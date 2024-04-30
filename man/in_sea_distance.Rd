@@ -22,6 +22,8 @@ in_sea_distance(
 \item{areas}{sf polygons among which to calculate distances. e.g. protected areas}
 
 \item{units}{character string for output distance matrix. Either "m" or "km" (by default).}
+
+\item{crs}{target coordinate reference system: object of class crs, or input string for st_crs}
 }
 \value{
 distance matrix
@@ -34,6 +36,6 @@ require(MarConsNetData)
 bioregion <- get_bioregion()
 areas <- get_CPCAD_areas(bioregion,zones=FALSE) |>
   dplyr::mutate(area=sf::st_area(geoms))
-distkm <-
+distkm <- in_sea_distance(cellsize=100000,bioregion,areas)
 
 }

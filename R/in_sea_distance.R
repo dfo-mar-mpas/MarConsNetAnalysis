@@ -4,6 +4,7 @@
 #' @param bioregion sf polygon of the study area (i.e. the sea!)
 #' @param areas sf polygons among which to calculate distances. e.g. protected areas
 #' @param units character string for output distance matrix. Either "m" or "km" (by default).
+#' @param crs target coordinate reference system: object of class crs, or input string for st_crs
 #'
 #' @return distance matrix
 #' @export
@@ -13,7 +14,7 @@
 #' bioregion <- get_bioregion()
 #' areas <- get_CPCAD_areas(bioregion,zones=FALSE) |>
 #'   dplyr::mutate(area=sf::st_area(geoms))
-#' distkm <-
+#' distkm <- in_sea_distance(cellsize=100000,bioregion,areas)
 #'
 in_sea_distance <- function(cellsize = 1000,
                             bioregion,
@@ -26,9 +27,12 @@ in_sea_distance <- function(cellsize = 1000,
                                        " +datum=WGS84 +units=m +no_defs")){
 
   if(!units %in% c("m","km")) warning("Argument 'units' not recognized, returning distance matrix in meters")
+  if(!"area" %in% names(areas)){
+    areas$area <- sf::st_area(areas))
+  }
 
   grid <- (sf::st_make_grid(sf::st_transform(bioregion,
-                                             crs=equidistant),
+                                             crs=crs),
                             square = FALSE,
                             cellsize=cellsize) |>
              sf::st_transform(sf::st_crs(bioregion)))[bioregion] |>
