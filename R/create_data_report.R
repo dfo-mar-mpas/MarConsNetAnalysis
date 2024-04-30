@@ -27,7 +27,7 @@ create_data_report <- function(datas=NULL,destdir=".") {
     }
   }
 
-  Rmdpath <- file.path(system.file(package="appMPA"),"templates")
+  Rmdpath <- file.path(system.file(package="MarConsNetAnalysis"),"templates")
 
   if (class(datas) == "data.frame") { # only one id given
     DATAS <- vector(mode = "list", length = 1)

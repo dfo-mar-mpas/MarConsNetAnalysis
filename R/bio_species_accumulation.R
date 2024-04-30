@@ -13,7 +13,7 @@
 #' bio_species_accumulation(datas=d)
 #' }
 #' @importFrom vegan specaccum
-#' @importFrom ggplot2 ggplot
+#' @importFrom ggplot2 ggplot aes
 #' @export
 
 bio_species_accumulation <- function(datas=NULL) {

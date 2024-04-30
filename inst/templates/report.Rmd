@@ -1,0 +1,16 @@
+---
+title: "report"
+output: html_document
+---
+
+**Results**
+
+```{r, echo=FALSE}
+# Creating Map
+map_data(datas=D)
+```
+
+
+```{r, echo=FALSE}
+bio_species_accumulation(datas=D)
+```
