@@ -1,0 +1,33 @@
+---
+title: "Indicators"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{indicators}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(MarConsNetAnalysis)
+library(MarConsNetData)
+```
+
+# Global Biodoversity Framework - Target 3
+
+## ProtConn
+
+```{r}
+bioregion <- get_bioregion()
+areas <- get_CPCAD_areas(bioregion,zones=FALSE) |>
+  dplyr::mutate(area=sf::st_area(geoms))
+distkm <- in_sea_distance(cellsize=100000,bioregion,areas)
+PC <- ProtConn(distkm,dkm=100,bioregion)
+```
+
