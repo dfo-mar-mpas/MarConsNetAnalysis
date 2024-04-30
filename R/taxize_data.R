@@ -68,7 +68,6 @@ taxize_data <- function(df=NULL) {
     DF <- cbind(lat=df$lat, lon=df$lon, DF)
     names(DF) <- nas
 
-    DF <- cbind(id = id, DF)
   }
 
   return(DF)
