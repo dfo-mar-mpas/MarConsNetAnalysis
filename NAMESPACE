@@ -3,6 +3,7 @@
 export(bio_method_comparison)
 export(bio_species_accumulation)
 export(create_data_report)
+export(in_sea_distance)
 export(map_data)
 export(taxize_data)
 importFrom(ggplot2,aes)
