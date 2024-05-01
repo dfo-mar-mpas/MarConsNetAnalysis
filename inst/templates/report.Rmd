@@ -14,3 +14,10 @@ map_data(datas=D)
 ```{r, echo=FALSE}
 bio_species_accumulation(datas=D)
 ```
+
+
+```{r, echo=FALSE}
+if (combine == TRUE) {
+  bio_method_comparison(datas=D)
+}
+```
