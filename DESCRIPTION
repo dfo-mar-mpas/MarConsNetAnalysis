@@ -7,7 +7,7 @@ Author:
         comment=c(ORCID="https://orcid.org/0000-0001-8832-4189"))) 
 Maintainer: Jaimie Harbin <jaimie.harbin@dfo-mpo.gc.ca>
 Description: Analyze sampling efforts in Marine Protected Areas (MPAs)
-Imports: magrittr, tidyr, dplyr, utils, shiny, ggplot2, leaflet, grDevices, arcpullr, sf, rlang, robis, methods, vegan, MarConsNetData, igraph
+Imports: magrittr, tidyr, dplyr, utils, shiny, ggplot2, leaflet, grDevices, arcpullr, sf, rlang, robis, methods, vegan, igraph
 License: GPL (>= 2)
 Depends: R (>= 3.5.0)
 Encoding: UTF-8

@@ -4,10 +4,14 @@
 \alias{create_data_report}
 \title{Creates reports of Project Planning Tool data}
 \usage{
-create_data_report(datas = NULL, destdir = ".")
+create_data_report(datas = NULL, combine = FALSE, destdir = ".")
 }
 \arguments{
 \item{datas}{a data frame or list of data frames obtained from \code{get_project_data()}}
+
+\item{combine}{a Boolean indicating if the \code{datas} should be combined
+into a single report. If \code{combine=FALSE} each item in the \code{datas}
+argument will be an individual reports}
 
 \item{destdir}{parameter indicating where to save the html report}
 }

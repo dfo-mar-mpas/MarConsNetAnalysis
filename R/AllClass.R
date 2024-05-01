@@ -8,5 +8,5 @@
 #'
 #' @importFrom methods new
 #' @name MarConsNetAnalysis-package
-#' @docType package
+#' @docType _PACKAGE
 NULL
