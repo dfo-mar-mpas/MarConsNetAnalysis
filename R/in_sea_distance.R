@@ -28,7 +28,7 @@ in_sea_distance <- function(cellsize = 1000,
 
   if(!units %in% c("m","km")) warning("Argument 'units' not recognized, returning distance matrix in meters")
   if(!"area" %in% names(areas)){
-    areas$area <- sf::st_area(areas))
+    areas$area <- sf::st_area(areas)
   }
 
   grid <- (sf::st_make_grid(sf::st_transform(bioregion,

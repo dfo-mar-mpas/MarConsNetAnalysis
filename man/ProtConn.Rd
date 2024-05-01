@@ -4,12 +4,14 @@
 \alias{ProtConn}
 \title{ProtConn}
 \usage{
-ProtConn(distkm, dkm)
+ProtConn(distkm, dkm, bioregion)
 }
 \arguments{
 \item{distkm}{distance matrix in km. Can be created by the 'in_sea_distance()' in this package}
 
 \item{dkm}{median dispersal distance in km for the negative exponential dispersal kernal (i.e. \code{p <- 1-pexp(distkm,log(2)/dkm)})}
+
+\item{bioregion}{sf polygon of the study area (i.e. the sea!)}
 }
 \value{
 numeric

@@ -2,19 +2,10 @@
 % Please edit documentation in R/AllClass.R
 \docType{package}
 \name{MarConsNetAnalysis-package}
-\alias{MarConsNetAnalysis}
 \alias{MarConsNetAnalysis-package}
 \title{A Package for Analyzing MPA Data}
 \description{
 The \code{MarConsNetAnalysis} package is intended to analyze the
 real data  that was located and transformed using the
 \code{MarConsNetData} package.
-}
-\seealso{
-Useful links:
-\itemize{
-  \item \url{https://github.com/dfo-mar-mpas/MarConsNetAnalysis}
-  \item Report bugs at \url{https://github.com/dfo-mar-mpas/MarConsNetAnalysis/issues}
-}
-
 }
