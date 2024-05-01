@@ -7,6 +7,7 @@
 #' @param type an argument indicating what the output should be. Options include
 #' `bar`, which produces a bar chart, `venn`, which produces a Venn Diagram, or
 #' `table`, which produces a table.
+#' @importFrom ggplot2 geom_bar
 #' @examples
 #' \dontrun{
 #' library(MarConsNetData)
@@ -32,8 +33,8 @@ bio_method_comparison <- function(datas=NULL, type="bar") {
   }
 
   if (type == "bar") {
-  if (length(names(datas[[1]])) > 11) {
-    warning("Consider doing getAppData(taxize=TRUE) to better see the results on a bar chart.")
+  if (length(names(datas[[1]])) > 15) {
+    warning("If you have not grouped species into taxonomic groups, consider doing getAppData(taxize=TRUE) to better see the results on a bar chart.")
   }
   }
 
@@ -47,17 +48,20 @@ bio_method_comparison <- function(datas=NULL, type="bar") {
   })
 
   df <- data.frame("Group"=rep(allSpecies, each = 2), "sample"=rep(names(d),length(allSpecies)), "Presence"=0, "Proportion"=0)
-
+#browser()
 for (i in seq_along(datas)) {
   data_df <- datas[[i]]
 
   # Filter df based on the conditions
-  filtered_df <- df %>%
-    filter(Group %in% tolower(names(data_df)), sample %in% unique(data_df$id))
-  indices <- which(df$Group %in% filtered_df$Group & df$sample %in% filtered_df$sample)
+  # filtered_df <- df %>%
+  #   filter(Group %in% tolower(names(data_df)), sample %in% unique(data_df$id))
 
-  # Update the Presence column to 1 for the filtered rows
-  df$Presence[indices] <- 1
+  filtered_df <- df$Presence[intersect(which(df$Group %in% tolower(names(data_df))),which(df$sample %in% unique(data_df$id)))] <- 1
+
+  # indices <- which(df$Group %in% filtered_df$Group & df$sample %in% filtered_df$sample)
+  #
+  # # Update the Presence column to 1 for the filtered rows
+  # df$Presence[indices] <- 1
 }
   prop <- vector(mode = "list", length = length(datas))
   for (i in seq_along(datas)) {
