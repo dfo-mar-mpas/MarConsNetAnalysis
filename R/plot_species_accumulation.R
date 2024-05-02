@@ -10,13 +10,13 @@
 #' library(MarConsNetData)
 #' library(MarConsNetAnalysis)
 #' d <- get_project_data(ids=1093)
-#' bio_species_accumulation(datas=d)
+#' plot_species_accumulation(datas=d)
 #' }
 #' @importFrom vegan specaccum
 #' @importFrom ggplot2 ggplot aes
 #' @export
 
-bio_species_accumulation <- function(datas=NULL) {
+plot_species_accumulation <- function(datas=NULL) {
 
   if (is.null(datas)) {
     stop("1. In mapAppData() must provide a datas argument, which is an output from getAppData()")

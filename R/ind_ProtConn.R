@@ -9,12 +9,12 @@
 #'
 #' @examples
 #' require(MarConsNetData)
-#' bioregion <- get_bioregion()
-#' areas <- get_CPCAD_areas(bioregion,zones=FALSE) |>
+#' bioregion <- data_bioregion()
+#' areas <- data_CPCAD_areas(bioregion,zones=FALSE) |>
 #'   dplyr::mutate(area=sf::st_area(geoms))
-#' distkm <- in_sea_distance(cellsize=100000,bioregion,areas)
-#' PC <- ProtConn(distkm,dkm=100)
-ProtConn <- function(distkm,dkm,bioregion){
+#' distkm <- calc_in_sea_distance(cellsize=100000,bioregion,areas)
+#' PC <- ind_ProtConn(distkm,dkm=100)
+ind_ProtConn <- function(distkm,dkm,bioregion){
   p <- 1-pexp(distkm,log(2)/dkm)
   p[p<median(p)/10] <- 0
   protg <- igraph::graph_from_adjacency_matrix(p,weighted = TRUE)

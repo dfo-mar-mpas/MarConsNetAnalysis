@@ -5,19 +5,23 @@ output: html_document
 
 **Results**
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.cap="Map of sampling effort"}
 # Creating Map
-map_data(datas=D)
+plot_map(datas=D)
 ```
 
 
-```{r, echo=FALSE}
-bio_species_accumulation(datas=D)
+```{r, echo=FALSE, fig.cap="Species Accumulation Curve"}
+plot_species_accumulation(datas=D)
 ```
 
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.cap="Method Comparison"}
 if (combine == TRUE) {
-  bio_method_comparison(datas=D)
+  plot_method_comparison(datas=D)
 }
 ```
+
+
+**Discussion**
+

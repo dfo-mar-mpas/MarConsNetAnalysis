@@ -9,14 +9,14 @@
 #' library(MarConsNetData)
 #' library(MarConsNetAnalysis)
 #' d <- get_project_data(ids=c(1093, 642))
-#' map_app_data(datas=d)
+#' plot_map(datas=d)
 #' }
 #' @importFrom grDevices rainbow
 #' @importFrom magrittr %>%
 #' @importFrom leaflet leaflet addTiles addCircleMarkers addLegend
 #' @export
 
-map_data <- function(datas=NULL) {
+plot_map <- function(datas=NULL) {
 
   if (is.null(datas)) {
     stop("1. In mapAppData() must provide a datas argument, which is an output from getAppData()")

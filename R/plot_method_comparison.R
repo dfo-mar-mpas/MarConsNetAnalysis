@@ -13,13 +13,13 @@
 #' library(MarConsNetData)
 #' library(MarConsNetAnalysis)
 #' d <- get_project_data(ids=c(1093, 642))
-#' bio_method_comparison(datas=d)
+#' plot_method_comparison(datas=d)
 #' }
 #' @importFrom vegan specaccum
 #' @importFrom ggplot2 ggplot
 #' @export
 
-bio_method_comparison <- function(datas=NULL, type="bar") {
+plot_method_comparison <- function(datas=NULL, type="bar") {
   if (is.null(datas)) {
     stop("Must provide a datas argument, which is an output from getAppData()")
   }

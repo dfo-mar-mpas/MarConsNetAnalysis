@@ -12,11 +12,11 @@
 #' @examples
 #' require(MarConsNetData)
 #' bioregion <- get_bioregion()
-#' areas <- get_CPCAD_areas(bioregion,zones=FALSE) |>
+#' areas <- data_CPCAD_areas(bioregion,zones=FALSE) |>
 #'   dplyr::mutate(area=sf::st_area(geoms))
-#' distkm <- in_sea_distance(cellsize=100000,bioregion,areas)
+#' distkm <- calc_in_sea_distance(cellsize=100000,bioregion,areas)
 #'
-in_sea_distance <- function(cellsize = 1000,
+calc_in_sea_distance <- function(cellsize = 1000,
                             bioregion,
                             areas,
                             units="km",
