@@ -4,7 +4,7 @@
 \alias{ind_ProtConn}
 \title{ProtConn}
 \usage{
-ind_ProtConn(distkm, dkm, bioregion)
+ind_ProtConn(distkm, dkm, bioregion, area = NULL)
 }
 \arguments{
 \item{distkm}{distance matrix in km. Can be created by the 'in_sea_distance()' in this package}
@@ -12,6 +12,8 @@ ind_ProtConn(distkm, dkm, bioregion)
 \item{dkm}{median dispersal distance in km for the negative exponential dispersal kernal (i.e. \code{p <- 1-pexp(distkm,log(2)/dkm)})}
 
 \item{bioregion}{sf polygon of the study area (i.e. the sea!)}
+
+\item{area}{output of data_CPCAS_areas}
 }
 \value{
 numeric
@@ -20,10 +22,12 @@ numeric
 ProtConn
 }
 \examples{
+\dontrun{
 require(MarConsNetData)
 bioregion <- data_bioregion()
 areas <- data_CPCAD_areas(bioregion,zones=FALSE) |>
   dplyr::mutate(area=sf::st_area(geoms))
 distkm <- calc_in_sea_distance(cellsize=100000,bioregion,areas)
-PC <- ind_ProtConn(distkm,dkm=100)
+PC <- ind_ProtConn(distkm,dkm=100, area=areas)
+}
 }

@@ -8,6 +8,7 @@
 #' into a single report. If `combine=FALSE` each item in the `datas`
 #' argument will be an individual reports
 #' @param destdir parameter indicating where to save the html report
+#' @importFrom rmarkdown render
 #' @examples
 #' \dontrun{
 #' library(MarConsNetData)

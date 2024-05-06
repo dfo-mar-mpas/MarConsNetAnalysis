@@ -6,8 +6,8 @@ Author:
         comment=c(ORCID="https://orcid.org/0000-0003-3774-3732")),person(given="Remi", family="Daigle", email="remi.daigle@dfo-mpo.gc.ca", role=c("aut"),
         comment=c(ORCID="https://orcid.org/0000-0001-8832-4189"))) 
 Maintainer: Jaimie Harbin <jaimie.harbin@dfo-mpo.gc.ca>
-Description: Analyze sampling efforts in Marine Protected Areas (MPAs)
-Imports: magrittr, tidyr, dplyr, utils, shiny, ggplot2, leaflet, grDevices, arcpullr, sf, rlang, robis, methods, vegan, igraph
+Description: This package analyze sampling efforts in Marine Protected Areas (MPAs).
+Imports: magrittr, tidyr, dplyr, utils, shiny, ggplot2, leaflet, grDevices, arcpullr, sf, rlang, robis, methods, vegan,stats, igraph, rmarkdown
 License: GPL (>= 2)
 Depends: R (>= 3.5.0)
 Encoding: UTF-8
@@ -15,5 +15,5 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
 URL: https://github.com/dfo-mar-mpas/MarConsNetAnalysis
 BugReports: https://github.com/dfo-mar-mpas/MarConsNetAnalysis/issues
-Suggests: 
-    knitr
+Suggests: knitr
+VignetteBuilder: knitr

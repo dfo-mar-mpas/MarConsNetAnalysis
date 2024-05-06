@@ -16,10 +16,13 @@
 #' plot_method_comparison(datas=d)
 #' }
 #' @importFrom vegan specaccum
-#' @importFrom ggplot2 ggplot
+#' @importFrom ggplot2 ggplot geom_vline geom_bar labs scale_fill_brewer
+#' @importFrom ggplot2 scale_y_continuous theme_bw theme element_text
 #' @export
 
 plot_method_comparison <- function(datas=NULL, type="bar") {
+  d <- Group <- Proportion <- NULL
+
   if (is.null(datas)) {
     stop("Must provide a datas argument, which is an output from getAppData()")
   }
@@ -51,17 +54,7 @@ plot_method_comparison <- function(datas=NULL, type="bar") {
 #browser()
 for (i in seq_along(datas)) {
   data_df <- datas[[i]]
-
-  # Filter df based on the conditions
-  # filtered_df <- df %>%
-  #   filter(Group %in% tolower(names(data_df)), sample %in% unique(data_df$id))
-
   filtered_df <- df$Presence[intersect(which(df$Group %in% tolower(names(data_df))),which(df$sample %in% unique(data_df$id)))] <- 1
-
-  # indices <- which(df$Group %in% filtered_df$Group & df$sample %in% filtered_df$sample)
-  #
-  # # Update the Presence column to 1 for the filtered rows
-  # df$Presence[indices] <- 1
 }
   prop <- vector(mode = "list", length = length(datas))
   for (i in seq_along(datas)) {
@@ -83,20 +76,14 @@ for (i in seq_along(datas)) {
     df$Proportion[which(df$sample == names(datas)[i] & df$Group %in% tolower(names(dd)))] <- prop[[i]]
   }
 
-
-  #df$Group[which(df$sample == names(datas)[2] & df$Group %in% tolower(names(datas[[2]])))]
-
-
-
-
   if (type == "bar") {
   ggplot(df, aes(
     x = Group,
     fill = factor(sample),
     y = Proportion
   )) +
-    geom_bar(stat = "identity", position = "dodge") +
-    geom_vline(
+    ggplot2::geom_bar(stat = "identity", position = "dodge") +
+    ggplot2::geom_vline(
       xintercept = seq(0.5, length(unique(df$Group)) + 0.5, 1),
       color = "black",
       linetype = "solid",
@@ -119,7 +106,6 @@ for (i in seq_along(datas)) {
     ))
 
   } else if (type == "table") {
-
     df2 <- data.frame(matrix(nrow = length(unique(df$Group)), ncol = length(datas)+1), stringsAsFactors = FALSE)
     names(df2) <- c("Group", names(datas))
     df2$Group <- unique(df$Group)
@@ -128,7 +114,6 @@ for (i in seq_along(datas)) {
       df2[[names(datas)[[i]]]][which(df2$Group %in% tolower(names(datas[[i]])))] <- "true"
       df2[[names(datas)[[i]]]][which(is.na(df2[[names(datas)[[i]]]]))] <- "false"
     }
-
     return(df2)
   } else if (type == "venn") {
     stop("This has not been coded yet.")

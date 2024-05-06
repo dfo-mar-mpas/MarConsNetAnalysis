@@ -9,8 +9,8 @@ calc_in_sea_distance(
   bioregion,
   areas,
   units = "km",
-  crs = paste0("+proj=aeqd +lon_0=", sf::st_coordinates(sf::st_centroid(bioregion))[1,
-    1], " +lat_0=", sf::st_coordinates(sf::st_centroid(bioregion))[1, 2],
+  crs = paste0("+proj=aeqd +lon_0=", st_coordinates(st_centroid(bioregion))[1, 1],
+    " +lat_0=", st_coordinates(st_centroid(bioregion))[1, 2],
     " +datum=WGS84 +units=m +no_defs")
 )
 }
@@ -32,10 +32,11 @@ distance matrix
 in_sea_distance
 }
 \examples{
+\dontrun{
 require(MarConsNetData)
 bioregion <- get_bioregion()
 areas <- data_CPCAD_areas(bioregion,zones=FALSE) |>
   dplyr::mutate(area=sf::st_area(geoms))
 distkm <- calc_in_sea_distance(cellsize=100000,bioregion,areas)
-
+}
 }

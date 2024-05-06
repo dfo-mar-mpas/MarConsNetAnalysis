@@ -17,6 +17,7 @@
 #' @export
 
 plot_species_accumulation <- function(datas=NULL) {
+  Sites <- Richness <- Source <- Group <- Proportion <- NULL
 
   if (is.null(datas)) {
     stop("1. In mapAppData() must provide a datas argument, which is an output from getAppData()")

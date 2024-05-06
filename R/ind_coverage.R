@@ -11,10 +11,12 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
 #' require(MarConsNetData)
 #' bioregion <- data_bioregion()
 #' areas <- data_bioregion()
 #' ind_coverage(x=areas, y=bioregion)
+#' }
 #'
 ind_coverage <- function(x,y,intersection=FALSE,proportion=FALSE){
   if(intersection){
