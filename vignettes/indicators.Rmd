@@ -121,4 +121,4 @@ In development...
 ```{r, eval=FALSE}
 SPI <- ind_coverage(areas,sarch,intersection = TRUE)
 ```
-The Species Protection Index is `r round(SPI,2)`%
+The Species Protection Index is `round(SPI,2)`%
