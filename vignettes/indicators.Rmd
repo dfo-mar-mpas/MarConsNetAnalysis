@@ -2,7 +2,7 @@
 title: "Marine Conservation Network Effectiveness Indicators"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{indicators}
+  %\VignetteIndexEntry{Marine Conservation Network Effectiveness Indicators}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -73,14 +73,17 @@ ggplot2::ggplot(mpacoverage)+
 kbacoverage <- ind_coverage(areas,kba,intersection = TRUE)
 ```
 
+The protected areas and OECMs cover `round(kbacoverage,2)`% of the EBSAs in the bioregion
 
 ```{r ebsa, eval=FALSE}
 ebsacoverage <- ind_coverage(areas,ebsa,intersection = TRUE)
 ```
 
+The protected areas and OECMs cover `round(ebsacoverage,2)`% of the EBSAs in the bioregion
+
 ## Protected Area Management Effectiveness (PAME)
 
-We would need to pick a method and do a whole process, but for now unquantified!
+We would need to pick a method and do a whole process with MPC, but for now unquantified!
 
 
 ## ProtConn
@@ -118,4 +121,4 @@ In development...
 ```{r, eval=FALSE}
 SPI <- ind_coverage(areas,sarch,intersection = TRUE)
 ```
-
+The Species Protection Index is `r round(SPI,2)`%
