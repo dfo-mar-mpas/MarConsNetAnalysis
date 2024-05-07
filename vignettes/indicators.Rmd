@@ -1,5 +1,5 @@
 ---
-title: "Indicators"
+title: "Marine Conservation Network Effectiveness Indicators"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{indicators}
@@ -14,20 +14,107 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup, eval=FALSE}
+
+```{r packages}
 library(MarConsNetAnalysis)
 library(MarConsNetData)
 ```
 
+```{r}
+bioregion <- data_bioregion()
+
+areas <- data_CPCAD_areas(bioregion,zones=FALSE) |> 
+  dplyr::mutate(area=sf::st_area(geoms))
+
+areas_zones <- data_CPCAD_areas(bioregion,zones=TRUE)
+
+kba <- data_KBA(bioregion)
+ebsa <- data_EBSA(bioregion)
+sarch <- data_SAR_CH(bioregion)
+```
+
+
+
 # Global Biodoversity Framework - Target 3
+
+## Coverage of protected areas and OECMs
+
+```{r area coverage}
+totalarea <- as.numeric(sf::st_area(bioregion))
+mpacoverage <- areas_zones |> 
+  dplyr::rowwise() |> 
+  dplyr::mutate(cover=ind_coverage(geoms,bioregion,intersection=TRUE,proportion=FALSE),
+                mgmt=dplyr::if_else(MGMT_E=="Fisheries And Oceans Canada",
+                                    "DFO",
+                                    "Other")) |> 
+  as.data.frame() |> 
+  dplyr::group_by(TYPE_E,mgmt) |> 
+  dplyr::summarise(`Bioregion Coverage (%)`=sum(cover))
+totalcoverage <- sum(mpacoverage$`Bioregion Coverage (%)`)
+```
+The Scotian Shelf Bioregion is `r round(totalcoverage,2)`% covered by protected areas and OECMs.
+
+
+```{r area coverage by type}
+ggplot2::ggplot(mpacoverage)+
+  ggplot2::geom_col(ggplot2::aes(x=TYPE_E,y=`Bioregion Coverage (%)`))+
+  ggplot2::scale_x_discrete(guide = ggplot2::guide_axis(angle = 30))+
+  ggplot2::facet_wrap(~mgmt, scales="free")+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.title.x = ggplot2::element_blank())
+
+```
+
+
+## Protected area coverage of Key Biodiversity Areas
+
+```{r kba}
+kbacoverage <- ind_coverage(areas,kba,intersection = TRUE)
+```
+
+
+```{r ebsa}
+ebsacoverage <- ind_coverage(areas,ebsa,intersection = TRUE)
+```
+
+## Protected Area Management Effectiveness (PAME)
+
+We would need to pick a method and do a whole process, but for now unquantified!
+
 
 ## ProtConn
 
 ```{r, eval=FALSE}
-bioregion <- get_bioregion()
-areas <- get_CPCAD_areas(bioregion,zones=FALSE) |>
-  dplyr::mutate(area=sf::st_area(geoms))
-distkm <- in_sea_distance(cellsize=100000,bioregion,areas)
-PC <- ProtConn(distkm,dkm=100,bioregion)
+distkm <- calc_in_sea_distance(cellsize=100000,bioregion,areas)
+
+PC <- data.frame()
+for(dkm in c(10,20,50,100,200)){
+  PC <- dplyr::bind_rows(PC,
+                         data.frame(dkm,
+                                    ProtConn = ind_ProtConn(distkm,dkm,bioregion)
+                         ))
+}
+
+ggplot2::ggplot(PC |> dplyr::mutate(`Median Dispersal Distances (km)`=factor(dkm,levels=unique(dkm))))+
+  ggplot2::geom_col(ggplot2::aes(x=`Median Dispersal Distances (km)`,y=ProtConn))+
+  ggplot2::geom_hline(yintercept=sum(mpacoverage$cover),linetype = "dashed")+
+  ggplot2::theme_classic()
+
+```
+
+## Protected Area Connectedness Index (PARC-Connectedness)
+
+Terrestrial only!
+
+## Red List of Ecosystems Connectivity Indicator (in development)
+
+In development...
+
+## The number of protected areas that have completed a site-level assessment of governance and equity (SAGE)
+
+## Species Protection Index
+
+```{r}
+SPI <- ind_coverage(areas,sarch,intersection = TRUE)
 ```
 
