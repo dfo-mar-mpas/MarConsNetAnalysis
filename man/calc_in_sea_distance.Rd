@@ -2,7 +2,7 @@
 % Please edit documentation in R/calc_in_sea_distance.R
 \name{calc_in_sea_distance}
 \alias{calc_in_sea_distance}
-\title{in_sea_distance}
+\title{Calculate the 'in-sea' distance between polygons}
 \usage{
 calc_in_sea_distance(
   cellsize = 1000,
@@ -29,12 +29,12 @@ calc_in_sea_distance(
 distance matrix
 }
 \description{
-in_sea_distance
+Calculate the 'in-sea' distance between polygons
 }
 \examples{
 \dontrun{
 require(MarConsNetData)
-bioregion <- get_bioregion()
+bioregion <- data_bioregion()
 areas <- data_CPCAD_areas(bioregion,zones=FALSE) |>
   dplyr::mutate(area=sf::st_area(geoms))
 distkm <- calc_in_sea_distance(cellsize=100000,bioregion,areas)

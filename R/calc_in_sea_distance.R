@@ -1,4 +1,4 @@
-#' in_sea_distance
+#' Calculate the 'in-sea' distance between polygons
 #'
 #' @param cellsize numeric with target cellsize in meters of hexagonal cells the distance between opposite edges. The edge length is cellsize/sqrt(3))
 #' @param bioregion sf polygon of the study area (i.e. the sea!)
@@ -16,7 +16,7 @@
 #' @examples
 #' \dontrun{
 #' require(MarConsNetData)
-#' bioregion <- get_bioregion()
+#' bioregion <- data_bioregion()
 #' areas <- data_CPCAD_areas(bioregion,zones=FALSE) |>
 #'   dplyr::mutate(area=sf::st_area(geoms))
 #' distkm <- calc_in_sea_distance(cellsize=100000,bioregion,areas)
