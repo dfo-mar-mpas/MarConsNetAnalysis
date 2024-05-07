@@ -15,12 +15,12 @@ knitr::opts_chunk$set(
 ```
 
 
-```{r packages}
+```{r packages, eval=FALSE}
 library(MarConsNetAnalysis)
 library(MarConsNetData)
 ```
 
-```{r}
+```{r, eval=FALSE}
 bioregion <- data_bioregion()
 
 areas <- data_CPCAD_areas(bioregion,zones=FALSE) |> 
@@ -39,7 +39,7 @@ sarch <- data_SAR_CH(bioregion)
 
 ## Coverage of protected areas and OECMs
 
-```{r area coverage}
+```{r area coverage, eval=FALSE}
 totalarea <- as.numeric(sf::st_area(bioregion))
 mpacoverage <- areas_zones |> 
   dplyr::rowwise() |> 
@@ -51,11 +51,12 @@ mpacoverage <- areas_zones |>
   dplyr::group_by(TYPE_E,mgmt) |> 
   dplyr::summarise(`Bioregion Coverage (%)`=sum(cover))
 totalcoverage <- sum(mpacoverage$`Bioregion Coverage (%)`)
+#The Scotian Shelf Bioregion is `r round(totalcoverage,2)`% covered by protected areas and OECMs.
 ```
-The Scotian Shelf Bioregion is `r round(totalcoverage,2)`% covered by protected areas and OECMs.
 
 
-```{r area coverage by type}
+
+```{r area coverage by type, eval=FALSE}
 ggplot2::ggplot(mpacoverage)+
   ggplot2::geom_col(ggplot2::aes(x=TYPE_E,y=`Bioregion Coverage (%)`))+
   ggplot2::scale_x_discrete(guide = ggplot2::guide_axis(angle = 30))+
@@ -68,12 +69,12 @@ ggplot2::ggplot(mpacoverage)+
 
 ## Protected area coverage of Key Biodiversity Areas
 
-```{r kba}
+```{r kba, eval=FALSE}
 kbacoverage <- ind_coverage(areas,kba,intersection = TRUE)
 ```
 
 
-```{r ebsa}
+```{r ebsa, eval=FALSE}
 ebsacoverage <- ind_coverage(areas,ebsa,intersection = TRUE)
 ```
 
@@ -114,7 +115,7 @@ In development...
 
 ## Species Protection Index
 
-```{r}
+```{r, eval=FALSE}
 SPI <- ind_coverage(areas,sarch,intersection = TRUE)
 ```
 

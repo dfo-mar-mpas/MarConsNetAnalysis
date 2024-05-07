@@ -28,4 +28,5 @@ bioregion <- data_bioregion()
 areas <- data_bioregion()
 ind_coverage(x=areas, y=bioregion)
 }
+
 }
