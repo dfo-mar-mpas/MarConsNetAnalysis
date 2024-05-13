@@ -1,0 +1,40 @@
+label_Framework,type_Framework,label_Objective,type_Objective,source
+SAB CO,Site-level Conservation Objectives,"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Habitat,https://www.dfo-mpo.gc.ca/oceans/mpa-zpm/stanns-sainteanne/index-eng.html
+SAB CO,Site-level Conservation Objectives,Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Productivity,https://www.dfo-mpo.gc.ca/oceans/mpa-zpm/stanns-sainteanne/index-eng.html
+SAB CO,Site-level Conservation Objectives,"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Biodiversity,https://www.dfo-mpo.gc.ca/oceans/mpa-zpm/stanns-sainteanne/index-eng.html
+SSBoF CO,Regional-level Conservation Objectives,"Protect unique, rare, or sensitive ecological features",Habitat,https://www.dfo-mpo.gc.ca/oceans/networks-reseaux/scotian-shelf-plateau-neo-ecossais-bay-baie-fundy/development-developpement-eng.html
+SSBoF CO,Regional-level Conservation Objectives,Protect representative examples of identified ecosystem and habitat types,Habitat,https://www.dfo-mpo.gc.ca/oceans/networks-reseaux/scotian-shelf-plateau-neo-ecossais-bay-baie-fundy/development-developpement-eng.html
+SSBoF CO,Regional-level Conservation Objectives,"Help maintain ecosystem structure, functioning and resilience (including resilience to climate change)",Productivity,https://www.dfo-mpo.gc.ca/oceans/networks-reseaux/scotian-shelf-plateau-neo-ecossais-bay-baie-fundy/development-developpement-eng.html
+SSBoF CO,Regional-level Conservation Objectives,Contribute to the recovery and conservation of depleted species,Biodiversity,https://www.dfo-mpo.gc.ca/oceans/networks-reseaux/scotian-shelf-plateau-neo-ecossais-bay-baie-fundy/development-developpement-eng.html
+SSBoF CO,Regional-level Conservation Objectives,"Help maintain healthy populations of species of Aboriginal, commercial, and/or recreational importance",Productivity,https://www.dfo-mpo.gc.ca/oceans/networks-reseaux/scotian-shelf-plateau-neo-ecossais-bay-baie-fundy/development-developpement-eng.html
+EBM,General Framework,Control unintended incidental mortality for all species,Biodiversity,Alida
+EBM,General Framework,Distribute population component mortality in relation to component biomass,Biodiversity,Alida
+EBM,General Framework,Minimize unintended introduction and transmission of invasive species,Biodiversity,Alida
+EBM,General Framework,Control introduction and proliferation of disease/pathogens,Biodiversity,Alida
+EBM,General Framework,Minimize aquaculture escapes,Biodiversity,Alida
+EBM,General Framework,Maintain Species Biodiversity,Biodiversity,Alida
+EBM,General Framework,Maintain Functional Biodiversity,Biodiversity,Alida
+EBM,General Framework,Maintain Ecosystem Resistance,Biodiversity,Alida
+EBM,General Framework,Maintain Habitat Diversity,Biodiversity,Alida
+EBM,General Framework,Keep fishing and other forms of mortality moderate,Productivity,Alida
+EBM,General Framework,Allow sufficient escapement from exploitation for spawning,Productivity,Alida
+EBM,General Framework,Limit disturbing activity in important reproductive areas/seasons,Productivity,Alida
+EBM,General Framework,Control alteration of nutrient concentrations affecting primary production,Productivity,Alida
+EBM,General Framework,Maintain/promote ecosystem structure and functioning,Productivity,Alida
+EBM,General Framework,"Habitat required for all species, particularly priority species, is maintained and protected",Habitat,Alida
+EBM,General Framework,Fish habitat that has been degraded is restored,Habitat,Alida
+EBM,General Framework,Pollution is prevented and reduced,Habitat,Alida
+Gully CO,Site-level Conservation Objectives,Minimize harmful impacts from human activities on cetacean populations and their habitats;,Habitat,https://www.dfo-mpo.gc.ca/oceans/mpa-zpm/gully/index-eng.html
+Gully CO,Site-level Conservation Objectives,Minimize the disturbance of seafloor habitat and associated benthic communities caused by human activities;,Habitat,https://www.dfo-mpo.gc.ca/oceans/mpa-zpm/gully/index-eng.html
+Gully CO,Site-level Conservation Objectives,Maintain and monitor the quality of water and sediments of the Gully; and,Habitat,https://www.dfo-mpo.gc.ca/oceans/mpa-zpm/gully/index-eng.html
+Gully CO,Site-level Conservation Objectives,Manage human activities to minimize impacts on other commercial and non-commercial living resources.,Productivity,https://www.dfo-mpo.gc.ca/oceans/mpa-zpm/gully/index-eng.html
+Musquash CO,Site-level Conservation Objectives,Maintain productivity of harvested species;,Productivity,https://www.dfo-mpo.gc.ca/oceans/mpa-zpm/musquash/index-eng.html
+Musquash CO,Site-level Conservation Objectives,"Maintain biodiversity of individual species, communities, and populations within the different ecotypes; and",Biodiversity,https://www.dfo-mpo.gc.ca/oceans/mpa-zpm/musquash/index-eng.html
+Musquash CO,Site-level Conservation Objectives,"Safeguard habitat, including the physical and chemical properties of the ecosystem, by maintaining water and sediment quality.",Habitat,https://www.dfo-mpo.gc.ca/oceans/mpa-zpm/musquash/index-eng.html
+Corsair and Georges Canyons CO,Site-level Conservation Objectives,Protect cold-water corals,Habitat,https://www.dfo-mpo.gc.ca/oceans/oecm-amcepz/refuges/corsair-eng.html
+Eastern Canyons CO,Site-level Conservation Objectives,Protect cold-water corals and deep water frontier area,Habitat,https://www.dfo-mpo.gc.ca/oceans/oecm-amcepz/refuges/eastern-canyons-est-eng.html
+Emerald Basin and Sambro Bank Sponge CO ,Site-level Conservation Objectives,Protect Vazella pourtalesi glass sponges,Habitat,https://www.dfo-mpo.gc.ca/oceans/oecm-amcepz/refuges/emerald-emeraude-eng.html
+Jordan Basin CO,Site-level Conservation Objectives,Protect cold-water corals,Habitat,https://www.dfo-mpo.gc.ca/oceans/oecm-amcepz/refuges/jordan-eng.html
+Northeast Channel Coral CO,Site-level Conservation Objectives,Protect cold-water corals,Habitat,https://www.dfo-mpo.gc.ca/oceans/oecm-amcepz/refuges/northeast-nordest-eng.html
+Western/Emerald Banks CO,Site-level Conservation Objectives,"Support productivity objectives for groundfish species of Aboriginal, commercial, and/or recreational importance, particularly NAFO Division 4VW haddock",Productivity,https://www.dfo-mpo.gc.ca/oceans/oecm-amcepz/refuges/westernemerald-emeraudewestern-eng.html
+Western/Emerald Banks CO,Site-level Conservation Objectives,Manage the disturbance of benthic habitat that supports juvenile and adult haddock and other groundfish species,Habitat,https://www.dfo-mpo.gc.ca/oceans/oecm-amcepz/refuges/westernemerald-emeraudewestern-eng.html

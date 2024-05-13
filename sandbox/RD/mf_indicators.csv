@@ -1,0 +1,44 @@
+Objective,Indicator
+Keep fishing and other forms of mortality moderate,Fishing mortality
+Keep fishing and other forms of mortality moderate,Flim
+Allow sufficient escapement from exploitation for spawning,SSB
+Limit disturbing activity in important reproductive areas/seasons,Presence of fishing activity in spawning areas
+Control alteration of nutrient concentrations affecting primary production,Primary Production
+Maintain/promote ecosystem structure and functioning,Biomass of target species
+Maintain/promote ecosystem structure and functioning,Biomass of bycatch species
+Maintain/promote ecosystem structure and functioning,Biomass of ecologically dependent species
+Maintain/promote ecosystem structure and functioning,Large Fish Indicator
+Maintain/promote ecosystem structure and functioning,BTGLargeBenthivore (BiomassSkates)
+Maintain/promote ecosystem structure and functioning,BTGMediumBenthivore(Biomass Flatfish)
+Maintain/promote ecosystem structure and functioning,BTGPlanktivore(Forage fish biomass (Biomass)
+Maintain/promote ecosystem structure and functioning,BTGPiscivore
+Maintain/promote ecosystem structure and functioning,BTGZoopiscivore
+Maintain/promote ecosystem structure and functioning,Mean Length Abundance
+Maintain/promote ecosystem structure and functioning,Large Fish Indicator
+Maintain/promote ecosystem structure and functioning,MeanTrophicLevel
+Maintain/promote ecosystem structure and functioning,BInvertebrateToDemersal (Biomass)
+Maintain/promote ecosystem structure and functioning,BPelagicToDemersal (BiomassInvertebrates)
+Maintain/promote ecosystem structure and functioning,CommunityCondition (CC)
+Maintain/promote ecosystem structure and functioning,CCMediumBenthivore
+Maintain/promote ecosystem structure and functioning,CCPlanktivore (CommunityCondition)
+Maintain/promote ecosystem structure and functioning,CCPiscivore
+Maintain/promote ecosystem structure and functioning,CCZoopiscivore
+Maintain/promote ecosystem structure and functioning,CCLargeBenthivore
+Control unintended incidental mortality for all species,Incidental-bycatch mortality
+Distribute population component mortality in relation to component biomass,Population component mortality
+Distribute population component mortality in relation to component biomass,"Genetic diversity (e.g., genetic variation using microsatellites and mitochondrial DNA, genetic mixing, phenotypic sex ratio)"
+Minimize unintended introduction and transmission of invasive species,"Non-native species (e.g., abundance, degree of impact, probability of introduction)"
+Control introduction and proliferation of disease/pathogens,# of occurrences of pathogens per year
+Minimize aquaculture escapes,# of escapees per year
+Maintain Species Biodiversity,Margalef Richness
+Maintain Species Biodiversity,HeipsEveness
+Maintain Functional Biodiversity,Biomass Large Benthivore
+Maintain Functional Biodiversity,Biomass Medium Benthivore
+Maintain Functional Biodiversity,Biomass Planktivore
+Maintain Functional Biodiversity,Biomass Piscivore
+Maintain Functional Biodiversity,Biomass Zoopiscivore
+Maintain Ecosystem Resistance,MeanLifespan
+Maintain Ecosystem Resistance,MMLengthAbundance (LargeFishIndicator)
+Maintain Ecosystem Resistance,MMLengthBiomass (LargeFishIndicator)
+Maintain Ecosystem Resistance,Intrinsicvulnerabilityindex.L
+Maintain Habitat Diversity,?
