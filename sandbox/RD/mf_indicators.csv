@@ -1,44 +1,143 @@
-Objective,Indicator
-Keep fishing and other forms of mortality moderate,Fishing mortality
-Keep fishing and other forms of mortality moderate,Flim
-Allow sufficient escapement from exploitation for spawning,SSB
-Limit disturbing activity in important reproductive areas/seasons,Presence of fishing activity in spawning areas
-Control alteration of nutrient concentrations affecting primary production,Primary Production
-Maintain/promote ecosystem structure and functioning,Biomass of target species
-Maintain/promote ecosystem structure and functioning,Biomass of bycatch species
-Maintain/promote ecosystem structure and functioning,Biomass of ecologically dependent species
-Maintain/promote ecosystem structure and functioning,Large Fish Indicator
-Maintain/promote ecosystem structure and functioning,BTGLargeBenthivore (BiomassSkates)
-Maintain/promote ecosystem structure and functioning,BTGMediumBenthivore(Biomass Flatfish)
-Maintain/promote ecosystem structure and functioning,BTGPlanktivore(Forage fish biomass (Biomass)
-Maintain/promote ecosystem structure and functioning,BTGPiscivore
-Maintain/promote ecosystem structure and functioning,BTGZoopiscivore
-Maintain/promote ecosystem structure and functioning,Mean Length Abundance
-Maintain/promote ecosystem structure and functioning,Large Fish Indicator
-Maintain/promote ecosystem structure and functioning,MeanTrophicLevel
-Maintain/promote ecosystem structure and functioning,BInvertebrateToDemersal (Biomass)
-Maintain/promote ecosystem structure and functioning,BPelagicToDemersal (BiomassInvertebrates)
-Maintain/promote ecosystem structure and functioning,CommunityCondition (CC)
-Maintain/promote ecosystem structure and functioning,CCMediumBenthivore
-Maintain/promote ecosystem structure and functioning,CCPlanktivore (CommunityCondition)
-Maintain/promote ecosystem structure and functioning,CCPiscivore
-Maintain/promote ecosystem structure and functioning,CCZoopiscivore
-Maintain/promote ecosystem structure and functioning,CCLargeBenthivore
-Control unintended incidental mortality for all species,Incidental-bycatch mortality
-Distribute population component mortality in relation to component biomass,Population component mortality
-Distribute population component mortality in relation to component biomass,"Genetic diversity (e.g., genetic variation using microsatellites and mitochondrial DNA, genetic mixing, phenotypic sex ratio)"
-Minimize unintended introduction and transmission of invasive species,"Non-native species (e.g., abundance, degree of impact, probability of introduction)"
-Control introduction and proliferation of disease/pathogens,# of occurrences of pathogens per year
-Minimize aquaculture escapes,# of escapees per year
-Maintain Species Biodiversity,Margalef Richness
-Maintain Species Biodiversity,HeipsEveness
-Maintain Functional Biodiversity,Biomass Large Benthivore
-Maintain Functional Biodiversity,Biomass Medium Benthivore
-Maintain Functional Biodiversity,Biomass Planktivore
-Maintain Functional Biodiversity,Biomass Piscivore
-Maintain Functional Biodiversity,Biomass Zoopiscivore
-Maintain Ecosystem Resistance,MeanLifespan
-Maintain Ecosystem Resistance,MMLengthAbundance (LargeFishIndicator)
-Maintain Ecosystem Resistance,MMLengthBiomass (LargeFishIndicator)
-Maintain Ecosystem Resistance,Intrinsicvulnerabilityindex.L
-Maintain Habitat Diversity,?
+Objective,Indicator,source
+Keep fishing and other forms of mortality moderate,Fishing mortality,Alida
+Keep fishing and other forms of mortality moderate,Flim,Alida
+Allow sufficient escapement from exploitation for spawning,SSB,Alida
+Limit disturbing activity in important reproductive areas/seasons,Presence of fishing activity in spawning areas,Alida
+Control alteration of nutrient concentrations affecting primary production,Primary Production,Alida
+Maintain/promote ecosystem structure and functioning,Biomass of target species,Alida
+Maintain/promote ecosystem structure and functioning,Biomass of bycatch species,Alida
+Maintain/promote ecosystem structure and functioning,Biomass of ecologically dependent species,Alida
+Maintain/promote ecosystem structure and functioning,Large Fish Indicator,Alida
+Maintain/promote ecosystem structure and functioning,BTGLargeBenthivore (BiomassSkates),Alida
+Maintain/promote ecosystem structure and functioning,BTGMediumBenthivore(Biomass Flatfish),Alida
+Maintain/promote ecosystem structure and functioning,BTGPlanktivore(Forage fish biomass (Biomass),Alida
+Maintain/promote ecosystem structure and functioning,BTGPiscivore,Alida
+Maintain/promote ecosystem structure and functioning,BTGZoopiscivore,Alida
+Maintain/promote ecosystem structure and functioning,Mean Length Abundance,Alida
+Maintain/promote ecosystem structure and functioning,Large Fish Indicator,Alida
+Maintain/promote ecosystem structure and functioning,MeanTrophicLevel,Alida
+Maintain/promote ecosystem structure and functioning,BInvertebrateToDemersal (Biomass),Alida
+Maintain/promote ecosystem structure and functioning,BPelagicToDemersal (BiomassInvertebrates),Alida
+Maintain/promote ecosystem structure and functioning,CommunityCondition (CC),Alida
+Maintain/promote ecosystem structure and functioning,CCMediumBenthivore,Alida
+Maintain/promote ecosystem structure and functioning,CCPlanktivore (CommunityCondition),Alida
+Maintain/promote ecosystem structure and functioning,CCPiscivore,Alida
+Maintain/promote ecosystem structure and functioning,CCZoopiscivore,Alida
+Maintain/promote ecosystem structure and functioning,CCLargeBenthivore,Alida
+Control unintended incidental mortality for all species,Incidental-bycatch mortality,Alida
+Distribute population component mortality in relation to component biomass,Population component mortality,Alida
+Distribute population component mortality in relation to component biomass,"Genetic diversity (e.g., genetic variation using microsatellites and mitochondrial DNA, genetic mixing, phenotypic sex ratio)",Alida
+Minimize unintended introduction and transmission of invasive species,"Non-native species (e.g., abundance, degree of impact, probability of introduction)",Alida
+Control introduction and proliferation of disease/pathogens,# of occurrences of pathogens per year,Alida
+Minimize aquaculture escapes,# of escapees per year,Alida
+Maintain Species Biodiversity,Margalef Richness,Alida
+Maintain Species Biodiversity,HeipsEveness,Alida
+Maintain Functional Biodiversity,Biomass Large Benthivore,Alida
+Maintain Functional Biodiversity,Biomass Medium Benthivore,Alida
+Maintain Functional Biodiversity,Biomass Planktivore,Alida
+Maintain Functional Biodiversity,Biomass Piscivore,Alida
+Maintain Functional Biodiversity,Biomass Zoopiscivore,Alida
+Maintain Ecosystem Resistance,MeanLifespan,Alida
+Maintain Ecosystem Resistance,MMLengthAbundance (LargeFishIndicator),Alida
+Maintain Ecosystem Resistance,MMLengthBiomass (LargeFishIndicator),Alida
+Maintain Ecosystem Resistance,Intrinsicvulnerabilityindex.L,Alida
+Maintain Habitat Diversity,?,Alida
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 1: Ship-Board Oceanographic Monitoring,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 1: Ship-Board Oceanographic Monitoring,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 1: Ship-Board Oceanographic Monitoring,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 2: Satellite-Based Oceanographic Monitoring,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 2: Satellite-Based Oceanographic Monitoring,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 2: Satellite-Based Oceanographic Monitoring,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 3: Meteorological Monitoring,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 3: Meteorological Monitoring,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 3: Meteorological Monitoring,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 4: Ice cover,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 4: Ice cover,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 4: Ice cover,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes","Indicator 5: Fluxes across the MPA boundaries, excluding nekton",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,"Indicator 5: Fluxes across the MPA boundaries, excluding nekton",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA","Indicator 5: Fluxes across the MPA boundaries, excluding nekton",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 6: Bentho-pelagic exchanges,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 6: Bentho-pelagic exchanges,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 6: Bentho-pelagic exchanges,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 7: Primary Production,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 7: Primary Production,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 7: Primary Production,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 8: Mesozooplankton,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 8: Mesozooplankton,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 8: Mesozooplankton,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 10: Representative Benthic Environments in the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 10: Representative Benthic Environments in the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 10: Representative Benthic Environments in the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 11: Comparable Benthic Environments outside the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 11: Comparable Benthic Environments outside the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 11: Comparable Benthic Environments outside the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 12: Distinctive Benthic Features in the MP,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 12: Distinctive Benthic Features in the MP,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 12: Distinctive Benthic Features in the MP,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 13: Spatial extent of distinctive benthic features,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 13: Spatial extent of distinctive benthic features,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 13: Spatial extent of distinctive benthic features,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 14: Population-wide resource status,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 14: Population-wide resource status,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 14: Population-wide resource status,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 15: Trawl-vulnerable groundfish,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 15: Trawl-vulnerable groundfish,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 15: Trawl-vulnerable groundfish,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 17: Mesopelagic nekton,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 17: Mesopelagic nekton,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 17: Mesopelagic nekton,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicators 18: Comparable groundfish (trawl),https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicators 18: Comparable groundfish (trawl),https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicators 18: Comparable groundfish (trawl),https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicators 19: Comparable groundfish (longline),https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicators 19: Comparable groundfish (longline),https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicators 19: Comparable groundfish (longline),https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 20: Wolffish in Sub-Tidal Zone,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 21: Fluxes of nekton across the boundaries of the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 21: Fluxes of nekton across the boundaries of the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 21: Fluxes of nekton across the boundaries of the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,"Indicator 22: Mammal, bird and reptile surveys",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA","Indicator 22: Mammal, bird and reptile surveys",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 23: Cetacean activity,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 23: Cetacean activity,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 24: Seal breeding,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 24: Seal breeding,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 24: Seal breeding,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 25: Seabird nesting,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 25: Seabird nesting,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 26: Trophic relationships,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 26: Trophic relationships,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 26: Trophic relationships,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect all major benthic, demersal (i.e., close to the sea floor) and pelagic (i.e., in the water column) habitats within the MPA, along with their associated physical, chemical, geological and biological properties and processes",Indicator 27: Ecosystem function,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Conserve and protect biological productivity across all trophic levels so that they are able to fulfill their ecological role in the ecosystems of the MPA,Indicator 27: Ecosystem function,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+"Conserve and protect marine areas of high biodiversity at the community, species, population and genetic levels within the MPA",Indicator 27: Ecosystem function,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/361257.pdf
+Minimize harmful impacts from human activities on cetacean populations and their habitats;,"1. Abundance of the Scotian Shelf population of northern bottlenose whales (including all members of the population, whether in The Gully or not)",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize harmful impacts from human activities on cetacean populations and their habitats;,"2. Use of the Gully MPA by bottlenose whales, measured as the percentage of the Scotian Shelf population within the Gully MPA",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize harmful impacts from human activities on cetacean populations and their habitats;,"3. Size, age and sex structure of the Scotian Shelf bottlenose population",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize harmful impacts from human activities on cetacean populations and their habitats;,4. Percentage of individuals in the Scotian Shelf bottlenose population showing fresh scars,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize harmful impacts from human activities on cetacean populations and their habitats;,5. Genetic diversity within the Scotian Shelf bottlenose population,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize harmful impacts from human activities on cetacean populations and their habitats;,6. Levels of contaminants in the blubber of individuals in the Scotian Shelf bottlenose population,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize harmful impacts from human activities on cetacean populations and their habitats;,7. Relative abundances of cetaceans (other than northern bottlenose whales) in the Gully MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize harmful impacts from human activities on cetacean populations and their habitats;,"8. Cetacean presence and activity in the MPA, year-round",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize harmful impacts from human activities on cetacean populations and their habitats;,9. Number of reported strandings of Scotian Shelf bottlenose whales,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize harmful impacts from human activities on cetacean populations and their habitats;,10. Number of reported ship strikes on cetaceans in or near the Gully and of strikes on Scotian Shelf bottlenose whales elsewhere,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize harmful impacts from human activities on cetacean populations and their habitats;,11. Number of reported gear entanglements of cetaceans in or near the Gully and of entanglements of Scotian Shelf bottlenose whales elsewhere,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize harmful impacts from human activities on cetacean populations and their habitats;,12. Number of reports of other interactions between human activities and cetaceans in or near the Gully and of interactions with Scotian Shelf bottlenose whales elsewhere,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize the disturbance of seafloor habitat and associated benthic communities caused by human activities;,"13. Coral distribution, density and size structure by species at selected monitoring sites within the MPA",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize the disturbance of seafloor habitat and associated benthic communities caused by human activities;,14. Coral diversity at selected monitoring sites within the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize the disturbance of seafloor habitat and associated benthic communities caused by human activities;,"15. Proportions of live and dead corals, by species, at selected monitoring sites within the MPA",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Minimize the disturbance of seafloor habitat and associated benthic communities caused by human activities;,16. Proportion of live corals at selected monitoring sites within the MPA that show zooanthid over-growths and the extent of over-growth in any affected colonies,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,"17. Relative abundances, size distributions and diversity of selected groundfish and trawl-vulnerable invertebrates in Zone 3 of the MPA",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,"18. Relative abundances, size distributions and diversity of selected longline-vulnerable species in Zones 2 and 3 of the MPA",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,"19. Relative abundances, size distributions and diversity of selected trap-vulnerable species in Zones 1 and 2 of the MPA",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,"20. Relative abundances, size distributions and diversity of selected mesopelagic nektonic species in Zones 1 and 2 of the MPA",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,"21. Temperature, salinity, oxygen concentration, alkalinity, pH, light levels, chlorophyll, pigments and nutrients in the watercolumn within the MPA, including in close proximity to the seabed",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,"22. Temperature, salinity, oxygen concentration, light levels, chlorophyll, pigments and nutrients in waters flowing into and past the MPA, as measured on the Louisbourg Line, the Halifax Line and the Extended Halifax Line",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,"23. Physical (temperature, salinity, wind, sea-surface height) and biological (ocean colour) sea surface properties in the MPA and the surrounding region",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,"24. Weather conditions at the Sable Island weather station and at the Banquereau and Laurentian Fan weather-buoy sites, including wind direction and speed, air pressure and sea-level air temperatures, plus for the buoy sites sea surface temperatures, wave height and dominant wave period",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,25. Three-dimensional distribution and movements of watermasses within and around the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,"26. Phytoplankton production, community composition and the timing of the spring bloom in the MPA and the surrounding region",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,"27. Zooplankton biomass, community composition and the biomass of selected species within the MPA",https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,28. Acoustic scattering in the watercolumn within the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf
+Manage human activities to minimize impacts on other commercial and non-commercial living resources.,29. Distribution and abundance of seabird species within the MPA,https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/342194.pdf

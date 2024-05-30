@@ -18,8 +18,8 @@ typelegend <- data.frame(Type=c("Site-level Conservation Objectives",
                                      "#984ea3",
                                      "#ff7f00"))
 
-mf <- read.csv("metaframework.csv")
-mf_ind <- read.csv("mf_indicators.csv") |>
+mf <- read.csv("sandbox/RD/metaframework.csv")
+mf_ind <- read.csv("sandbox/RD/mf_indicators.csv") |>
   left_join(mf, by=c("Objective"="label_Objective"))
 
 nodes <- data.frame(label=c(mf$label_Framework,
@@ -59,7 +59,7 @@ render_graph(g)
 
 
 g2 <- g |>
-  select_nodes(conditions = Type != "Habitat Objective" & cluster == "Objective") |>
+  select_nodes(conditions = Type != "Biodiversity Objective" & cluster == "Objective") |>
   delete_nodes_ws() |>
   select_nodes_by_degree(expressions = "deg==0")|>
   delete_nodes_ws()
