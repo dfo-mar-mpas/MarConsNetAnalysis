@@ -3,7 +3,7 @@ pkgdown: 2.0.9
 pkgdown_sha: ~
 articles:
   indicators: indicators.html
-last_built: 2024-05-30T13:47Z
+last_built: 2024-06-25T18:19Z
 urls:
   reference: https://dfo-mar-mpas.github.io/MarConsNetAnalysis/reference
   article: https://dfo-mar-mpas.github.io/MarConsNetAnalysis/articles
