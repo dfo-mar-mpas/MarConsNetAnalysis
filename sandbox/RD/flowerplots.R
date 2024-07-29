@@ -32,34 +32,51 @@ grade <- function(percent){
   cut(percent,cutoffs,letters)
 }
 
-Ecological <- data.frame(grouping=rep(c("Habitat",
-                                      "Biodiversity",
+Ecological <- data.frame(grouping=rep(c("Biodiversity",
+                                        "Habitat",
                                       "Productivity"),
-                                      times=c(3,3,3)),
-                         labels=paste("indicator",1:9),
-                         score=runif(9,55,100)) |>
-  group_by(grouping) |>
-  mutate(weight=1/n()) |>
-  ungroup()
+                                      times=c(3,5,3)),
+                         labels=c("Genetic Diversity",
+                                  "Species Diversity",
+                                  "Functional Diversity",
+
+                                 "Environmental & Representativity",
+                                 "Key Fish Habitat",
+                                 "Connectivity",
+                                 "Uniqueness",
+                                 "Threats to Habitat",
+
+                                 "Biomass Metrics",
+                                 "Structure and Function",
+                                 "Threats to Productivity"),
+                         score=runif(11,55,100)) |>
+  # group_by(grouping) |>
+  # mutate(weight=1/n()) |>
+  mutate(weight=runif(11,1,10)) |>
+  ungroup()|>
+  mutate(angle=(cumsum(weight)-weight/2)/sum(weight)*360)
+
 
 flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weight="weight"){
   # browser()
 
 
   ngroups <- length(unique(df[[grouping]]))
-  data <- data.frame(grouping=df[[grouping]],
-                   labels=df[[labels]],
+  data <- data.frame(grouping=factor(df[[grouping]],levels = unique(df[[grouping]])),
+                   labels=factor(df[[labels]],levels = unique(df[[labels]])),
                    score=df[[score]],
                    weight=df[[weight]]) |>
-    mutate(pos=cumsum(weight)-weight/2,
+    mutate(weight=weight/sum(weight),
+           pos=cumsum(weight)-weight/2,
            lettergrade=grade(.data[[score]]))
 
   grouped_df <- data |>
     group_by(grouping) |>
     reframe(y=150,
-            n=n()) |>
-    mutate(x=1:ngroups-0.5,
-           angle=360-(1:ngroups-0.5)/ngroups*360,
+            n=n(),
+            weight=sum(weight)) |>
+    mutate(x=cumsum(weight)-weight/2,
+           angle=360-x*360,
            angle=if_else(angle>90&angle<270,
                          angle-180,
                          angle)
@@ -90,9 +107,10 @@ flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weig
               size=2)+
     geom_errorbar(data=grouped_df,
                   inherit.aes=FALSE,
-                  aes(x=ngroups:1-0.5,
+                  aes(x=x,
                       ymin=rep(145,ngroups),
-                      ymax=rep(145,ngroups)))+
+                      ymax=rep(145,ngroups),
+                      width=weight-0.01))+
     geom_text(data=grouped_df,
               inherit.aes = FALSE,
               aes(label=grouping,
