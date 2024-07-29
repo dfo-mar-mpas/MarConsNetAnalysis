@@ -1,4 +1,5 @@
 require(ggplot2)
+require(shiny)
 require(dplyr)
 
 # more flexible version of the OHI flowerplots inspired by https://github.com/OHI-Science/ohicore/blob/master/R/PlotFlower.R#L331
@@ -120,5 +121,34 @@ flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weig
               size=3)
 }
 
-flowerplot(EBM)
+# flowerplot(EBM)
 flowerplot(Ecological)
+
+# Shiny example of how to return the label when the figure is clicked
+
+ui <- fluidPage(
+  plotOutput('flower', click = "click"),
+  textOutput('cut')
+)
+
+server <- function(input, output, session) {
+  output$flower <- renderPlot({
+    flowerplot(Ecological)
+  })
+
+  output$cut <- renderText({
+    req(input$click)
+
+    xscale <- 0.5
+    yscale <- 205/2
+    clickangle <- 90-atan2((input$click$y+50-yscale)/yscale,
+                   (input$click$x-xscale)/xscale)*180/pi
+    if(clickangle<0) clickangle <- 360+clickangle
+
+    paste(Ecological$labels[which.min(abs(Ecological$angle-clickangle))])
+
+
+  })
+}
+
+shinyApp(ui, server)
