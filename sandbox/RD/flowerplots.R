@@ -83,9 +83,9 @@ flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weig
                          angle)
            )
 
-  ggplot(data,aes(width = weight))+
-    geom_bar(stat="identity",size=0.2,color='lightgrey',aes(x=pos,y=100),fill="white")+
-    geom_bar(stat="identity",size=0.2,color='black',aes(x=pos,y=score,fill=grade(score)))+
+  ggplot(data=data,aes(width = weight))+
+    geom_bar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=100),fill="white")+
+    geom_bar(stat="identity",linewidth=0.2,color='black',aes(x=pos,y=score,fill=grade(score)))+
     coord_polar()+
     theme(panel.grid.major = ggplot2::element_blank(),
           panel.background = ggplot2::element_blank(),
