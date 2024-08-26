@@ -1,19 +1,20 @@
 # load packages that are NOT tracked by targets
 library(targets)
+library(tarchetypes)
 library(dplyr)
 library(arcpullr)
 library(sf)
 
 tar_option_set(format = "qs") # new default format
 
-# delete targets that are older than 30 days
-if(file.exists("_targets/meta/meta")){
-  tar_meta()[["name"]][
-    Sys.time()-tar_meta()[["time"]]>30*24 &
-      !is.na(tar_meta()[["time"]])] |>
-  all_of() |>
-  tar_delete()
-}
+# # delete targets that are older than 30 days
+# if(file.exists("_targets/meta/meta")){
+#   tar_meta()[["name"]][
+#     Sys.time()-tar_meta()[["time"]]>30*24 &
+#       !is.na(tar_meta()[["time"]])] |>
+#   all_of() |>
+#   tar_delete()
+# }
 
 
 # sourced functions will be tracked!
@@ -39,7 +40,9 @@ list(
   # extract OBIS data:
   tar_target(name=OBISdf,
              data_OBIS(bioregion),
-             format = "feather"
+             format = "feather",
+             cue = tar_cue_age(OBISdf,
+                               as.difftime(1,units = "days"))
              # or use this for 'quick' data downloads for testing
              # consAreas  |>
              #   st_buffer(10000) |>
@@ -132,6 +135,6 @@ list(
   #### Indicator binning ####
   # Species Diversity
   tar_target(Species_Diversity,
-             mean(ind_sp_representation,ind_SAR_representation)+x
+             mean(ind_sp_representation,ind_SAR_representation)
   )
 )
