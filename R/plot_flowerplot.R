@@ -15,8 +15,8 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
 
   calc_letter_grade <- function(percent){
     cutoffs=c(0, seq(60, 100, by = 10/3))
-    letters=c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
-    cut(percent,cutoffs,letters)
+    grades=c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
+    cut(percent,cutoffs,grades)
   }
 
   ngroups <- length(unique(df[[grouping]]))
@@ -25,10 +25,11 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                      score=df[[score]],
                      weight=df[[weight]]) |>
     group_by(grouping,labels) |>
-    reframe(score = weighted.mean(score,weight),
+    reframe(score = weighted.mean(score,weight,na.rm = TRUE),
             weight = sum(weight)) |>
     mutate(weight=weight/sum(weight),
-           pos=cumsum(weight)-weight/2)
+           pos=cumsum(weight)-weight/2,
+           bg=if_else(is.nan(score),"grey93","white"))
 
   grouped_df <- data |>
     group_by(grouping) |>
@@ -43,7 +44,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
     )
 
   ggplot(data=data,aes(width = weight))+
-    geom_bar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=100),fill="white")+
+    geom_bar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=100),fill=data$bg)+
     geom_bar(stat="identity",linewidth=0.2,color='black',aes(x=pos,y=score,fill=calc_letter_grade(score)))+
     coord_polar()+
     theme(panel.grid.major = ggplot2::element_blank(),
@@ -57,7 +58,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                        breaks = data$pos)+
     scale_y_continuous(limits = c(-50,155))+
     scale_fill_brewer(palette = "RdBu")+
-    geom_text(aes(label=calc_letter_grade(weighted.mean(score,weight))),
+    geom_text(aes(label=calc_letter_grade(weighted.mean(score,weight,na.rm = TRUE))),
               x=0,
               y=-50,
               size=8)+
