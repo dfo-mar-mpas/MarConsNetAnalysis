@@ -14,6 +14,7 @@ real data  that was located and transformed using the
 Useful links:
 \itemize{
   \item \url{https://github.com/dfo-mar-mpas/MarConsNetAnalysis}
+  \item \url{https://dfo-mar-mpas.github.io/MarConsNetAnalysis/}
   \item Report bugs at \url{https://github.com/dfo-mar-mpas/MarConsNetAnalysis/issues}
 }
 
