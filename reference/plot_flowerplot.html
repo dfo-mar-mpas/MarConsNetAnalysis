@@ -47,7 +47,8 @@
 <span>  grouping <span class="op">=</span> <span class="st">"grouping"</span>,</span>
 <span>  labels <span class="op">=</span> <span class="st">"labels"</span>,</span>
 <span>  score <span class="op">=</span> <span class="st">"score"</span>,</span>
-<span>  weight <span class="op">=</span> <span class="st">"weight"</span></span>
+<span>  weight <span class="op">=</span> <span class="st">"weight"</span>,</span>
+<span>  title <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">df</span><span class="op">[[</span><span class="st">"area_name"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -55,11 +56,67 @@
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-weight">weight<a class="anchor" aria-label="anchor" href="#arg-weight"></a></dt>
-<dd></dd>
+<dl><dt id="arg-df">df<a class="anchor" aria-label="anchor" href="#arg-df"></a></dt>
+<dd><p>data.frame with indicator scores, grouping, labels, and relative weight</p></dd>
+
+
+<dt id="arg-grouping">grouping<a class="anchor" aria-label="anchor" href="#arg-grouping"></a></dt>
+<dd><p>character string for the name of the grouping column in <code>df</code></p></dd>
+
+
+<dt id="arg-labels">labels<a class="anchor" aria-label="anchor" href="#arg-labels"></a></dt>
+<dd><p>character string for the name of the labels column in <code>df</code></p></dd>
+
+
+<dt id="arg-score">score<a class="anchor" aria-label="anchor" href="#arg-score"></a></dt>
+<dd><p>character string for the name of the score column in <code>df</code></p></dd>
+
+
+<dt id="arg-weight">weight<a class="anchor" aria-label="anchor" href="#arg-weight"></a></dt>
+<dd><p>character string for the name of the weight column in <code>df</code></p></dd>
+
+
+<dt id="arg-title">title<a class="anchor" aria-label="anchor" href="#arg-title"></a></dt>
+<dd><p>Defaults to the unique value of the <code>area_name</code> column of the <code>df</code>, but can take any character value. Alternatively, use <code>FALSE</code> to avoid having a title.</p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    <p>plot</p>
+    </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">indicatorbins</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>grouping<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Biodiversity"</span>,</span></span>
+<span class="r-in"><span>                                           <span class="st">"Habitat"</span>,</span></span>
+<span class="r-in"><span>                                           <span class="st">"Productivity"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                         times<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>,<span class="fl">5</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                            labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Genetic Diversity"</span>,</span></span>
+<span class="r-in"><span>                                     <span class="st">"Species Diversity"</span>,</span></span>
+<span class="r-in"><span>                                     <span class="st">"Functional Diversity"</span>,</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>                                     <span class="st">"Environmental Representativity"</span>,</span></span>
+<span class="r-in"><span>                                     <span class="st">"Key Fish Habitat"</span>,</span></span>
+<span class="r-in"><span>                                     <span class="st">"Connectivity"</span>,</span></span>
+<span class="r-in"><span>                                     <span class="st">"Uniqueness"</span>,</span></span>
+<span class="r-in"><span>                                     <span class="st">"Threats to Habitat"</span>,</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>                                     <span class="st">"Biomass Metrics"</span>,</span></span>
+<span class="r-in"><span>                                     <span class="st">"Structure and Function"</span>,</span></span>
+<span class="r-in"><span>                                     <span class="st">"Threats to Productivity"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                            score<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">11</span>,<span class="fl">55</span>,<span class="fl">100</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                            weight<span class="op">=</span><span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                            area_name <span class="op">=</span> <span class="st">"Random Example MPA"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu">plot_flowerplot</span><span class="op">(</span><span class="va">indicatorbins</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mutate(reframe(group_by(data.frame(grouping = factor(df[[grouping]],     levels = unique(df[[grouping]])), labels = factor(df[[labels]],     levels = unique(df[[labels]])), score = df[[score]], weight = df[[weight]]),     grouping, labels), score = weighted.mean(score, weight, na.rm = TRUE),     weight = sum(weight)), weight = weight/sum(weight), pos = cumsum(weight) -     weight/2, bg = if_else(is.nan(score), "grey93", "white")):</span> <span style="color: #00BBBB;">ℹ</span> In argument: `bg = if_else(is.nan(score), "grey93", "white")`.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error in `if_else()`:</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> could not find function "if_else"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
