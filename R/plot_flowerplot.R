@@ -1,16 +1,42 @@
 #' Plot a flowerplot
 #'
-#' @param df
-#' @param grouping
-#' @param labels
-#' @param score
-#' @param weight
+#' @param df data.frame with indicator scores, grouping, labels, and relative weight
+#' @param grouping character string for the name of the grouping column in `df`
+#' @param labels character string for the name of the labels column in `df`
+#' @param score character string for the name of the score column in `df`
+#' @param weight character string for the name of the weight column in `df`
+#' @param title Defaults to the unique value of the `area_name` column of the `df`, but can take any character value. Alternatively, use `FALSE` to avoid having a title.
 #'
-#' @return
+#' @return plot
 #' @export
 #'
 #' @examples
-plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weight="weight"){
+#'
+#' indicatorbins <- data.frame(grouping=rep(c("Biodiversity",
+#'                                            "Habitat",
+#'                                            "Productivity"),
+#'                                          times=c(3,5,3)),
+#'                             labels=c("Genetic Diversity",
+#'                                      "Species Diversity",
+#'                                      "Functional Diversity",
+#'
+#'                                      "Environmental Representativity",
+#'                                      "Key Fish Habitat",
+#'                                      "Connectivity",
+#'                                      "Uniqueness",
+#'                                      "Threats to Habitat",
+#'
+#'                                      "Biomass Metrics",
+#'                                      "Structure and Function",
+#'                                      "Threats to Productivity"),
+#'                             score=runif(11,55,100),
+#'                             weight=1,
+#'                             area_name = "Random Example MPA")
+#'
+#' plot_flowerplot(indicatorbins)
+#'
+#'
+plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weight="weight",title=unique(df[["area_name"]])){
   # browser()
 
   calc_letter_grade <- function(percent){
@@ -43,7 +69,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                          angle)
     )
 
-  ggplot(data=data,aes(width = weight))+
+  p <- ggplot(data=data,aes(width = weight))+
     geom_bar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=100),fill=data$bg)+
     geom_bar(stat="identity",linewidth=0.2,color='black',aes(x=pos,y=score,fill=calc_letter_grade(score)))+
     coord_polar()+
@@ -79,4 +105,12 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                   y=y,
                   angle=angle),
               size=3)
+  if(title==FALSE){
+    return(p)
+  } else {
+    return(p+
+             labs(title=title) +
+             theme(plot.title = element_text(hjust = 0.5)))
+  }
+
 }

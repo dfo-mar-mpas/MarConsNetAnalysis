@@ -9,12 +9,53 @@ plot_flowerplot(
   grouping = "grouping",
   labels = "labels",
   score = "score",
-  weight = "weight"
+  weight = "weight",
+  title = unique(df[["area_name"]])
 )
 }
 \arguments{
-\item{weight}{}
+\item{df}{data.frame with indicator scores, grouping, labels, and relative weight}
+
+\item{grouping}{character string for the name of the grouping column in \code{df}}
+
+\item{labels}{character string for the name of the labels column in \code{df}}
+
+\item{score}{character string for the name of the score column in \code{df}}
+
+\item{weight}{character string for the name of the weight column in \code{df}}
+
+\item{title}{Defaults to the unique value of the \code{area_name} column of the \code{df}, but can take any character value. Alternatively, use \code{FALSE} to avoid having a title.}
+}
+\value{
+plot
 }
 \description{
 Plot a flowerplot
+}
+\examples{
+
+indicatorbins <- data.frame(grouping=rep(c("Biodiversity",
+                                           "Habitat",
+                                           "Productivity"),
+                                         times=c(3,5,3)),
+                            labels=c("Genetic Diversity",
+                                     "Species Diversity",
+                                     "Functional Diversity",
+
+                                     "Environmental Representativity",
+                                     "Key Fish Habitat",
+                                     "Connectivity",
+                                     "Uniqueness",
+                                     "Threats to Habitat",
+
+                                     "Biomass Metrics",
+                                     "Structure and Function",
+                                     "Threats to Productivity"),
+                            score=runif(11,55,100),
+                            weight=1,
+                            area_name = "Random Example MPA")
+
+plot_flowerplot(indicatorbins)
+
+
 }
