@@ -4,6 +4,8 @@
 #' @param grouping character string for the name of the grouping column in `df`
 #' @param labels character string for the name of the labels column in `df`
 #' @param score character string for the name of the score column in `df`
+#' @param max_score numeric value for the maximum possible value of the scale (i.e. petal length). Default is 100
+#' @param min_score numeric value for the minimum possible value of the scale (i.e. petal length). Default is 0
 #' @param weight character string for the name of the weight column in `df`
 #' @param title Defaults to the unique value of the `area_name` column of the `df`, but can take any character value. Alternatively, use `FALSE` to avoid having a title.
 #'
@@ -36,11 +38,12 @@
 #' plot_flowerplot(indicatorbins)
 #'
 #'
-plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weight="weight",title=unique(df[["area_name"]])){
+plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weight="weight",title=unique(df[["area_name"]]),max_score = 100,min_score = 0,bintextsize=3,zeroline=FALSE){
   # browser()
+  scalerange <- max_score-min_score
 
   calc_letter_grade <- function(percent){
-    cutoffs=c(0, seq(60, 100, by = 10/3))
+    cutoffs=c(min_score, seq(max_score-scalerange*.4, max_score, by = 10/3/100*scalerange))
     grades=c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
     cut(percent,cutoffs,grades)
   }
@@ -59,7 +62,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
 
   grouped_df <- data |>
     group_by(grouping) |>
-    reframe(y=150,
+    reframe(y=max_score+scalerange*.5,
             n=n(),
             weight=sum(weight)) |>
     mutate(x=cumsum(weight)-weight/2,
@@ -70,8 +73,8 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
     )
 
   p <- ggplot(data=data,aes(width = weight))+
-    geom_bar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=100),fill=data$bg)+
-    geom_bar(stat="identity",linewidth=0.2,color='black',aes(x=pos,y=score,fill=calc_letter_grade(score)))+
+    geom_crossbar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=max_score,ymax=max_score,ymin=min_score),fill=data$bg)+
+    geom_crossbar(stat="identity",linewidth=0.2,color='black',aes(x=pos,y=score,ymax=score,ymin=min_score,fill=calc_letter_grade(score)))+
     coord_polar()+
     theme(panel.grid.major = ggplot2::element_blank(),
           panel.background = ggplot2::element_blank(),
@@ -82,21 +85,21 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
           legend.position="none")+
     scale_x_continuous(labels = data$labels,
                        breaks = data$pos)+
-    scale_y_continuous(limits = c(-50,155))+
+    scale_y_continuous(limits = c(max_score-scalerange*1.5,max_score+scalerange*.55))+
     scale_fill_brewer(palette = "RdBu")+
     geom_text(aes(label=calc_letter_grade(weighted.mean(score,weight,na.rm = TRUE))),
-              x=0,
-              y=-50,
+              x=min_score,
+              y=max_score-scalerange*1.5,
               size=8)+
     geom_text(aes(label=gsub(" ","\n",labels),
                   x=pos,
-                  y=120),
+                  y=max_score+scalerange*.2),
               size=2)+
     geom_errorbar(data=grouped_df,
                   inherit.aes=FALSE,
                   aes(x=x,
-                      ymin=rep(145,ngroups),
-                      ymax=rep(145,ngroups),
+                      ymin=0.95*y,
+                      ymax=0.95*y,
                       width=weight-0.01))+
     geom_text(data=grouped_df,
               inherit.aes = FALSE,
@@ -104,7 +107,14 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                   x=x,
                   y=y,
                   angle=angle),
-              size=3)
+              size=bintextsize)
+  if(zeroline){
+    p <- p + geom_hline(yintercept = 0,linetype="dotted")
+
+  }
+
+
+
   if(title==FALSE){
     return(p)
   } else {
