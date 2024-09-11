@@ -1,0 +1,73 @@
+indicator_name,indicator_bin,applicability
+Indicator 1: Ship-Board Oceanographic Monitoring,Environmental Representativity,all
+Indicator 2: Satellite-Based Oceanographic Monitoring,Environmental Representativity,all
+Indicator 3: Meteorological Monitoring,Environmental Representativity,all
+Indicator 4: Ice cover,Environmental Representativity; Structure and Function; Threats to Habitat; Key Fish Habitat,coastal
+"Indicator 5: Fluxes across the MPA boundaries, excluding nekton",Structure and Function; Connectivity,all
+Indicator 6: Bentho-pelagic exchanges,Structure and Function; Connectivity,all
+Indicator 7: Primary Production,Biomass Metrics; Structure and Function,all
+Indicator 8: Mesozooplankton,Species Diversity; Connectivity,all
+Indicator 9: Harmful algae,Threats to Productivity; Threats to Habitat,coastal
+Indicator 10: Representative Benthic Environments in the MPA,Environmental Representativity,all
+Indicator 11: Comparable Benthic Environments outside the MPA,Environmental Representativity,all
+Indicator 12: Distinctive Benthic Features in the MPA,Uniqueness,all
+Indicator 13: Spatial extent of distinctive benthic features,Uniqueness,all
+Indicator 14: Population-wide resource status,Biomass Metrics; Species Diversity; Functional Diversity,all
+Indicator 15: Trawl-vulnerable groundfish,Biomass Metrics; Species Diversity; Functional Diversity,offshore
+Indicator 17: Mesopelagic nekton,Species Diversity; Structure and Function,all
+Indicators 18: Comparable groundfish (trawl),Biomass Metrics; Species Diversity; Functional Diversity,offshore
+Indicators 19: Comparable groundfish (longline),Biomass Metrics; Species Diversity; Functional Diversity,all
+Indicator 20: Wolffish in Sub-Tidal Zone,Species Diversity,all
+Indicator 21: Fluxes of nekton across the boundaries of the MPA,Connectivity,all
+"Indicator 22: Mammal, bird and reptile surveys",Species Diversity; Biomass Metrics; Genetic Diversity; Functional Diversity,all
+Indicator 23: Cetacean activity,Species Diversity; Functional Diversity,all
+Indicator 24: Seal breeding,Key Fish Habitat,coastal
+Indicator 25: Seabird nesting,Key Fish Habitat,coastal
+Indicator 26: Trophic relationships,Structure and Function,all
+Indicator 27: Ecosystem function,Structure and Function,all
+"1. Abundance of the Scotian Shelf population of northern bottlenose whales (including all members of the population, whether in The Gully or not)",Species Diversity; Biomass Metrics,gully
+"2. Use of the Gully MPA by bottlenose whales, measured as the percentage of the Scotian Shelf population within the Gully MPA",Species Diversity,gully
+"3. Size, age and sex structure of the Scotian Shelf bottlenose population",Biomass Metrics; Species Diversity,gully
+4. Percentage of individuals in the Scotian Shelf bottlenose population showing fresh scars,Threats to Habitat,gully
+5. Genetic Diversity within the Scotian Shelf bottlenose population,Genetic Diversity,gully
+6. Levels of contaminants in the blubber of individuals in the Scotian Shelf bottlenose population,Threats to Habitat,gully
+7. Relative abundances of cetaceans (other than northern bottlenose whales) in the Gully MPA,Biomass Metrics; Species Diversity,all
+"8. Cetacean presence and activity in the MPA, year-round",Species Diversity,all
+9. Number of reported strandings of Scotian Shelf bottlenose whales,Threats to Habitat,gully
+10. Number of reported ship strikes on cetaceans in or near the Gully and of strikes on Scotian Shelf bottlenose whales elsewhere,Threats to Habitat,all
+11. Number of reported gear entanglements of cetaceans in or near the Gully and of entanglements of Scotian Shelf bottlenose whales elsewhere,Threats to Habitat,all
+12. Number of reports of other interactions between human activities and cetaceans in or near the Gully and of interactions with Scotian Shelf bottlenose whales elsewhere,Threats to Habitat,all
+"13. Coral distribution, density and size structure by species at selected monitoring sites within the MPA",Uniqueness; Species Diversity; Functional Diversity; Key Fish Habitat; Biomass Metrics,offshore
+14. Coral diversity at selected monitoring sites within the MPA,Species Diversity; Functional Diversity,offshore
+"15. Proportions of live and dead corals, by species, at selected monitoring sites within the MPA",Species Diversity; Functional Diversity; Threats to Habitat,offshore
+16. Proportion of live corals at selected monitoring sites within the MPA that show zooanthid over-growths and the extent of over-growth in any affected colonies,Threats to Habitat,offshore
+"17. Relative abundances, size distributions and diversity of selected groundfish and trawl-vulnerable invertebrates in Zone 3 of the MPA", Species Diversity; Functional Diversity; Biomass Metrics,offshore
+"18. Relative abundances, size distributions and diversity of selected longline-vulnerable species in Zones 2 and 3 of the MPA", Species Diversity; Functional Diversity; Biomass Metrics,offshore
+"19. Relative abundances, size distributions and diversity of selected trap-vulnerable species in Zones 1 and 2 of the MPA", Species Diversity; Functional Diversity; Biomass Metrics,all
+"20. Relative abundances, size distributions and diversity of selected mesopelagic nektonic species in Zones 1 and 2 of the MPA", Species Diversity; Functional Diversity; Biomass Metrics,all
+"21. Temperature, salinity, oxygen concentration, alkalinity, pH, light levels, chlorophyll, pigments and nutrients in the watercolumn within the MPA, including in close proximity to the seabed",Environmental Representativity,all
+"22. Temperature, salinity, oxygen concentration, light levels, chlorophyll, pigments and nutrients in waters flowing into and past the MPA, as measured on the Louisbourg Line, the Halifax Line and the Extended Halifax Line",Environmental Representativity,all
+"23. Physical (temperature, salinity, wind, sea-surface height) and biological (ocean colour) sea surface properties in the MPA and the surrounding region",Environmental Representativity; Connectivity,all
+"24. Weather conditions at the Sable Island weather station and at the Banquereau and Laurentian Fan weather-buoy sites, including wind direction and speed, air pressure and sea-level air temperatures, plus for the buoy sites sea surface temperatures, wave height and dominant wave period",Environmental Representativity,all
+25. Three-dimensional distribution and movements of watermasses within and around the MPA,Environmental Representativity; Connectivity,all
+"26. Phytoplankton production, community composition and the timing of the spring bloom in the MPA and the surrounding region",Structure and Function; Biomass Metrics; Species Diversity; Functional Diversity; Environmental Representativity,all
+"27. Zooplankton biomass, community composition and the biomass of selected species within the MPA",Structure and Function; Biomass Metrics; Species Diversity; Functional Diversity,all
+28. Acoustic scattering in the watercolumn within the MPA,Biomass Metrics,all
+29. Distribution and abundance of seabird species within the MPA,Species Diversity; Functional Diversity; Structure and Function,all
+"Total biomass/abundance and spatial distribution of key
+species in each trophic level",Biomass Metrics; Structure and Function,all
+"Number of species per trophic level within each habitat type
+",Species Diversity; Functional Diversity,all
+Number of species at risk within the MPA (by each habitat type if required),Species Diversity,all
+"Total area and location of each habitat type within the estuary, and the proportion and frequency that is disturbed or lost",Environmental Representativity; Threats to Habitat,all
+"Hydrodynamic and sediment regime within the estuary (e.g., sediment infilling)",Environmental Representativity; Connectivity,all
+Temperature and salinity within the estuary,Environmental Representativity,all
+Nutrient concentrations within the estuary,Environmental Representativity; Threats to Habitat,all
+"Commercial and recreational fishing catch per unit effort
+(CPUE)",Biomass Metrics,all
+By-catch number per impacted species,Biomass Metrics; Threats to Habitat,all
+Number of non-indigenous species in the MPA (within each habitat type if required) relative to non-indigenous species in region,Threats to Habitat; Threats to Productivity,all
+Degree of human induced habitat perturbation or loss,Threats to Habitat,all
+Contaminant concentrations within the estuary,Threats to Habitat; Threats to Productivity,all
+Recovery potential,Threats to Habitat; Threats to Productivity,all
+Number of haddock,Biomass Metrics; Uniqueness,webca

@@ -10,7 +10,11 @@ plot_flowerplot(
   labels = "labels",
   score = "score",
   weight = "weight",
-  title = unique(df[["area_name"]])
+  title = unique(df[["area_name"]]),
+  max_score = 100,
+  min_score = 0,
+  bintextsize = 3,
+  zeroline = FALSE
 )
 }
 \arguments{
@@ -25,6 +29,10 @@ plot_flowerplot(
 \item{weight}{character string for the name of the weight column in \code{df}}
 
 \item{title}{Defaults to the unique value of the \code{area_name} column of the \code{df}, but can take any character value. Alternatively, use \code{FALSE} to avoid having a title.}
+
+\item{max_score}{numeric value for the maximum possible value of the scale (i.e. petal length). Default is 100}
+
+\item{min_score}{numeric value for the minimum possible value of the scale (i.e. petal length). Default is 0}
 }
 \value{
 plot
