@@ -124,6 +124,7 @@ flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weig
 # flowerplot(EBM)
 flowerplot(Ecological)
 
+require(MarConsNetAnalysis)
 # Shiny example of how to return the label when the figure is clicked
 
 ui <- fluidPage(
@@ -133,7 +134,7 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   output$flower <- renderPlot({
-    flowerplot(Ecological)
+    plot_flowerplot(Ecological,title="test")
   })
 
   output$cut <- renderText({
@@ -141,13 +142,18 @@ server <- function(input, output, session) {
 
     xscale <- 0.5
     yscale <- 205/2
-    clickangle <- 90-atan2((input$click$y+50-yscale)/yscale,
-                   (input$click$x-xscale)/xscale)*180/pi
+
+    x <- (input$click$x-xscale)/xscale
+    y <- (input$click$y+50-yscale)/yscale
+
+    clickangle <- 90-atan2(y,x)*180/pi
     if(clickangle<0) clickangle <- 360+clickangle
 
-    paste(Ecological$labels[which.min(abs(Ecological$angle-clickangle))])
-
-
+    if(sqrt(x^2+y^2)>0.75){
+      paste(Ecological$grouping[which.min(abs(Ecological$angle-clickangle))])
+    } else {
+      paste(Ecological$labels[which.min(abs(Ecological$angle-clickangle))])
+    }
   })
 }
 
