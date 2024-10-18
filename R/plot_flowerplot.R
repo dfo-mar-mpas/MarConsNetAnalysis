@@ -39,7 +39,6 @@
 #'
 #'
 plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weight="weight",title=unique(df[["area_name"]]),max_score = 100,min_score = 0,bintextsize=3,zeroline=FALSE){
-  # browser()
   scalerange <- max_score-min_score
 
   calc_letter_grade <- function(percent){
@@ -72,6 +71,10 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                          angle)
     )
 
+  grades <- c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
+  flowerPalette <- colorRampPalette(brewer.pal(11,"RdBu"))(length(grades))
+  names(flowerPalette) <- grades
+
   p <- ggplot(data=data,aes(width = weight))+
     geom_crossbar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=max_score,ymax=max_score,ymin=min_score),fill=data$bg)+
     geom_crossbar(stat="identity",linewidth=0.2,color='black',aes(x=pos,y=score,ymax=score,ymin=min_score,fill=calc_letter_grade(score)))+
@@ -86,7 +89,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
     scale_x_continuous(labels = data$labels,
                        breaks = data$pos)+
     scale_y_continuous(limits = c(max_score-scalerange*1.5,max_score+scalerange*.55))+
-    scale_fill_brewer(palette = "RdBu")+
+    scale_fill_manual(values=flowerPalette)+
     geom_text(aes(label=calc_letter_grade(weighted.mean(score,weight,na.rm = TRUE))),
               x=min_score,
               y=max_score-scalerange*1.5,
