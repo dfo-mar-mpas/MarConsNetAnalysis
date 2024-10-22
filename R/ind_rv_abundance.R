@@ -8,6 +8,9 @@
 #' the name and geoms of the protected areas
 #' @param data GSSPECIES from get_data in the Mar.datawrangling package
 #' @return
+#' \dontrun{
+#' rva <- ind_rv_abundance()
+#' }
 #' @export
 #'
 #' @examples

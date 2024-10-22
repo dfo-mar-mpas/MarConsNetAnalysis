@@ -16,3 +16,8 @@ ind_placeholder(
 \description{
 Create example FAKE data
 }
+\examples{
+\dontrun{
+# FIXME placeholder
+}
+}

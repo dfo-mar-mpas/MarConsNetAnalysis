@@ -6,6 +6,10 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' rva <- ind_rv_abundance()
+#' plot_rv_abundance(rva)
+#' }
 
 plot_rv_abundance <- function(abundance=NULL) {
   if (is.null(abundance)) {

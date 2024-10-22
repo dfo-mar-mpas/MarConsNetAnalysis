@@ -18,3 +18,8 @@ aggregate_groups(group_level, group_name, weights = 1, ...)
 \description{
 aggregate indicator values into bins or objectives
 }
+\examples{
+\dontrun{
+# FIXME placeholder
+}
+}
