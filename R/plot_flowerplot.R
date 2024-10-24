@@ -10,6 +10,7 @@
 #' @param title Defaults to the unique value of the `area_name` column of the `df`, but can take any character value. Alternatively, use `FALSE` to avoid having a title.
 #'
 #' @return plot
+#' @importFrom RColorBrewer brewer.pal
 #' @export
 #'
 #' @examples
@@ -72,7 +73,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
     )
 
   grades <- c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
-  flowerPalette <- colorRampPalette(brewer.pal(11,"RdBu"))(length(grades))
+  flowerPalette <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdBu"))(length(grades))
   names(flowerPalette) <- grades
 
   p <- ggplot(data=data,aes(width = weight))+
