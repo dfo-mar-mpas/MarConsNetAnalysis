@@ -11,6 +11,8 @@
 #'
 #' @return plot
 #' @importFrom RColorBrewer brewer.pal
+#' @importFrom dplyr if_else
+#' @importFrom ggplot2 geom_crossbar geom_text geom_errorbar geom_hline
 #' @export
 #'
 #' @examples
@@ -58,7 +60,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
             weight = sum(weight)) |>
     mutate(weight=weight/sum(weight),
            pos=cumsum(weight)-weight/2,
-           bg=if_else(is.nan(score),"grey93","white"))
+           bg=dplyr::if_else(is.nan(score),"grey93","white"))
 
   grouped_df <- data |>
     group_by(grouping) |>
@@ -67,7 +69,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
             weight=sum(weight)) |>
     mutate(x=cumsum(weight)-weight/2,
            angle=360-x*360,
-           angle=if_else(angle>90&angle<270,
+           angle=dplyr::if_else(angle>90&angle<270,
                          angle-180,
                          angle)
     )
@@ -77,8 +79,8 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
   names(flowerPalette) <- grades
 
   p <- ggplot(data=data,aes(width = weight))+
-    geom_crossbar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=max_score,ymax=max_score,ymin=min_score),fill=data$bg)+
-    geom_crossbar(stat="identity",linewidth=0.2,color='black',aes(x=pos,y=score,ymax=score,ymin=min_score,fill=calc_letter_grade(score)))+
+    ggplot2::geom_crossbar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=max_score,ymax=max_score,ymin=min_score),fill=data$bg)+
+    ggplot2::geom_crossbar(stat="identity",linewidth=0.2,color='black',aes(x=pos,y=score,ymax=score,ymin=min_score,fill=calc_letter_grade(score)))+
     coord_polar()+
     theme(panel.grid.major = ggplot2::element_blank(),
           panel.background = ggplot2::element_blank(),
@@ -91,21 +93,21 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                        breaks = data$pos)+
     scale_y_continuous(limits = c(max_score-scalerange*1.5,max_score+scalerange*.55))+
     scale_fill_manual(values=flowerPalette)+
-    geom_text(aes(label=calc_letter_grade(weighted.mean(score,weight,na.rm = TRUE))),
+    ggplot2::geom_text(aes(label=calc_letter_grade(weighted.mean(score,weight,na.rm = TRUE))),
               x=min_score,
               y=max_score-scalerange*1.5,
               size=8)+
-    geom_text(aes(label=gsub(" ","\n",labels),
+    ggplot2::geom_text(aes(label=gsub(" ","\n",labels),
                   x=pos,
                   y=max_score+scalerange*.2),
               size=2)+
-    geom_errorbar(data=grouped_df,
+    ggplot2::geom_errorbar(data=grouped_df,
                   inherit.aes=FALSE,
                   aes(x=x,
                       ymin=0.95*y,
                       ymax=0.95*y,
                       width=weight-0.01))+
-    geom_text(data=grouped_df,
+    ggplot2::geom_text(data=grouped_df,
               inherit.aes = FALSE,
               aes(label=grouping,
                   x=x,
@@ -113,7 +115,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                   angle=angle),
               size=bintextsize)
   if(zeroline){
-    p <- p + geom_hline(yintercept = 0,linetype="dotted")
+    p <- p + ggplot2::geom_hline(yintercept = 0,linetype="dotted")
 
   }
 
