@@ -11,8 +11,8 @@
 #'
 #' @return plot
 #' @importFrom RColorBrewer brewer.pal
-#' @importFrom dplyr if_else
-#' @importFrom ggplot2 geom_crossbar geom_text geom_errorbar geom_hline
+#' @importFrom dplyr if_else n
+#' @importFrom ggplot2 geom_crossbar geom_text geom_errorbar geom_hline coord_polar
 #' @export
 #'
 #' @examples
@@ -65,7 +65,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
   grouped_df <- data |>
     group_by(grouping) |>
     reframe(y=max_score+scalerange*.5,
-            n=n(),
+            n=dplyr::n(),
             weight=sum(weight)) |>
     mutate(x=cumsum(weight)-weight/2,
            angle=360-x*360,
@@ -81,7 +81,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
   p <- ggplot(data=data,aes(width = weight))+
     ggplot2::geom_crossbar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=max_score,ymax=max_score,ymin=min_score),fill=data$bg)+
     ggplot2::geom_crossbar(stat="identity",linewidth=0.2,color='black',aes(x=pos,y=score,ymax=score,ymin=min_score,fill=calc_letter_grade(score)))+
-    coord_polar()+
+    ggplot2::coord_polar()+
     theme(panel.grid.major = ggplot2::element_blank(),
           panel.background = ggplot2::element_blank(),
           axis.line  = ggplot2::element_blank(),
