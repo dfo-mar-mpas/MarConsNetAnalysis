@@ -4,11 +4,13 @@
 \alias{analysis}
 \title{Analyse Status and Trends of indicators}
 \usage{
-analysis(bi = binned_indicators)
+analysis(bi = binned_indicators, mpa = MPAs)
 }
 \arguments{
 \item{bi}{binned_indicators data frame likely found in the
 data folder of the MarConsNetAnalysis package}
+
+\item{mpa}{CPCAD a "sf" "dataframe" object from \code{\link[=data_CPCAD_areas]{data_CPCAD_areas()}}}
 }
 \value{
 data frame with trends and status'

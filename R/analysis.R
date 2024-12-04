@@ -6,12 +6,13 @@
 #'
 #' @param bi binned_indicators data frame likely found in the
 #' data folder of the MarConsNetAnalysis package
+#' @param mpa CPCAD a "sf" "dataframe" object from [data_CPCAD_areas()]
 #'
 #' @return data frame with trends and status'
 #' @export
 #'
-analysis <- function(bi=binned_indicators) {
-ITP <- binned_indicators
+analysis <- function(bi=binned_indicators, mpa=MPAs) {
+ITP <- bi
 ITP$status <- 0
 ITP$trend <- 0
 
