@@ -5,7 +5,7 @@
 \title{Plot Physical AZMP}
 \usage{
 plot_azmp_physical(
-  mpa = MPAs,
+  mpa = NULL,
   area = "Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)",
   type = "surface",
   dataframe = FALSE,

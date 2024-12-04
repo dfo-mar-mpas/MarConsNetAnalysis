@@ -20,6 +20,7 @@ plot_rv_abundance <- function(abundance=NULL) {
     stop("Must obtain abundance from ind_rv_abundance")
   }
 
+  browser()
   plot(x=1:length(abundance$year), y=abundance$abundance, ylab=paste("Average # of", unique(abundance$species), "Per Tow"), xlab="Year", type="o", pch=20, xaxt="n")
   axis(side = 1, at = seq_along(abundance$year), labels = abundance$year, las=2)
 }
