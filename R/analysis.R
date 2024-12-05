@@ -6,18 +6,19 @@
 #'
 #' @param bi binned_indicators data frame likely found in the
 #' data folder of the MarConsNetAnalysis package
-#' @param mpa CPCAD a "sf" "dataframe" object from [data_CPCAD_areas()]
 #'
 #' @return data frame with trends and status'
 #' @export
 #'
-analysis <- function(bi=binned_indicators, mpa=MPAs) {
+analysis <- function(bi=binned_indicators) {
 ITP <- bi
 ITP$status <- 0
 ITP$trend <- 0
 
 for (i in seq_along(ITP$indicators)) {
   message(i)
+  MPAs <- data_CPCAD_areas(data_bioregion("Scotian Shelf"),  zones = FALSE)
+
   itp <- ITP$indicators[i]
 
 
@@ -34,9 +35,6 @@ for (i in seq_along(ITP$indicators)) {
 
   # Filling in actual status and trends
   if (!(ITP$plot[i]) == 0) {
-    if (grepl("mpa=MPAs", ITP$plot[i])) {
-      ITP$plot[i] <- gsub("mpa=MPAs", "mpa=mpa", ITP$plot[i])
-    }
 
     # We actually have a plot
     if (!(ITP$plot[i] == "plot_rv_abundance(RV_ABUNDANCE[[which(names(RV_ABUNDANCE) == 'WEBCA')]][[which(species == 'HADDOCK')]])")) {
