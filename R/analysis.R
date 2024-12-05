@@ -17,6 +17,7 @@ ITP$status <- 0
 ITP$trend <- 0
 
 for (i in seq_along(ITP$indicators)) {
+  message(i)
   itp <- ITP$indicators[i]
 
 
@@ -33,6 +34,10 @@ for (i in seq_along(ITP$indicators)) {
 
   # Filling in actual status and trends
   if (!(ITP$plot[i]) == 0) {
+    if (grepl("mpa=MPAs", ITP$plot[i])) {
+      ITP$plot[i] <- gsub("mpa=MPAs", "mpa=mpa", ITP$plot[i])
+    }
+
     # We actually have a plot
     if (!(ITP$plot[i] == "plot_rv_abundance(RV_ABUNDANCE[[which(names(RV_ABUNDANCE) == 'WEBCA')]][[which(species == 'HADDOCK')]])")) {
       if (grepl("dataframe", ITP$plot[i])) {
