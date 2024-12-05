@@ -6,18 +6,20 @@
 #'
 #' @param bi binned_indicators data frame likely found in the
 #' data folder of the MarConsNetAnalysis package
+#' @param ABUNDANCE_RV ABUNDANCE_RV
 #'
 #' @return data frame with trends and status'
 #' @export
 #'
-analysis <- function(bi=binned_indicators) {
+analysis <- function(bi=binned_indicators, rv_abundance=ABUNDANCE_RV, species=c("COD(ATLANTIC)", "HADDOCK")) {
 ITP <- bi
 ITP$status <- 0
 ITP$trend <- 0
+MPAs <- data_CPCAD_areas(data_bioregion("Scotian Shelf"),  zones = FALSE)
+
 
 for (i in seq_along(ITP$indicators)) {
   message(i)
-  MPAs <- data_CPCAD_areas(data_bioregion("Scotian Shelf"),  zones = FALSE)
 
   itp <- ITP$indicators[i]
 
@@ -37,7 +39,7 @@ for (i in seq_along(ITP$indicators)) {
   if (!(ITP$plot[i]) == 0) {
 
     # We actually have a plot
-    if (!(ITP$plot[i] == "plot_rv_abundance(RV_ABUNDANCE[[which(names(RV_ABUNDANCE) == 'WEBCA')]][[which(species == 'HADDOCK')]])")) {
+    if (!(ITP$plot[i] == "plot_rv_abundance(ABUNDANCE_RV[[which(names(ABUNDANCE_RV) == 'WEBCA')]][[which(species == 'HADDOCK')]])")) {
       if (grepl("dataframe", ITP$plot[i])) {
         df <- eval(parse(text=ITP$plot[i]))
 
@@ -45,7 +47,8 @@ for (i in seq_along(ITP$indicators)) {
         df <- eval(parse(text=paste0(substr(ITP$plot[i], 1, nchar(ITP$plot[i]) - 1), ",dataframe=TRUE)")))
       }
     } else {
-      df <- RV_ABUNDANCE[[which(names(RV_ABUNDANCE) == 'WEBCA')]][[which(species == 'HADDOCK')]]
+      ITP$plot[i] <- gsub("ABUNDANCE_RV", "rv_abundance", ITP$plot[i])
+      df <- rv_abundance[[which(names(rv_abundance) == 'WEBCA')]][[which(species == 'HADDOCK')]]
     }
     paste0(names(df), collapse=" , ")
     if ("avg_parameter" %in% names(df)) {
