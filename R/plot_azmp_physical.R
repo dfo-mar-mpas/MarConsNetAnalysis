@@ -19,6 +19,16 @@ plot_azmp_physical <- function(mpa=NULL, area="Western/Emerald Banks Conservatio
 
   if (parameter %in% names(azmpdata::Discrete_Occupations_Sections)) {
   df <- azmpdata::Discrete_Occupations_Sections
+  } else if (parameter == "Zooplankton") {
+    df <- Zooplankton_Annual_Stations
+    sdf <- Derived_Occupations_Stations
+    df$latitude <- 0
+    df$longitude <- 0
+    for (i in seq_along(unique(df$station))) {
+      df$latitude[which(df$station == unique(df$station)[i])] <- sdf$latitude[which(sdf$station == unique(df$station)[i])][1]
+      df$longitude[which(df$station == unique(df$station)[i])] <- sdf$longitude[which(sdf$station == unique(df$station)[i])][1]
+    }
+
   } else {
     df <- azmpdata::Derived_Monthly_Stations
     # Add latitude and longitude
@@ -75,7 +85,11 @@ plot_azmp_physical <- function(mpa=NULL, area="Western/Emerald Banks Conservatio
   }
 
   if (!("date" %in% names(df))) {
+    if ("month" %in% names(df)) {
     keep$date <- as.Date(paste(keep$year, keep$month, "1", sep = "-"), format = "%Y-%m-%d")
+    } else {
+      keep$date <- as.POSIXct(paste0(keep$year, "-01-01"), format = "%Y-%m-%d")
+    }
   }
 
   keep <- keep[order(keep$date),]
@@ -94,7 +108,20 @@ plot_azmp_physical <- function(mpa=NULL, area="Western/Emerald Banks Conservatio
   keep$year <- format(keep$date, "%Y")
 
   grouped_list <- split(keep, keep$year)
+  if (!(parameter == "Zooplankton")) {
   yearly_avg <- sapply(grouped_list, function(df) mean(df[[parameter]], na.rm=TRUE))
+  } else {
+    # JAIM HERE
+    yearly_avg <- NULL
+    for (i in seq_along(grouped_list)) {
+      l <- as.data.frame(grouped_list[[i]])
+      ll <- l[which(grepl("log10", names(l), ignore.case=TRUE))]
+      yearly_avg[[i]] <- sum(unname(unlist(ll)), na.rm=TRUE)
+
+    }
+    names(yearly_avg) <- names(grouped_list)
+    yearly_avg <- unlist(yearly_avg)
+  }
 
   # Convert to a data frame for plotting
   plot_data <- data.frame(
