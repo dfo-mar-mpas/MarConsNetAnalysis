@@ -46,9 +46,7 @@ plot_azmp_physical <- function(mpa=NULL, area="Western/Emerald Banks Conservatio
 
   # OUTSIDE BUFFER
   if (outside) {
-  eblat <- 43.46669
-  eblon <- -62.4704
-  outside <- st_buffer(st_sfc(st_point(c(eblon, eblat)), crs = 4326), dist=150000) # FIXME: issue
+  outside <- st_transform(read_sf("../WesternEmerald_CSAS_2025/data/WEBCA_10k_85k.shp")$geometry, crs=4326)
   outside_exclusive_multipolyon <- sf::st_difference(outside, multipolygon)
 
   inside <- sf::st_within(points_sf, outside_exclusive_multipolyon, sparse = FALSE)
