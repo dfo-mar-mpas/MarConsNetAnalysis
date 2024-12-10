@@ -43,7 +43,7 @@ ind_rv_abundance <- function(species="HADDOCK", area="Western/Emerald Banks Cons
   }
 
   #get_data('rv', data.dir="C:/Users/HarbinJ/Documents/data/rv")
-  GSSPECIES <- GSSPECIES$CODE[which(GSSPECIES$COMM == species)]
+  GSSPECIES <- GSSPECIES[which(GSSPECIES$COMM == species),]
   self_filter(keep_nullsets = F)
 
   test<- summarize_catches()

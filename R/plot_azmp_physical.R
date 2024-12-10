@@ -6,6 +6,7 @@
 #' @param type surface or bottom
 #' @param dataframe FALSE a Boolean indicating if a data frame is returned or not
 #' @param parameter a character indicating which parameter to measure
+#' @param outside a Boolean indicating if an outside comparison is happening
 #' @importFrom azmpdata Discrete_Occupations_Sections
 #' @importFrom sf st_within st_as_sf
 #' @importFrom dplyr slice_max ungroup group_by
@@ -14,7 +15,7 @@
 #'
 #' @examples
 plot_azmp_physical <- function(mpa=NULL, area="Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)", type="surface",
-                               dataframe=FALSE, parameter="temperature") {
+                               dataframe=FALSE, parameter="temperature",outside=FALSE) {
 
   if (parameter %in% names(azmpdata::Discrete_Occupations_Sections)) {
   df <- azmpdata::Discrete_Occupations_Sections
@@ -41,6 +42,21 @@ plot_azmp_physical <- function(mpa=NULL, area="Western/Emerald Banks Conservatio
 
   # Filter points that are inside the polygon
   points_inside <- points_sf[inside, ]
+
+
+  # OUTSIDE BUFFER
+  if (outside) {
+  eblat <- 43.46669
+  eblon <- -62.4704
+  outside <- st_buffer(st_sfc(st_point(c(eblon, eblat)), crs = 4326), dist=150000) # FIXME: issue
+  outside_exclusive_multipolyon <- sf::st_difference(outside, multipolygon)
+
+  inside <- sf::st_within(points_sf, outside_exclusive_multipolyon, sparse = FALSE)
+
+  # Filter points that are inside the polygon
+  points_inside <- points_sf[inside, ]
+
+  }
 
   if (any(inside[,1])) {
   keep <- df[which(inside[,1]),]
@@ -85,7 +101,9 @@ plot_azmp_physical <- function(mpa=NULL, area="Western/Emerald Banks Conservatio
   # Convert to a data frame for plotting
   plot_data <- data.frame(
     year = as.numeric(names(yearly_avg)),  # Convert year to numeric
-    avg_parameter = yearly_avg
+    avg_parameter = yearly_avg,
+    parameter_name=rep(parameter),
+    type=ifelse(!(is.null(type)), rep(type), "")
   )
 
   if (dataframe) {
@@ -105,7 +123,6 @@ plot_azmp_physical <- function(mpa=NULL, area="Western/Emerald Banks Conservatio
 
   # Optional: Add a grid for better readability
   grid()
-
 
 }
 
