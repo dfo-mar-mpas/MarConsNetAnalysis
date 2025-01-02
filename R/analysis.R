@@ -2,7 +2,17 @@
 #'
 #' This function automatically calculates status and trends
 #' for a list of indicators used in the Marine Conservation
-#' Target (MCT) app
+#' Target (MCT) app. It then uses this information to assign
+#' a letter grade for the status of either A, B,
+#' or C by doing the following:
+#'
+#' It 1) determines the desired trend of the indicator, then
+#' 2) Looks at the actual trend of the indicator. If the trend A)
+#' is statistically significant AND matches matches the desired direction
+#' for the indicator, a score of A is assigned.If B) the trend is not statistically significant (i.e.
+#' there is no true trend) a grade of B is assigned. Lastly, if
+#' C) the trend is statistically significant AND going in the opposite direction
+#' to the of the desired direction for that indicator it receives a C.
 #'
 #' @param bi binned_indicators data frame likely found in the
 #' data folder of the MarConsNetAnalysis package
@@ -19,6 +29,7 @@ analysis <- function(bi=binned_indicators, rv_abundance=ABUNDANCE_RV, species=c(
 ITP <- bi
 ITP$status <- 0
 ITP$trend <- 0
+ITP$status_grade <- 0
 MPAs <- data_CPCAD_areas(data_bioregion("Scotian Shelf"),  zones = FALSE)
 
 
@@ -149,10 +160,6 @@ for (i in seq_along(ITP$indicators)) {
   STATUS <- gsub("NN ", paste0(n," "), STATUS)
   STATUS <- gsub("MM ", paste0(m," "), STATUS)
 
-  #ITP$status[i] <- STATUS
-
-
-
   ## NEW
   if (!(t2 == "BLANK")) {
     if (t2 > 0) {
@@ -182,6 +189,37 @@ for (i in seq_along(ITP$indicators)) {
   STATUS <- gsub("MM2", m2, STATUS)
 
   ITP$status[i] <- STATUS
+
+  if (!(ITP$desired_state[i] %in% c("desired", "stable"))) { # FIXME
+    #browser()
+    # TREND LETTER GRADE
+    desired <- ITP$desired_state[i]
+    pval <- coef(summary(lm(df$avg_parameter ~ df$year)))["df$year", "Pr(>|t|)"]
+    if (t < 0) {
+      actual <- "decrease"
+    } else {
+      actual <- "increase"
+    }
+
+
+    if (!(pval < 0.05)) {
+      # B) The trend is not statistically significant (i.e. there is no true trend) a grade of B is assigned.
+      ITP$status_grade <- "B"
+    } else {
+      if (desired == actual) {
+        # A) The trend is statistically significant AND matches matches the desired direction
+        # for the indicator, a score of A is assigned.
+        ITP$status_grade <- "A"
+
+      } else {
+        #' C) The trend is statistically significant AND going in the opposite direction
+        #' to the of the desired direction for that indicator it receives a C.
+        ITP$status_grade <- "C"
+      }
+    }
+
+
+  }
 
 
 
