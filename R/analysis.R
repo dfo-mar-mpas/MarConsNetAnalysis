@@ -191,9 +191,9 @@ for (i in seq_along(ITP$indicators)) {
   ITP$status[i] <- STATUS
 
   if (!(ITP$desired_state[i] %in% c("desired", "stable"))) { # FIXME
-    #browser()
-    # TREND LETTER GRADE
+    # STATUS LETTER GRADE
     desired <- ITP$desired_state[i]
+    message("desired = ", desired)
     pval <- coef(summary(lm(df$avg_parameter ~ df$year)))["df$year", "Pr(>|t|)"]
     if (t < 0) {
       actual <- "decrease"
@@ -204,26 +204,22 @@ for (i in seq_along(ITP$indicators)) {
 
     if (!(pval < 0.05)) {
       # B) The trend is not statistically significant (i.e. there is no true trend) a grade of B is assigned.
-      ITP$status_grade <- "B"
+      ITP$status_grade[i] <- "B"
     } else {
       if (desired == actual) {
         # A) The trend is statistically significant AND matches matches the desired direction
         # for the indicator, a score of A is assigned.
-        ITP$status_grade <- "A"
+        ITP$status_grade[i] <- "A"
 
       } else {
         #' C) The trend is statistically significant AND going in the opposite direction
         #' to the of the desired direction for that indicator it receives a C.
-        ITP$status_grade <- "C"
+        ITP$status_grade[i] <- "C"
       }
     }
 
 
   }
-
-
-
-
 
 }
 
