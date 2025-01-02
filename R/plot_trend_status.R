@@ -8,6 +8,8 @@
 #' @param parameter a character indicating which parameter to measure
 #' @param outside a Boolean indicating if an outside comparison is happening
 #' @param GS GSDET used for fish weight and size
+#' @param ah likely all_haddock data frame from the targets file
+#' @param bd likely bloom_df data frame from the targets file
 #' @importFrom azmpdata Discrete_Occupations_Sections
 #' @importFrom sf st_within st_as_sf
 #' @importFrom dplyr slice_max ungroup group_by
@@ -16,13 +18,13 @@
 #'
 #' @examples
 plot_trend_status <- function(mpa=NULL, area="Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)", type="surface",
-                              dataframe=FALSE, parameter="temperature",outside=FALSE, GS=NULL) {
+                              dataframe=FALSE, parameter="temperature",outside=FALSE, GS=NULL, ah=all_haddock, bd=bloom_df) {
 
   if (parameter %in% names(azmpdata::Discrete_Occupations_Sections)) {
     df <- azmpdata::Discrete_Occupations_Sections
   } else if (parameter == "Zooplankton") {
-    df <- Zooplankton_Annual_Stations
-    sdf <- Derived_Occupations_Stations
+    df <- azmpdata::Zooplankton_Annual_Stations
+    sdf <- azmpdata::Derived_Occupations_Stations
     df$latitude <- 0
     df$longitude <- 0
     for (i in seq_along(unique(df$station))) {
@@ -33,9 +35,9 @@ plot_trend_status <- function(mpa=NULL, area="Western/Emerald Banks Conservation
   } else if (parameter %in% c("fish_weight", "fish_length")) {
     df <- GS
   } else if (parameter %in% c("haddock_abundance", "haddock_biomass")) {
-    df <- all_haddock
+    df <- ah
     } else if (parameter == "bloom_amplitude") {
-      df <- bloom_df
+      df <- bd
       } else {
     df <- azmpdata::Derived_Monthly_Stations
     # Add latitude and longitude
@@ -65,7 +67,11 @@ plot_trend_status <- function(mpa=NULL, area="Western/Emerald Banks Conservation
   # OUTSIDE BUFFER
   if (outside) {
     if (!(parameter == "bloom_amplitude")) {
+      if (area == "Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)") {
     outside <- st_transform(read_sf("../WesternEmerald_CSAS_2025/data/WEBCA_10k_85k.shp")$geometry, crs=4326)
+      } else {
+        stop("Must code in other buffers.")
+      }
     outside_exclusive_multipolyon <- sf::st_difference(outside, multipolygon)
 
     inside <- sf::st_within(points_sf, outside_exclusive_multipolyon, sparse = FALSE)

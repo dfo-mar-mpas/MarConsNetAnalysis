@@ -7,11 +7,15 @@
 #' @param bi binned_indicators data frame likely found in the
 #' data folder of the MarConsNetAnalysis package
 #' @param ABUNDANCE_RV ABUNDANCE_RV
+#' @param species likely HADDOCK
+#' @param GSDET likely gsdet from the targets folder
+#' @param ah likely all_haddock data frame from the targets file
+#' @param bd likely bloom_df data frame from the targets file
 #'
 #' @return data frame with trends and status'
 #' @export
 #'
-analysis <- function(bi=binned_indicators, rv_abundance=ABUNDANCE_RV, species=c("COD(ATLANTIC)", "HADDOCK")) {
+analysis <- function(bi=binned_indicators, rv_abundance=ABUNDANCE_RV, species=c("COD(ATLANTIC)", "HADDOCK"), GSDET=gsdet, ah=all_haddock, bd=bloom_df) {
 ITP <- bi
 ITP$status <- 0
 ITP$trend <- 0
@@ -47,8 +51,21 @@ for (i in seq_along(ITP$indicators)) {
   # Filling in actual status and trends
   if (!(ITP$plot[i]) == 0) {
 
+    if (!(grepl("all_haddock", ITP$plot[i], ignore.case=TRUE))) {
+      ITP$plot[i] <- paste0(substr(ITP$plot[i], 1, nchar(ITP$plot[i]) - 1), ", ah=ah)")
+    }
+
+    if (!(grepl("bloom_df", ITP$plot[i], ignore.case=TRUE))) {
+      ITP$plot[i] <- paste0(substr(ITP$plot[i], 1, nchar(ITP$plot[i]) - 1), ", bd=bd)")
+    }
+
+
     # We actually have a plot
     if (!(ITP$plot[i] == "plot_rv_abundance(ABUNDANCE_RV[[which(names(ABUNDANCE_RV) == 'WEBCA')]][[which(species == 'HADDOCK')]])")) {
+      if (grepl("gsdet", ITP$plot[i])) {
+        ITP$plot[i] <- gsub("gsdet", "GSDET", ITP$plot[i])
+      }
+
       if (grepl("dataframe", ITP$plot[i])) {
         text <- ITP$plot[i]
         df <- eval(parse(text=text))
@@ -60,7 +77,6 @@ for (i in seq_along(ITP$indicators)) {
       df2 <- eval(parse(text=paste0(substr(text, 1, nchar(text) - 1), ", outside=TRUE)")))
 
     } else {
-      # JAIM FIX HERE
       ITP$plot[i] <- gsub("ABUNDANCE_RV", "rv_abundance", ITP$plot[i])
       df <- rv_abundance[[which(names(rv_abundance) == 'WEBCA')]][[which(species == 'HADDOCK')]]
     }
@@ -86,7 +102,6 @@ for (i in seq_along(ITP$indicators)) {
       tid2 <- ifelse(lr2 > 0, "increase", "decrease")
 
     } else {
-      # FIX JAIM
       t <- round(unname(coef(lm(df$abundance ~ df$year))[2]),2)
       y <- length(df$year)
       u <- "average # of haddock per tow"
