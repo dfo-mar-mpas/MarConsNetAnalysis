@@ -1,4 +1,7 @@
-#' Plot Physical AZMP
+#' Plot Indicator Trends
+#'
+#' This function plots the trends of indicators. It also provides the values
+#' of indicators for each year that exists
 #'
 #' @param mpa an object of class "sf", likely from data_CPCAD_areas that contains
 #' the name and geoms of the protected areas

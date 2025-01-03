@@ -14,18 +14,15 @@
 #' C) the trend is statistically significant AND going in the opposite direction
 #' to the of the desired direction for that indicator it receives a C.
 #'
+#' @param DF list of data framed needed for all binned_indicators
 #' @param bi binned_indicators data frame likely found in the
 #' data folder of the MarConsNetAnalysis package
-#' @param ABUNDANCE_RV ABUNDANCE_RV
-#' @param species likely HADDOCK
-#' @param GSDET likely gsdet from the targets folder
-#' @param ah likely all_haddock data frame from the targets file
-#' @param bd likely bloom_df data frame from the targets file
 #'
 #' @return data frame with trends and status'
 #' @export
 #'
-analysis <- function(bi=binned_indicators, rv_abundance=ABUNDANCE_RV, species=c("COD(ATLANTIC)", "HADDOCK"), GSDET=gsdet, ah=all_haddock, bd=bloom_df) {
+analysis <- function(DF=list(bloom_df=bloom_df, all_haddock=all_haddock, gsdet=gsdet, zooplankton=zooplankton, surface_height=surface_height), bi=binned_indicators, Discrete_Occupations_Sections=azmpdata::Discrete_Occupations_Sections) {
+
 ITP <- bi
 ITP$status <- 0
 ITP$trend <- 0
@@ -37,7 +34,6 @@ for (i in seq_along(ITP$indicators)) {
   message(i)
 
   itp <- ITP$indicators[i]
-
 
   TREND <- "A linear regression has shown a XX  of YY UU over the last ZZ years. The linear trend for the last 5 years was a TID of LR UU. When comparing to outside of the protected area, a linear regression has shown a XX2  of YY2 UU2 over the last ZZ2 years. The linear trend for the last 5 years was a TID2 of LR2 UU2"
   STATUS <- "The most recent year (RR) shows NN UU. The most recent 5 year mean was MM UU. When comparing to outside the protected area, the most recent year (RR2) shows NN2 UU2. The most recent 5 year mean was MM2 UU2"
@@ -62,44 +58,38 @@ for (i in seq_along(ITP$indicators)) {
   # Filling in actual status and trends
   if (!(ITP$plot[i]) == 0) {
 
-    if (!(grepl("all_haddock", ITP$plot[i], ignore.case=TRUE))) {
-      ITP$plot[i] <- paste0(substr(ITP$plot[i], 1, nchar(ITP$plot[i]) - 1), ", ah=ah)")
+    text <- ITP$plot[i]
+    if (!(grepl("dataframe=TRUE", text))) {
+      text <- substr(text, 1, nchar(text) - 1)
+      text <- paste0(text, ", dataframe=TRUE)")
+      text <- gsub("dataframe=FALSE", "", text)
+    }
+    old <- sub(".*=(.*?),.*", "\\1", text)
+    if (grepl("azmpdata::", old)) {
+      old <- gsub("azmpdata::","", old)
     }
 
-    if (!(grepl("bloom_df", ITP$plot[i], ignore.case=TRUE))) {
-      ITP$plot[i] <- paste0(substr(ITP$plot[i], 1, nchar(ITP$plot[i]) - 1), ", bd=bd)")
+    text <- sub("=(.*?),", "=new_value,", text)
+    text <- gsub("new_value", "DF[[which(names(DF) == old)]]", text)
+
+    ddff <- eval(parse(text=text))
+
+    if (!(grepl("outside=TRUE", text))) {
+      text <- substr(text, 1, nchar(text) - 1)
+      text <- paste0(text, ", outside=TRUE)")
+      text <- gsub("outside=FALSE", "", text)
     }
+    df2 <- eval(parse(text=text))
 
 
-    # We actually have a plot
-    if (!(ITP$plot[i] == "plot_rv_abundance(ABUNDANCE_RV[[which(names(ABUNDANCE_RV) == 'WEBCA')]][[which(species == 'HADDOCK')]])")) {
-      if (grepl("gsdet", ITP$plot[i])) {
-        ITP$plot[i] <- gsub("gsdet", "GSDET", ITP$plot[i])
-      }
-
-      if (grepl("dataframe", ITP$plot[i])) {
-        text <- ITP$plot[i]
-        df <- eval(parse(text=text))
-      } else {
-        text <- paste0(substr(ITP$plot[i], 1, nchar(ITP$plot[i]) - 1), ",dataframe=TRUE)")
-        df <- eval(parse(text=text))
-      }
-
-      df2 <- eval(parse(text=paste0(substr(text, 1, nchar(text) - 1), ", outside=TRUE)")))
-
-    } else {
-      ITP$plot[i] <- gsub("ABUNDANCE_RV", "rv_abundance", ITP$plot[i])
-      df <- rv_abundance[[which(names(rv_abundance) == 'WEBCA')]][[which(species == 'HADDOCK')]]
-    }
-
-    if ("avg_parameter" %in% names(df)) {
-      t <- round(unname(coef(lm(df$avg_parameter ~ df$year))[2]),2)
-      y <- length(df$year)
-      u <- paste0("average ", unique(df$type), " ", unique(df$parameter_name))
-      r <- sort(df$year)[length(df$year)]
-      n <- df$avg_parameter[which(df$year == r)]
-      m <- round(mean(df$avg_parameter[which(df$year %in% tail(sort(df$year),5))], na.rm=TRUE),2)
-      lr <- round(unname(coef(lm(df$avg_parameter[which(df$year %in% tail(sort(df$year),5))] ~ df$year[which(df$year %in% tail(sort(df$year),5))]))[2]),2)
+    if ("avg_parameter" %in% names(ddff)) {
+      t <- round(unname(coef(lm(ddff$avg_parameter ~ ddff$year))[2]),2)
+      y <- length(ddff$year)
+      u <- paste0("average ", unique(ddff$type), " ", unique(ddff$parameter_name))
+      r <- sort(ddff$year)[length(ddff$year)]
+      n <- ddff$avg_parameter[which(ddff$year == r)]
+      m <- round(mean(ddff$avg_parameter[which(ddff$year %in% tail(sort(ddff$year),5))], na.rm=TRUE),2)
+      lr <- round(unname(coef(lm(ddff$avg_parameter[which(ddff$year %in% tail(sort(ddff$year),5))] ~ ddff$year[which(ddff$year %in% tail(sort(ddff$year),5))]))[2]),2)
       tid <- ifelse(lr > 0, "increase", "decrease")
 
 
@@ -113,13 +103,13 @@ for (i in seq_along(ITP$indicators)) {
       tid2 <- ifelse(lr2 > 0, "increase", "decrease")
 
     } else {
-      t <- round(unname(coef(lm(df$abundance ~ df$year))[2]),2)
-      y <- length(df$year)
+      t <- round(unname(coef(lm(df$abundance ~ ddff$year))[2]),2)
+      y <- length(ddff$year)
       u <- "average # of haddock per tow"
-      r <- sort(df$year)[length(df$year)]
-      n <- df$abundance[which(df$year == r)]
-      m <- mean(df$abundance[which(df$year %in% tail(sort(df$year),5))], na.rm=TRUE)
-      lr <- round(unname(coef(lm(df$abundance[which(df$year %in% tail(sort(df$year),5))] ~ df$year[which(df$year %in% tail(sort(df$year),5))]))[2]),2)
+      r <- sort(ddff$year)[length(ddff$year)]
+      n <- ddff$abundance[which(ddff$year == r)]
+      m <- mean(ddff$abundance[which(ddff$year %in% tail(sort(ddff$year),5))], na.rm=TRUE)
+      lr <- round(unname(coef(lm(ddff$abundance[which(ddff$year %in% tail(sort(ddff$year),5))] ~ ddff$year[which(ddff$year %in% tail(sort(ddff$year),5))]))[2]),2)
       tid <- ifelse(lr > 0, "increase", "decrease")
 
 
@@ -194,7 +184,7 @@ for (i in seq_along(ITP$indicators)) {
     # STATUS LETTER GRADE
     desired <- ITP$desired_state[i]
     message("desired = ", desired)
-    pval <- coef(summary(lm(df$avg_parameter ~ df$year)))["df$year", "Pr(>|t|)"]
+    pval <- coef(summary(lm(ddff$avg_parameter ~ ddff$year)))["ddff$year", "Pr(>|t|)"]
     if (t < 0) {
       actual <- "decrease"
     } else {
