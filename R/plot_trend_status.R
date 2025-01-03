@@ -2,14 +2,14 @@
 #'
 #' @param mpa an object of class "sf", likely from data_CPCAD_areas that contains
 #' the name and geoms of the protected areas
+#' @param df data frame either from a getFunction specified in dataTable or from
+#' a tar_load that includes latitude, longitude, year, type, and the parameter
+#' to average
 #' @param area area of interest (from the NAME_E column of MPAs)
 #' @param type surface or bottom
 #' @param dataframe FALSE a Boolean indicating if a data frame is returned or not
 #' @param parameter a character indicating which parameter to measure
 #' @param outside a Boolean indicating if an outside comparison is happening
-#' @param GS GSDET used for fish weight and size
-#' @param ah likely all_haddock data frame from the targets file
-#' @param bd likely bloom_df data frame from the targets file
 #' @importFrom azmpdata Discrete_Occupations_Sections
 #' @importFrom sf st_within st_as_sf
 #' @importFrom dplyr slice_max ungroup group_by
@@ -17,42 +17,9 @@
 #' @export
 #'
 #' @examples
-plot_trend_status <- function(mpa=NULL, area="Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)", type="surface",
-                              dataframe=FALSE, parameter="temperature",outside=FALSE, GS=NULL, ah=all_haddock, bd=bloom_df) {
+plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)", type="surface",
+                              dataframe=FALSE, parameter="temperature",outside=FALSE) {
 
-  if (parameter %in% names(azmpdata::Discrete_Occupations_Sections)) {
-    df <- azmpdata::Discrete_Occupations_Sections
-  } else if (parameter == "Zooplankton") {
-    df <- azmpdata::Zooplankton_Annual_Stations
-    sdf <- azmpdata::Derived_Occupations_Stations
-    df$latitude <- 0
-    df$longitude <- 0
-    for (i in seq_along(unique(df$station))) {
-      df$latitude[which(df$station == unique(df$station)[i])] <- sdf$latitude[which(sdf$station == unique(df$station)[i])][1]
-      df$longitude[which(df$station == unique(df$station)[i])] <- sdf$longitude[which(sdf$station == unique(df$station)[i])][1]
-    }
-
-  } else if (parameter %in% c("fish_weight", "fish_length")) {
-    df <- GS
-  } else if (parameter %in% c("haddock_abundance", "haddock_biomass")) {
-    df <- ah
-    } else if (parameter == "bloom_amplitude") {
-      df <- bd
-      } else {
-    df <- azmpdata::Derived_Monthly_Stations
-    # Add latitude and longitude
-    df$latitude <- 0
-    df$longitude <- 0
-    type <- NULL
-    df$latitude[which(df$station == "Halifax")] <- 43.5475
-    df$longitude[which(df$station == "Halifax")] <- 63.5714
-
-    df$latitude[which(df$station == "Yarmouth")] <- 43.8377
-    df$longitude[which(df$station == "Yarmouth")] <- 66.1150
-
-    df$latitude[which(df$station == "North Sydney")] <- 46.2051
-    df$longitude[which(df$station == "North Sydney")] <- 60.2563
-  }
   # Derived_Monthly_Stations
   multipolygon <- mpa$geoms[which(mpa$NAME_E == area)]
   if (!(parameter == "bloom_amplitude")) {
