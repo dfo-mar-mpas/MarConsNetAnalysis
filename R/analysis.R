@@ -6,13 +6,17 @@
 #' a letter grade for the status of either A, B,
 #' or C by doing the following:
 #'
-#' It 1) determines the desired trend of the indicator, then
-#' 2) Looks at the actual trend of the indicator. If the trend A)
-#' is statistically significant AND matches matches the desired direction
-#' for the indicator, a score of A is assigned.If B) the trend is not statistically significant (i.e.
-#' there is no true trend) a grade of B is assigned. Lastly, if
-#' C) the trend is statistically significant AND going in the opposite direction
-#' to the of the desired direction for that indicator it receives a C.
+#' It determines the desired trend of the indicator, then
+#' looks at the actual trend of the indicator. If the trend
+#' 1) is statistically significant AND matches the desired direction for the
+#' indicator, a score of A is assigned.
+#' 2) is not statistically significant but matches the desired direction for
+#' the indicator, a B is assigned
+#' 3) Has no change a C is assigned
+#' 4) is not statistically significant and going is the opposite direction
+#' of the desired direction a D is assigned
+#' 5) is statistically significant and going in the opposite direction,
+#'  a F is assigned.
 #'
 #' @param DF list of data framed needed for all binned_indicators
 #' @param bi binned_indicators data frame likely found in the
@@ -192,24 +196,41 @@ for (i in seq_along(ITP$indicators)) {
     }
 
 
-    if (!(pval < 0.05)) {
-      # B) The trend is not statistically significant (i.e. there is no true trend) a grade of B is assigned.
-      ITP$status_grade[i] <- "B"
-    } else {
-      if (desired == actual) {
-        # A) The trend is statistically significant AND matches matches the desired direction
-        # for the indicator, a score of A is assigned.
-        ITP$status_grade[i] <- "A"
+    #' if (!(pval < 0.05)) {
+    #'   # B) The trend is not statistically significant (i.e. there is no true trend) a grade of B is assigned.
+    #'   ITP$status_grade[i] <- "B"
+    #' } else {
+    #'   if (desired == actual) {
+    #'     # A) The trend is statistically significant AND matches matches the desired direction
+    #'     # for the indicator, a score of A is assigned.
+    #'     ITP$status_grade[i] <- "A"
+    #'
+    #'   } else {
+    #'     #' C) The trend is statistically significant AND going in the opposite direction
+    #'     #' to the of the desired direction for that indicator it receives a C.
+    #'     ITP$status_grade[i] <- "C"
+    #'   }
+    #' }
 
-      } else {
-        #' C) The trend is statistically significant AND going in the opposite direction
-        #' to the of the desired direction for that indicator it receives a C.
-        ITP$status_grade[i] <- "C"
-      }
+
+    # NEW A-F Assigning
+    if (pval < 0.05 & desired == actual) {
+      ITP$status_grade[i] <- "A"
+    } else if (pval > 0.05 & desired == actual) {
+      ITP$status_grade[i] <- "B"
+    } else if (round(t,0) == 0) {
+      ITP$status_grade[i] <- "C"
+    } else if (pval > 0.05 & (!(desired == actual))) {
+      ITP$status_grade[i] <- "D"
+    } else if (pval < 0.05 & (!(desired == actual))) {
+      ITP$status_grade[i] <- "F"
     }
+
+    message(paste0("pval = ", pval, " and desired = ", desired, " and actual = ", actual, " therefore grade = ", ITP$status_grade[i], " for ", ITP$indicators[i]))
 
 
   }
+
 
 }
 

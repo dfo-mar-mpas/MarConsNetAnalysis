@@ -44,11 +44,68 @@
 plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weight="weight",title=unique(df[["area_name"]]),max_score = 100,min_score = 0,bintextsize=3,zeroline=FALSE){
   scalerange <- max_score-min_score
 
+
+  if (!(max_score == 5)) {
   calc_letter_grade <- function(percent){
     cutoffs=c(min_score, seq(max_score-scalerange*.4, max_score, by = 10/3/100*scalerange))
     grades=c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
     cut(percent,cutoffs,grades)
   }
+  } else {
+    calc_letter_grade <- function(scores) {
+      sapply(scores, function(score) {
+        if (score >= 4.5) {
+          return("A")  # 4.5 to 4.9
+        } else if (score >= 4) {
+          return("A-")  # 4.0 to 4.4
+        } else if (score >= 3.5) {
+          return("B+")  # 3.5 to 3.9
+        } else if (score >= 3) {
+          return("B")  # 3.0 to 3.4
+        } else if (score >= 2.5) {
+          return("B-")  # 2.5 to 2.9
+        } else if (score >= 2) {
+          return("C+")  # 2.0 to 2.4
+        } else if (score >= 1.5) {
+          return("C")  # 1.5 to 1.9
+        } else if (score >= 1) {
+          return("C-")  # 1.0 to 1.4
+        } else if (score >= 0.5) {
+          return("D+")  # 0.5 to 0.9
+        } else if (score >= 0) {
+          return("D")  # 0 to 0.4
+        } else if (score >= -0.1) {
+          return("D-")  # -0.1 to -0.9
+        } else {
+          return("F")  # Below -1
+        }
+      })
+    }
+  }
+
+
+  grades <- c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
+  #flowerPalette <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdBu"))(length(grades))
+
+
+  # Define stoplight color scheme
+  flowerPalette <- c(
+    "F" = "#FF0000",    # Bright Red
+    "D-" = "#FF3300",   # Slightly lighter red
+    "D" = "#FF6600",    # Red-Orange
+    "D+" = "#FF9900",   # Orange
+    "C-" = "#FFCC00",   # Yellow-Orange
+    "C" = "#FFFF00",    # Yellow
+    "C+" = "#CCFF33",   # Yellow-Green
+    "B-" = "#99FF66",   # Light Green
+    "B" = "#66FF66",    # Medium Green
+    "B+" = "#33CC33",   # Bright Green
+    "A-" = "#009900",   # Dark Green
+    "A" = "#006600",    # Very Dark Green
+    "A+" = "#003300"    # Almost Black-Green
+  )
+
+  #browser()
 
   ngroups <- length(unique(df[[grouping]]))
   data <- data.frame(grouping=factor(df[[grouping]],levels = unique(df[[grouping]])),
@@ -74,9 +131,9 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                          angle)
     )
 
-  grades <- c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
-  flowerPalette <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdBu"))(length(grades))
-  names(flowerPalette) <- grades
+
+#browser()
+
 
   p <- ggplot(data=data,aes(width = weight))+
     ggplot2::geom_crossbar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=max_score,ymax=max_score,ymin=min_score),fill=data$bg)+
