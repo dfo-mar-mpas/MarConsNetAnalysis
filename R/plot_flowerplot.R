@@ -45,67 +45,74 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
   scalerange <- max_score-min_score
 
 
-  if (!(max_score == 5)) {
-  calc_letter_grade <- function(percent){
-    cutoffs=c(min_score, seq(max_score-scalerange*.4, max_score, by = 10/3/100*scalerange))
-    grades=c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
-    cut(percent,cutoffs,grades)
+  df[[score]][which(df[[score]]==0)] <- NA
+
+   #SEE ISSUE 47 in MarConsNetApp. Do not delete, we may revisit this.
+   #  calc_letter_grade <- function(percent){
+   #    cutoffs=c(min_score, seq(max_score-scalerange*.4, max_score, by = 10/3/100*scalerange))
+   #    grades=c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
+   #    cut(percent,cutoffs,grades)
+   #  }
+   #
+   #
+   #
+   #  grades <- c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
+   #  flowerPalette <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdBu"))(length(grades))
+   #
+   #
+   # # # Define stoplight color scheme
+   #  flowerPalette <- c(
+   #    "F" = "#FF0000",    # Bright Red
+   #    "D-" = "#FF3300",   # Slightly lighter red
+   #    "D" = "#FF6600",    # Red-Orange
+   #    "D+" = "#FF9900",   # Orange
+   #    "C-" = "#FFCC00",   # Yellow-Orange
+   #    "C" = "#FFFF00",    # Yellow
+   #    "C+" = "#CCFF33",   # Yellow-Green
+   #    "B-" = "#99FF66",   # Light Green
+   #    "B" = "#66FF66",    # Medium Green
+   #    "B+" = "#33CC33",   # Bright Green
+   #    "A-" = "#009900",   # Dark Green
+   #    "A" = "#006600",    # Very Dark Green
+   #    "A+" = "#003300"    # Almost Black-Green
+   #  )
+
+
+  # Note, I had to change calc_letter_grade because previously in the analysis
+  # function we assign A=5,B=4,C=3,D=2,F=1 (we then multiple by 20 adjust the
+  # scale to be 1-100.). Because the previous calc_letter_grade was fluid, it meant
+  # that a value of say, 20, may not always be a F (it could be F-, or something),
+  # I therefore adjusted this to hard code in the values we previously set so the
+  # grades didn't change.
+
+
+  calc_letter_grade <- function(scores) {
+    # Vectorized assignment of grades based on fixed criteria
+    sapply(scores, function(score) {
+      if (is.na(score)) {
+        return(NA)  # Return NA if the input is NA
+      } else if (score >= 100) {
+        return("A")
+      } else if (score >= 80) {
+        return("B")
+      } else if (score >= 60) {
+        return("C")
+      } else if (score >= 40) {
+        return("D")
+      } else {
+        return("F")
+      }
+    })
   }
-  } else {
-    calc_letter_grade <- function(scores) {
-      sapply(scores, function(score) {
-        if (score >= 4.5) {
-          return("A")  # 4.5 to 4.9
-        } else if (score >= 4) {
-          return("A-")  # 4.0 to 4.4
-        } else if (score >= 3.5) {
-          return("B+")  # 3.5 to 3.9
-        } else if (score >= 3) {
-          return("B")  # 3.0 to 3.4
-        } else if (score >= 2.5) {
-          return("B-")  # 2.5 to 2.9
-        } else if (score >= 2) {
-          return("C+")  # 2.0 to 2.4
-        } else if (score >= 1.5) {
-          return("C")  # 1.5 to 1.9
-        } else if (score >= 1) {
-          return("C-")  # 1.0 to 1.4
-        } else if (score >= 0.5) {
-          return("D+")  # 0.5 to 0.9
-        } else if (score >= 0) {
-          return("D")  # 0 to 0.4
-        } else if (score >= -0.1) {
-          return("D-")  # -0.1 to -0.9
-        } else {
-          return("F")  # Below -1
-        }
-      })
-    }
-  }
 
-
-  grades <- c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
-  #flowerPalette <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdBu"))(length(grades))
-
-
-  # Define stoplight color scheme
+  grades <- c("A", "B", "C", "D", "F")
   flowerPalette <- c(
     "F" = "#FF0000",    # Bright Red
-    "D-" = "#FF3300",   # Slightly lighter red
     "D" = "#FF6600",    # Red-Orange
-    "D+" = "#FF9900",   # Orange
-    "C-" = "#FFCC00",   # Yellow-Orange
     "C" = "#FFFF00",    # Yellow
-    "C+" = "#CCFF33",   # Yellow-Green
-    "B-" = "#99FF66",   # Light Green
     "B" = "#66FF66",    # Medium Green
-    "B+" = "#33CC33",   # Bright Green
-    "A-" = "#009900",   # Dark Green
-    "A" = "#006600",    # Very Dark Green
-    "A+" = "#003300"    # Almost Black-Green
+    "A" = "#006600"    # Very Dark Green
   )
-
-  #browser()
 
   ngroups <- length(unique(df[[grouping]]))
   data <- data.frame(grouping=factor(df[[grouping]],levels = unique(df[[grouping]])),
@@ -118,6 +125,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
     mutate(weight=weight/sum(weight),
            pos=cumsum(weight)-weight/2,
            bg=dplyr::if_else(is.nan(score),"grey93","white"))
+  data$score[which(is.nan(data$score))] <- NA
 
   grouped_df <- data |>
     group_by(grouping) |>
@@ -130,10 +138,6 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                          angle-180,
                          angle)
     )
-
-
-#browser()
-
 
   p <- ggplot(data=data,aes(width = weight))+
     ggplot2::geom_crossbar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=max_score,ymax=max_score,ymin=min_score),fill=data$bg)+
@@ -148,9 +152,9 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
           legend.position="none")+
     scale_x_continuous(labels = data$labels,
                        breaks = data$pos)+
-    scale_y_continuous(limits = c(max_score-scalerange*1.5,max_score+scalerange*.55))+
+    scale_y_continuous(limits = c(max_score-scalerange*1.5,max_score+scalerange*.55))+ #PROBLEM HERE
     scale_fill_manual(values=flowerPalette)+
-    ggplot2::geom_text(aes(label=calc_letter_grade(weighted.mean(score,weight,na.rm = TRUE))),
+      ggplot2::geom_text(aes(label=calc_letter_grade(weighted.mean(score,weight,na.rm = TRUE))),
               x=min_score,
               y=max_score-scalerange*1.5,
               size=8)+
