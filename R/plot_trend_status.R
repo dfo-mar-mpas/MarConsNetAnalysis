@@ -13,6 +13,8 @@
 #' @param dataframe FALSE a Boolean indicating if a data frame is returned or not
 #' @param parameter a character indicating which parameter to measure
 #' @param outside a Boolean indicating if an outside comparison is happening
+#' @param map a Boolean indicating if the latitude, longitude, boundary, and outside boundary
+#' should be returned. This is likely used for plotting purposes
 #' @importFrom azmpdata Discrete_Occupations_Sections
 #' @importFrom sf st_within st_as_sf
 #' @importFrom dplyr slice_max ungroup group_by
@@ -21,7 +23,7 @@
 #'
 #' @examples
 plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)", type="surface",
-                              dataframe=FALSE, parameter="temperature",outside=FALSE) {
+                              dataframe=FALSE, parameter="temperature",outside=FALSE, map=FALSE) {
 
   # Derived_Monthly_Stations
   multipolygon <- mpa$geoms[which(mpa$NAME_E == area)]
@@ -33,18 +35,20 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
   points_inside <- points_sf[inside, ]
   }
 
+  if (area == "Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)") {
+    Outside <- st_transform(read_sf("../WesternEmerald_CSAS_2025/data/WEBCA_10k_85k.shp")$geometry, crs=4326)
+  } else {
+    stop("Must code in other buffers.")
+  }
+
+  outside_exclusive_multipolygon <- sf::st_difference(Outside, multipolygon)
+
 
   # OUTSIDE BUFFER
   if (outside) {
     if (!(parameter == "bloom_amplitude")) {
-      if (area == "Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)") {
-    outside <- st_transform(read_sf("../WesternEmerald_CSAS_2025/data/WEBCA_10k_85k.shp")$geometry, crs=4326)
-      } else {
-        stop("Must code in other buffers.")
-      }
-    outside_exclusive_multipolyon <- sf::st_difference(outside, multipolygon)
 
-    inside <- sf::st_within(points_sf, outside_exclusive_multipolyon, sparse = FALSE)
+    inside <- sf::st_within(points_sf, outside_exclusive_multipolygon, sparse = FALSE)
 
     # Filter points that are inside the polygon
     points_inside <- points_sf[inside, ]
@@ -142,10 +146,12 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
     type=ifelse(!(is.null(type)), rep(type), "")
   )
 
-  if (dataframe) {
+  if (dataframe & (!(map))) {
     return(plot_data)
   }
   # Base R plot
+
+  if (!(dataframe) & !(map)) {
   plot(
     plot_data$year, plot_data$avg_parameter,
     type = "b",                    # Line and points
@@ -154,6 +160,68 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
     xlab = "Year",                 # Label for x-axis
     ylab = ifelse(!(is.null(type)), paste0("Average ", parameter),ifelse(type=="surface", paste0("Average Surface ",parameter), paste0("Average Bottom ", parameter)))
   )
+  }
+
+  if (map) {
+    browser()
+    if (!(parameter == "bloom_amplitude")) {
+      inside2 <- which(sf::st_within(points_sf, outside_exclusive_multipolygon, sparse = FALSE)[,1])
+      insideKeep <- unique(c(inside2, which(inside[,1])))
+
+      latitude <- df$latitude[insideKeep]
+      longitude <- df$longitude[insideKeep]
+
+
+
+      if (length(df$latitude[insideKeep]) > 1000) {
+      latitude <- round(latitude,1)
+      longitude <- round(longitude,1)
+      coord <- data.frame(latitude, longitude)
+
+      # Get unique pairs
+      unique_coords <- unique(coord)
+      latitude <- unique_coords$latitude
+      longitude <- unique_coords$longitude
+
+      }
+
+      mapdf <- list(
+        latitude=latitude,
+        longitude=longitude,
+        area=multipolygon,
+        outside=outside_exclusive_multipolygon
+      )
+    } else {
+      st_crs(df$geom) <- 4326
+      geometry <- st_transform(df$geom, st_crs(multipolygon))
+      geometry <- st_make_valid(geometry)
+      overlaps_poly <- st_intersects(geometry, multipolygon, sparse = FALSE)
+
+
+      sf_df <- st_sf(df, geometry = geometry)
+      geometry <- unique(geometry[which(overlaps_poly[,1])])[[1]]
+
+      geometry_sf <- st_sfc(geometry)
+      multipolygon_sf <- st_sfc(multipolygon)
+      outside_sf <- st_sfc(outside_exclusive_multipolygon)
+
+      # Create the data frame with sf objects
+      # mapdf <- data.frame(
+      #   geom = geometry_sf,
+      #   area = multipolygon_sf,
+      #   outside = outside_sf
+      # )
+
+      mapdf <- list(
+        geom=geometry_sf,
+        area=multipolygon_sf,
+        outside=outside_sf
+      )
+    }
+
+    return(mapdf)
+
+  }
 
   # Optional: Add a grid for better readability
   grid()

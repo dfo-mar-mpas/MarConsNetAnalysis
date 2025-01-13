@@ -60,7 +60,7 @@ for (i in seq_along(ITP$indicators)) {
   tid2 <- "BLANK"
 
   # Filling in actual status and trends
-  if (!(ITP$plot[i]) == 0) {
+  if (!(ITP$plot[i]) == "0") {
 
     text <- ITP$plot[i]
     if (!(grepl("dataframe=TRUE", text))) {
@@ -185,6 +185,7 @@ for (i in seq_along(ITP$indicators)) {
   ITP$status[i] <- STATUS
 
   if (!(ITP$desired_state[i] %in% c("desired", "stable"))) { # FIXME
+    if (!(ITP$plot[i] == "0")) {
     # STATUS LETTER GRADE
     desired <- ITP$desired_state[i]
     message("desired = ", desired)
@@ -228,7 +229,7 @@ for (i in seq_along(ITP$indicators)) {
 
     message(paste0("pval = ", pval, " and desired = ", desired, " and actual = ", actual, " therefore grade = ", ITP$status_grade[i], " for ", ITP$indicators[i]))
 
-
+  }
   }
 
 
