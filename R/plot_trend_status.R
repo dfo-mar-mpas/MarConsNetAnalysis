@@ -163,7 +163,6 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
   }
 
   if (map) {
-    browser()
     if (!(parameter == "bloom_amplitude")) {
       inside2 <- which(sf::st_within(points_sf, outside_exclusive_multipolygon, sparse = FALSE)[,1])
       insideKeep <- unique(c(inside2, which(inside[,1])))
