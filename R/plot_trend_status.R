@@ -36,7 +36,11 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
   }
 
   if (area == "Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)") {
-    Outside <- st_transform(read_sf("../WesternEmerald_CSAS_2025/data/WEBCA_10k_85k.shp")$geometry, crs=4326)
+
+    Outside <- st_transform(read_sf(system.file("data","WEBCA_10k_85k.shp", package = "MarConsNetAnalysis"))$geometry, crs=4326)
+
+
+    #Outside <- st_transform(read_sf("../WesternEmerald_CSAS_2025/data/WEBCA_10k_85k.shp")$geometry, crs=4326)
   } else {
     stop("Must code in other buffers.")
   }
