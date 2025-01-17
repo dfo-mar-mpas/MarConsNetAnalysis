@@ -25,7 +25,7 @@
 #' @return data frame with trends and status'
 #' @export
 #'
-analysis <- function(DF=list(bloom_df=bloom_df, all_haddock=all_haddock, gsdet=gsdet, zooplankton=zooplankton, surface_height=surface_height), bi=binned_indicators, Discrete_Occupations_Sections=azmpdata::Discrete_Occupations_Sections) {
+analysis <- function(DF=list(bloom_df=bloom_df, all_haddock=all_haddock, gsdet=gsdet, zooplankton=zooplankton, surface_height=surface_height, whale_sighting), bi=binned_indicators, Discrete_Occupations_Sections=azmpdata::Discrete_Occupations_Sections) {
 
 ITP <- bi
 ITP$status <- 0
@@ -33,7 +33,7 @@ ITP$trend <- 0
 ITP$status_grade <- 0
 MPAs <- data_CPCAD_areas(data_bioregion("Scotian Shelf"),  zones = FALSE)
 
-
+#for (i in 112) {
 for (i in seq_along(ITP$indicators)) {
   message(i)
 
