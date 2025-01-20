@@ -253,16 +253,17 @@ for (i in seq_along(ITP$indicators)) {
     }
 
     message(paste0("pval = ", pval, " and desired = ", desired, " and actual = ", actual, " therefore grade = ", ITP$status_grade[i], " for ", ITP$indicators[i]))
-    message("TREND = ", TREND)
+  }
+  }
+  message("TREND = ", TREND)
 
-  }
-  }
+
+  ITP$trend[i] <- TREND
+  ITP$status[i] <- STATUS
 
 
 }
 
-ITP$trend[i] <- TREND
-ITP$status[i] <- STATUS
 
 
 
