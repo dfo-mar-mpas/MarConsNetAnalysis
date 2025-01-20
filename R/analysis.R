@@ -39,7 +39,7 @@ for (i in seq_along(ITP$indicators)) {
 
   itp <- ITP$indicators[i]
 
-  TREND <- "A linear regression has shown a XX  of YY UU over the last ZZ years. The linear trend for the last 5 years was a TID of LR UU. When comparing to outside of the protected area, a linear regression has shown a XX2  of YY2 UU2 over the last ZZ2 years. The linear trend for the last 5 years was a TID2 of LR2 UU2"
+  TREND <- "A linear regression has shown a XX of YY UU over the last ZZ years (PVAL). The linear trend for the last 5 years was a TID of LR UU. When comparing to outside of the protected area, a linear regression has shown a XX2 of YY2 UU2 over the last ZZ2 years (PVAL2). The linear trend for the last 5 years was a TID2 of LR2 UU2"
   STATUS <- "The most recent year (RR) shows NN UU. The most recent 5 year mean was MM UU. When comparing to outside the protected area, the most recent year (RR2) shows NN2 UU2. The most recent 5 year mean was MM2 UU2"
   t <- "BLANK"
   y <- "BLANK"
@@ -49,6 +49,7 @@ for (i in seq_along(ITP$indicators)) {
   m <- "BLANK"
   lr <- "BLANK"
   tid <- "BLANK"
+  pval <- "BLANK"
 
   t2 <- "BLANK"
   y2 <- "BLANK"
@@ -58,6 +59,7 @@ for (i in seq_along(ITP$indicators)) {
   m2 <- "BLANK"
   lr2 <- "BLANK"
   tid2 <- "BLANK"
+  pval2 <- "BLANK"
 
   # Filling in actual status and trends
   if (!(ITP$plot[i]) == "0") {
@@ -143,14 +145,14 @@ for (i in seq_along(ITP$indicators)) {
 
   TREND <- gsub("YY ", paste0(t, " "), TREND)
   TREND <- gsub("ZZ ", paste0(y, " "), TREND)
-  TREND <- gsub("UU.", paste0(u, " ."), TREND)
+  TREND <- gsub("UU", paste0(u, " "), TREND)
   TREND <- gsub("LR ", paste0(lr," "), TREND)
   TREND <- gsub("TID ", paste0(tid," "), TREND)
 
 
   # STATUS
   STATUS <- gsub("(RR)", paste0(r), STATUS)
-  STATUS <- gsub("UU.", paste0(u," ."), STATUS)
+  STATUS <- gsub("U ", paste0(u," "), STATUS)
   STATUS <- gsub("NN ", paste0(n," "), STATUS)
   STATUS <- gsub("MM ", paste0(m," "), STATUS)
 
@@ -172,17 +174,12 @@ for (i in seq_along(ITP$indicators)) {
   TREND <- gsub("LR2", lr2, TREND)
   TREND <- gsub("TID2", tid2, TREND)
 
-
-
-  ITP$trend[i] <- TREND
-
   # STATUS
   STATUS <- gsub("RR2", r2, STATUS)
   STATUS <- gsub("UU2", u2, STATUS)
   STATUS <- gsub("NN2", n2, STATUS)
   STATUS <- gsub("MM2", m2, STATUS)
 
-  ITP$status[i] <- STATUS
 
   if (!(ITP$desired_state[i] %in% c("desired", "stable"))) { # FIXME
     if (!(ITP$plot[i] == "0")) {
@@ -190,11 +187,31 @@ for (i in seq_along(ITP$indicators)) {
     desired <- ITP$desired_state[i]
     message("desired = ", desired)
     pval <- coef(summary(lm(ddff$avg_parameter ~ ddff$year)))["ddff$year", "Pr(>|t|)"]
+    pval2 <- coef(summary(lm(df2$avg_parameter ~ df2$year)))["df2$year", "Pr(>|t|)"]
+
+    # Determine if the inside/outside different is statistically significant
+    # Clean data: Remove rows with NaN values
+    ddff_clean <- ddff %>% filter(!is.na(avg_parameter))
+    df2_clean <- df2 %>% filter(!is.na(avg_parameter))
+
+    combined_data <- bind_rows(
+      ddff_clean %>% mutate(group = "ddff"),
+      df2_clean %>% mutate(group = "df2")
+    )
+    model <- lm(avg_parameter ~ year * group, data = combined_data)
+
+
+    # Extract the interaction term significance
+    interaction_p_value <- summary(model)$coefficients["year:groupdf2", "Pr(>|t|)"]
+
     if (t < 0) {
       actual <- "decrease"
     } else {
       actual <- "increase"
     }
+    TREND <- gsub("PVAL2", paste0("p = ", round(pval2,2)), TREND)
+
+    TREND <- gsub("PVAL", paste0("p=", round(pval,2)), TREND)
 
 
     #' if (!(pval < 0.05)) {
@@ -227,13 +244,27 @@ for (i in seq_along(ITP$indicators)) {
       ITP$status_grade[i] <- "F"
     }
 
+
+    if (interaction_p_value < 0.05) {
+      TREND <- paste0(TREND, ". The difference between the inside and outside boundary is significant (p =",round(interaction_p_value,2), ").")
+    } else {
+      TREND <- paste0(TREND, ". The difference between the inside and outside boundary is not significant (p =",round(interaction_p_value,2), ").")
+
+    }
+
     message(paste0("pval = ", pval, " and desired = ", desired, " and actual = ", actual, " therefore grade = ", ITP$status_grade[i], " for ", ITP$indicators[i]))
+    message("TREND = ", TREND)
 
   }
   }
 
 
 }
+
+ITP$trend[i] <- TREND
+ITP$status[i] <- STATUS
+
+
 
 return(ITP)
 
