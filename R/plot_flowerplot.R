@@ -106,13 +106,8 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
   }
 
   grades <- c("A", "B", "C", "D", "F")
-  flowerPalette <- c(
-    "F" = "#FF0000",    # Bright Red
-    "D" = "#FF6600",    # Red-Orange
-    "C" = "#FFFF00",    # Yellow
-    "B" = "#66FF66",    # Medium Green
-    "A" = "#006600"    # Very Dark Green
-  )
+  flowerPalette <- colorRampPalette(brewer.pal(5,"RdBu"))(length(grades))
+  names(flowerPalette) <- grades
 
   ngroups <- length(unique(df[[grouping]]))
   data <- data.frame(grouping=factor(df[[grouping]],levels = unique(df[[grouping]])),
