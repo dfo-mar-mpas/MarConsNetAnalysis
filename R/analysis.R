@@ -10,12 +10,8 @@
 #' looks at the actual trend of the indicator. If the trend
 #' 1) is statistically significant AND matches the desired direction for the
 #' indicator, a score of A is assigned.
-#' 2) is not statistically significant but matches the desired direction for
-#' the indicator, a B is assigned
-#' 3) Has no change a C is assigned
-#' 4) is not statistically significant and going is the opposite direction
-#' of the desired direction a D is assigned
-#' 5) is statistically significant and going in the opposite direction,
+#' 2) Has no statistically significant change a C is assigned
+#' 3) is statistically significant and going in the opposite direction,
 #'  a F is assigned.
 #'
 #' @param DF list of data framed needed for all binned_indicators
@@ -30,13 +26,11 @@ analysis <- function(DF=list(bloom_df=bloom_df, all_haddock=all_haddock, gsdet=g
 ITP <- bi
 ITP$status <- 0
 ITP$trend <- 0
-ITP$status_grade <- 0
+ITP$status_grade <- NA
 MPAs <- data_CPCAD_areas(data_bioregion("Scotian Shelf"),  zones = FALSE)
 
-#for (i in 112) {
 for (i in seq_along(ITP$indicators)) {
   message(i)
-
   itp <- ITP$indicators[i]
 
   TREND <- "A linear regression has shown a XX of YY UU over the last ZZ years (PVAL). The linear trend for the last 5 years was a TID of LR UU. When comparing to outside of the protected area, a linear regression has shown a XX2 of YY2 UU2 over the last ZZ2 years (PVAL2). The linear trend for the last 5 years was a TID2 of LR2 UU2"
@@ -234,12 +228,8 @@ for (i in seq_along(ITP$indicators)) {
     # NEW A-F Assigning
     if (pval < 0.05 & desired == actual) {
       ITP$status_grade[i] <- "A"
-    } else if (pval > 0.05 & desired == actual) {
-      ITP$status_grade[i] <- "B"
-    } else if (round(t,0) == 0) {
+    } else if (pval > 0.05) {
       ITP$status_grade[i] <- "C"
-    } else if (pval > 0.05 & (!(desired == actual))) {
-      ITP$status_grade[i] <- "D"
     } else if (pval < 0.05 & (!(desired == actual))) {
       ITP$status_grade[i] <- "F"
     }

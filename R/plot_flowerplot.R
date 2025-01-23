@@ -44,9 +44,6 @@
 plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weight="weight",title=unique(df[["area_name"]]),max_score = 100,min_score = 0,bintextsize=3,zeroline=FALSE){
   scalerange <- max_score-min_score
 
-
-  df[[score]][which(df[[score]]==0)] <- NA
-
    #SEE ISSUE 47 in MarConsNetApp. Do not delete, we may revisit this.
    #  calc_letter_grade <- function(percent){
    #    cutoffs=c(min_score, seq(max_score-scalerange*.4, max_score, by = 10/3/100*scalerange))
@@ -87,26 +84,30 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
 
 
   calc_letter_grade <- function(scores) {
-    # Vectorized assignment of grades based on fixed criteria
     sapply(scores, function(score) {
-      if (is.na(score)) {
-        return(NA)  # Return NA if the input is NA
-      } else if (score >= 100) {
-        return("A")
-      } else if (score >= 80) {
-        return("B")
-      } else if (score >= 60) {
-        return("C")
-      } else if (score >= 40) {
-        return("D")
+      if (!(is.na(score)) && !(is.nan(score))) {
+        if (score >= 0 && score <= 20) {
+          grade <- "F"
+        } else if (score >= 20 && score < 40) {
+          grade <- "D"
+        } else if (score >= 40 && score < 60) {
+          grade <- "C"
+        } else if (score >= 60 && score < 80) {
+          grade <- "B"
+        } else if (score >= 80 && score <= 100) {
+          grade <- "A"
+        }
       } else {
-        return("F")
+        grade <- "NA"
       }
+      return(grade)
     })
   }
 
+
   grades <- c("A", "B", "C", "D", "F")
-  flowerPalette <- colorRampPalette(brewer.pal(5,"RdBu"))(length(grades))
+  flowerPalette <- rev(colorRampPalette(brewer.pal(5,"RdYlBu"))(length(grades)))
+
   names(flowerPalette) <- grades
 
   ngroups <- length(unique(df[[grouping]]))
