@@ -26,7 +26,7 @@
 #' @examples
 climate_analysis <- function(trend=NULL, itp=indicator_to_plot) {
   if (!(grepl("BLANK", trend))) {
-    TREND <- str_split(trend, "(?<!\\d)\\.(?!\\d)")[[1]]
+    TREND <- str_split(trend, "(?<!\\d)\\.(?!\\d)")[[1]] # Splitting at dots that are not part of a number
     TREND <- paste0(TREND[1], ". ",trimws(TREND[3], "both"),". ", str_extract(TREND[4], "The difference between.*"))
 
 

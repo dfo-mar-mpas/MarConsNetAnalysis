@@ -3,8 +3,10 @@
 #' This function automatically calculates status and trends
 #' for a list of indicators used in the Marine Conservation
 #' Target (MCT) app. It then uses this information to assign
-#' a letter grade for the status of either A, B,
-#' or C by doing the following:
+#' a letter grade in two different scenarios:
+#'
+#' # Scenario 1: If there is a desired trend we want the indicator to go in
+#' A grade of either A, B, or C by doing the following:
 #'
 #' It determines the desired trend of the indicator, then
 #' looks at the actual trend of the indicator. If the trend
@@ -13,6 +15,11 @@
 #' 2) Has no statistically significant change a C is assigned
 #' 3) is statistically significant and going in the opposite direction,
 #'  a F is assigned.
+#'
+#' # Scenario 2: If we want the trend of the indicator to be stable
+#' A grade of either A or F is assigned based on:
+#' 1) If the trend of the indicator has no significant change an A is assigned
+#' 2) If there is a significant change, a F in assigned
 #'
 #' @param DF list of data framed needed for all binned_indicators
 #' @param bi binned_indicators data frame likely found in the
@@ -175,7 +182,7 @@ for (i in seq_along(ITP$indicators)) {
   STATUS <- gsub("MM2", m2, STATUS)
 
 
-  if (!(ITP$desired_state[i] %in% c("desired", "stable"))) { # FIXME
+  if (!(ITP$desired_state[i] %in% "desired")) { # FIXME
     if (!(ITP$plot[i] == "0")) {
     # STATUS LETTER GRADE
     desired <- ITP$desired_state[i]
@@ -207,31 +214,23 @@ for (i in seq_along(ITP$indicators)) {
 
     TREND <- gsub("PVAL", paste0("p=", round(pval,2)), TREND)
 
-
-    #' if (!(pval < 0.05)) {
-    #'   # B) The trend is not statistically significant (i.e. there is no true trend) a grade of B is assigned.
-    #'   ITP$status_grade[i] <- "B"
-    #' } else {
-    #'   if (desired == actual) {
-    #'     # A) The trend is statistically significant AND matches matches the desired direction
-    #'     # for the indicator, a score of A is assigned.
-    #'     ITP$status_grade[i] <- "A"
-    #'
-    #'   } else {
-    #'     #' C) The trend is statistically significant AND going in the opposite direction
-    #'     #' to the of the desired direction for that indicator it receives a C.
-    #'     ITP$status_grade[i] <- "C"
-    #'   }
-    #' }
-
-
     # NEW A-F Assigning
+    if (!(desired == "stable")) {
     if (pval < 0.05 & desired == actual) {
       ITP$status_grade[i] <- "A"
     } else if (pval > 0.05) {
       ITP$status_grade[i] <- "C"
     } else if (pval < 0.05 & (!(desired == actual))) {
       ITP$status_grade[i] <- "F"
+    }
+    } else {
+      # A or F scoring
+      if (pval < 0.05) {
+        ITP$status_grade[i] <- "F"
+      } else {
+        ITP$status_grade[i] <- "A"
+
+      }
     }
 
 
@@ -253,9 +252,6 @@ for (i in seq_along(ITP$indicators)) {
 
 
 }
-
-
-
 
 return(ITP)
 
