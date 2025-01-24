@@ -2,18 +2,24 @@
 % Please edit documentation in R/plot_trend_status.R
 \name{plot_trend_status}
 \alias{plot_trend_status}
-\title{Plot Physical AZMP}
+\title{Plot Indicator Trends}
 \usage{
 plot_trend_status(
+  df = NULL,
   mpa = NULL,
   area = "Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)",
   type = "surface",
   dataframe = FALSE,
   parameter = "temperature",
-  outside = FALSE
+  outside = FALSE,
+  map = FALSE
 )
 }
 \arguments{
+\item{df}{data frame either from a getFunction specified in dataTable or from
+a tar_load that includes latitude, longitude, year, type, and the parameter
+to average}
+
 \item{mpa}{an object of class "sf", likely from data_CPCAD_areas that contains
 the name and geoms of the protected areas}
 
@@ -26,7 +32,11 @@ the name and geoms of the protected areas}
 \item{parameter}{a character indicating which parameter to measure}
 
 \item{outside}{a Boolean indicating if an outside comparison is happening}
+
+\item{map}{a Boolean indicating if the latitude, longitude, boundary, and outside boundary
+should be returned. This is likely used for plotting purposes}
 }
 \description{
-Plot Physical AZMP
+This function plots the trends of indicators. It also provides the values
+of indicators for each year that exists
 }

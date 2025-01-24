@@ -23,7 +23,6 @@
 #' @return a string interpreting results of indicators from a climate change lens
 #' @export
 #'
-#' @examples
 climate_analysis <- function(trend=NULL, itp=indicator_to_plot) {
   if (!(grepl("BLANK", trend))) {
     TREND <- str_split(trend, "(?<!\\d)\\.(?!\\d)")[[1]] # Splitting at dots that are not part of a number

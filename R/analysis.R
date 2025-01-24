@@ -28,7 +28,7 @@
 #' @return data frame with trends and status'
 #' @export
 #'
-analysis <- function(DF=list(bloom_df=bloom_df, all_haddock=all_haddock, gsdet=gsdet, zooplankton=zooplankton, surface_height=surface_height, whale_sighting), bi=binned_indicators, Discrete_Occupations_Sections=azmpdata::Discrete_Occupations_Sections) {
+analysis <- function(DF=list(bloom_df=bloom_df, all_haddock=all_haddock, gsdet=gsdet, zooplankton=zooplankton, surface_height=surface_height, whale_biodiversity=whale_biodiversity), bi=binned_indicators, Discrete_Occupations_Sections=azmpdata::Discrete_Occupations_Sections) {
 
 ITP <- bi
 ITP$status <- 0
@@ -152,8 +152,11 @@ for (i in seq_along(ITP$indicators)) {
 
 
   # STATUS
+  STATUS <- gsub("RR2", r2, STATUS)
+
   STATUS <- gsub("(RR)", paste0(r), STATUS)
-  STATUS <- gsub("U ", paste0(u," "), STATUS)
+  STATUS <- gsub("UU2", paste0(u," "), STATUS)
+  STATUS <- gsub("UU", paste0(u," "), STATUS)
   STATUS <- gsub("NN ", paste0(n," "), STATUS)
   STATUS <- gsub("MM ", paste0(m," "), STATUS)
 
@@ -176,7 +179,6 @@ for (i in seq_along(ITP$indicators)) {
   TREND <- gsub("TID2", tid2, TREND)
 
   # STATUS
-  STATUS <- gsub("RR2", r2, STATUS)
   STATUS <- gsub("UU2", u2, STATUS)
   STATUS <- gsub("NN2", n2, STATUS)
   STATUS <- gsub("MM2", m2, STATUS)

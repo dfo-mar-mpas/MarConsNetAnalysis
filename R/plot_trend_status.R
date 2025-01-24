@@ -109,7 +109,7 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
   }
 
   grouped_list <- split(keep, keep$year)
-  if (!(parameter %in% c("Zooplankton", "fish_weight", "fish_length", "haddock_biomass", "haddock_abundance", "whale_sightings"))) {
+  if (!(parameter %in% c("Zooplankton", "fish_weight", "fish_length", "haddock_biomass", "haddock_abundance", "whale_biodiversity"))) {
     yearly_avg <- sapply(grouped_list, function(df) mean(df[[parameter]], na.rm=TRUE))
   } else if (parameter == "Zooplankton") {
     yearly_avg <- NULL
@@ -138,7 +138,7 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
       }
 
 
-    } else if (parameter == "whale_sightings") {
+    } else if (parameter == "whale_biodiversity") {
       yearly_avg <- NULL
       for (i in seq_along(grouped_list)) {
         l <- as.data.frame(grouped_list[[i]])

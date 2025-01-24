@@ -3,6 +3,7 @@
 export(aggregate_groups)
 export(analysis)
 export(calc_in_sea_distance)
+export(climate_analysis)
 export(create_data_report)
 export(ind_ProtConn)
 export(ind_coverage)
