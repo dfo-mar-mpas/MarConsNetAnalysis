@@ -142,7 +142,7 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
       yearly_avg <- NULL
       for (i in seq_along(grouped_list)) {
         l <- as.data.frame(grouped_list[[i]])
-        yearly_avg[[i]] <-  length(grouped_list[[i]]$ws_date)
+        yearly_avg[[i]] <-  length(unique(grouped_list[[i]]$species_name))
       }
 
 
