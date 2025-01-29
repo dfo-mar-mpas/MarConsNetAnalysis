@@ -22,79 +22,93 @@
 #' @export
 #'
 #' @examples
-plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)", type="surface",
-                              dataframe=FALSE, parameter="temperature",outside=FALSE, map=FALSE) {
+plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)", type=NULL,
+                              dataframe=FALSE, outside=FALSE, map=FALSE) {
 
   # Derived_Monthly_Stations
   multipolygon <- mpa$geoms[which(mpa$NAME_E == area)]
-  if (!(parameter == "bloom_amplitude")) {
-  points_sf <- sf::st_as_sf(df, coords = c("longitude", "latitude"), crs = 4326)
-  inside <- sf::st_within(points_sf, multipolygon, sparse = FALSE)
-
-  # Filter points that are inside the polygon
-  points_inside <- points_sf[inside, ]
-  }
 
   if (area == "Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)") {
-
     Outside <- st_transform(read_sf(system.file("data","WEBCA_10k_85k.shp", package = "MarConsNetAnalysis"))$geometry, crs=4326)
-
-
-    #Outside <- st_transform(read_sf("../WesternEmerald_CSAS_2025/data/WEBCA_10k_85k.shp")$geometry, crs=4326)
   } else {
-    stop("Must code in other buffers.")
+    stop("Must code in outside buffer for outside comparison in this area")
   }
 
   outside_exclusive_multipolygon <- sf::st_difference(Outside, multipolygon)
 
-
-  # OUTSIDE BUFFER
-  if (outside) {
-    if (!(parameter == "bloom_amplitude")) {
-
-    inside <- sf::st_within(points_sf, outside_exclusive_multipolygon, sparse = FALSE)
+  if (!("geom" %in% names(df))) {
+    points_sf <- sf::st_as_sf(df, coords = c("longitude", "latitude"), crs = 4326)
+    inside <- sf::st_within(points_sf, multipolygon, sparse = FALSE)
 
     # Filter points that are inside the polygon
     points_inside <- points_sf[inside, ]
+  } else {
+    polys <- unique(df$geom)
+    if (outside) {
+      overlap <- lapply(polys, function(x) st_overlaps(x, Outside))
     } else {
-      message("No outside comparison available.")
+      overlap <- lapply(polys, function(x) st_overlaps(x, multipolygon))
+
+    }
+    yon <- NULL # 1 means overlap
+    for (i in seq_along(overlap)) {
+      yon[[i]] <- overlap[[i]][[1]]
+    }
+    polyKeep <- polys[which(yon == 1)]
+
+    keepers <- vector("list", length(df$geom))
+    for (i in seq_along(df$geom)) {
+      dfk <- unlist(df$geom[i])
+      for (j in seq_along(polyKeep)) {
+        pg <- unlist(polyKeep[[j]])
+        if (identical(dfk,pg)) {
+          keepers[[i]][[j]] <- i
+        }
+      }
+    }
+
+    keepers <- unlist(keepers)
+
+    inside <-  matrix(FALSE, nrow = length(df$type), ncol = 1)
+    inside[,1][unlist(keepers)] <- TRUE
+  }
+
+  # OUTSIDE BUFFER
+  if (outside) {
+    if (!("geom" %in% names(df))) {
+      inside <- sf::st_within(points_sf, outside_exclusive_multipolygon, sparse = FALSE)
+      if (!(any(inside[,1]) == 0)) {
+        # Filter points that are inside the polygon
+        points_inside <- points_sf[inside, ]
+      } else {
+        stop("No outside comparison available.")
+      }
     }
   }
-  if (!(parameter == "bloom_amplitude")) {
   if (any(inside[,1])) {
     keep <- df[which(inside[,1]),]
   } else {
-    # None in, but find the closest
-    latitude <- df$latitude
-    longitude <- df$longitude
-    points <- sf::st_as_sf(data.frame(latitude,longitude),
-                           coords = c("longitude", "latitude"),
-                           crs = 4326)  # WGS84 CRS
-    distances <- st_distance(points, multipolygon)
-    closest_index <- apply(distances, 1, which.min)
-    closest_distance <- apply(distances, 1, min)
-    closest_point <- unique(points[closest_index, ])
-    closest_coordinates <- st_coordinates(closest_point)
-    station <- unique(df$station[which(df$latitude %in% unname(closest_coordinates[,2]) & df$longitude %in% unname(closest_coordinates[,1]))])
-    keep <- df[which(df$station == station),]
-  }
-  } else {
-    df$date <- df$year
-    keep <- df
-  }
-
-  if (!("date" %in% names(df))) {
-    if ("month" %in% names(df)) {
-      keep$date <- as.Date(paste(keep$year, keep$month, "1", sep = "-"), format = "%Y-%m-%d")
-    } else {
-      keep$date <- as.POSIXct(paste0(keep$year, "-01-01"), format = "%Y-%m-%d")
+    if (!("geom" %in% names(df))) {
+      # None in, but find the closest
+      latitude <- df$latitude
+      longitude <- df$longitude
+      points <- sf::st_as_sf(data.frame(latitude,longitude),
+                             coords = c("longitude", "latitude"),
+                             crs = 4326)  # WGS84 CRS
+      distances <- st_distance(points, multipolygon)
+      closest_index <- apply(distances, 1, which.min)
+      closest_distance <- apply(distances, 1, min)
+      closest_point <- unique(points[closest_index, ])
+      closest_coordinates <- st_coordinates(closest_point)
+      latKeep <- which(df$latitude %in% unname(closest_coordinates[,2]) & df$longitude %in% unname(closest_coordinates[,1]))
+      keep <- df[(latKeep),]
     }
   }
 
-  keep <- keep[order(keep$date),]
+  keep <- keep[order(keep$year),]
 
-  if (parameter %in% names(azmpdata::Discrete_Occupations_Sections)) {
-    if (type=="surface") {
+  if (!(is.null(type))) {
+    if (type=="surface" && "depth" %in% names(df)) {
       keep <- keep[which(keep$depth < 5),]
     } else if (type == "bottom") {
       keep <- keep %>%
@@ -104,59 +118,33 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
     }
   }
 
-  if (!("year" %in% names(keep))) {
-  keep$year <- format(keep$date, "%Y")
-  }
+
+  NAMES <- names(df)
+  parameter <- NAMES[which(!(NAMES %in% c('latitude', "longitude", "type", "geom", "year", "units", "species_name", "area", "depth")))]
 
   grouped_list <- split(keep, keep$year)
-  if (!(parameter %in% c("Zooplankton", "fish_weight", "fish_length", "haddock_biomass", "haddock_abundance", "whale_biodiversity"))) {
+  if (!("whale_biodiversity" %in% names(df))) {
     yearly_avg <- sapply(grouped_list, function(df) mean(df[[parameter]], na.rm=TRUE))
-  } else if (parameter == "Zooplankton") {
-    yearly_avg <- NULL
-    for (i in seq_along(grouped_list)) {
-      l <- as.data.frame(grouped_list[[i]])
-      ll <- l[which(grepl("log10", names(l), ignore.case=TRUE))]
-      yearly_avg[[i]] <- sum(unname(unlist(ll)), na.rm=TRUE)
-    }
-    } else if (parameter %in% c("fish_weight", "fish_length")) {
-      yearly_avg <- NULL
-      for (i in seq_along(grouped_list)) {
-        l <- as.data.frame(grouped_list[[i]])
-        yearly_avg[[i]] <-  ifelse(parameter=="fish_weight", mean(l$FWT,na.rm=TRUE), mean(l$FLEN, na.rm=TRUE))
-      }
-    } else if (parameter %in% c("haddock_abundance", "haddock_biomass")) {
-      yearly_avg <- NULL
-      for (i in seq_along(grouped_list)) {
-        l <- as.data.frame(grouped_list[[i]])
-        yearly_avg[[i]] <-  ifelse(parameter=="haddock_abundance", mean(l$TOTNO,na.rm=TRUE), mean(l$TOTWGT, na.rm=TRUE))
-      }
-    } else if (parameter == "bloom_amplitude") {
-      yearly_avg <- NULL
-      for (i in seq_along(grouped_list)) {
-        l <- as.data.frame(grouped_list[[i]])
-        yearly_avg[[i]] <-  mean(l$bloom_amplitude,na.rm=TRUE)
-      }
+  } else {
+    yearly_avg <- sapply(grouped_list, function(df) length(unique(df$whale_biodiversity)))
 
+  }
 
-    } else if (parameter == "whale_biodiversity") {
-      yearly_avg <- NULL
-      for (i in seq_along(grouped_list)) {
-        l <- as.data.frame(grouped_list[[i]])
-        yearly_avg[[i]] <-  length(unique(grouped_list[[i]]$species_name))
-      }
-
-
-    }
-    names(yearly_avg) <- names(grouped_list)
-    yearly_avg <- unlist(yearly_avg)
+  names(yearly_avg) <- names(grouped_list)
+  yearly_avg <- unlist(yearly_avg)
 
   # Convert to a data frame for plotting
-  plot_data <- data.frame(
-    year = as.numeric(names(yearly_avg)),  # Convert year to numeric
-    avg_parameter = yearly_avg,
-    parameter_name=rep(parameter),
-    type=ifelse(!(is.null(type)), rep(type), "")
-  )
+  if (!(dataframe)) {
+    plot_data <- data.frame(
+      year = as.numeric(names(yearly_avg)),  # Convert year to numeric
+      avg_parameter = unname(yearly_avg),
+      parameter_name=rep(parameter),
+      type=ifelse(!(is.null(type)), rep(type), ""),
+      units=unique(df$units)
+    )
+  } else {
+    plot_data <- keep
+  }
 
   if (dataframe & (!(map))) {
     return(plot_data)
@@ -164,18 +152,18 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
   # Base R plot
 
   if (!(dataframe) & !(map)) {
-  plot(
-    plot_data$year, plot_data$avg_parameter,
-    type = "b",                    # Line and points
-    col = "blue",                  # Line color
-    pch = 19,                      # Point style (solid circle)
-    xlab = "Year",                 # Label for x-axis
-    ylab = ifelse(!(is.null(type)), paste0("Average ", parameter),ifelse(type=="surface", paste0("Average Surface ",parameter), paste0("Average Bottom ", parameter)))
-  )
+    plot(
+      plot_data$year, plot_data$avg_parameter,
+      type = "b",                    # Line and points
+      col = "blue",                  # Line color
+      pch = 19,                      # Point style (solid circle)
+      xlab = "Year",                 # Label for x-axis
+      ylab = ifelse(is.null(type), paste0("Average ", parameter, " (", unique(plot_data$units), ")"), paste0(ifelse(type=="surface", paste0("Average Surface ",parameter), paste0("Average Bottom ", parameter)), " (", unique(plot_data$units, ")")))
+    )
   }
 
   if (map) {
-    if (!(parameter == "bloom_amplitude")) {
+    if (!("geom" %in% names(df))) {
       inside2 <- which(sf::st_within(points_sf, outside_exclusive_multipolygon, sparse = FALSE)[,1])
       insideKeep <- unique(c(inside2, which(inside[,1])))
 
@@ -185,14 +173,14 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
 
 
       if (length(df$latitude[insideKeep]) > 1000) {
-      latitude <- round(latitude,1)
-      longitude <- round(longitude,1)
-      coord <- data.frame(latitude, longitude)
+        latitude <- round(latitude,1)
+        longitude <- round(longitude,1)
+        coord <- data.frame(latitude, longitude)
 
-      # Get unique pairs
-      unique_coords <- unique(coord)
-      latitude <- unique_coords$latitude
-      longitude <- unique_coords$longitude
+        # Get unique pairs
+        unique_coords <- unique(coord)
+        latitude <- unique_coords$latitude
+        longitude <- unique_coords$longitude
 
       }
 
@@ -216,13 +204,6 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
       multipolygon_sf <- st_sfc(multipolygon)
       outside_sf <- st_sfc(outside_exclusive_multipolygon)
 
-      # Create the data frame with sf objects
-      # mapdf <- data.frame(
-      #   geom = geometry_sf,
-      #   area = multipolygon_sf,
-      #   outside = outside_sf
-      # )
-
       mapdf <- list(
         geom=geometry_sf,
         area=multipolygon_sf,
@@ -233,8 +214,4 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
     return(mapdf)
 
   }
-
-  # Optional: Add a grid for better readability
-  grid()
 }
-
