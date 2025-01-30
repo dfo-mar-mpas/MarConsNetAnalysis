@@ -26,12 +26,19 @@
 climate_analysis <- function(trend=NULL, itp=indicator_to_plot) {
   if (!(grepl("BLANK", trend))) {
     TREND <- str_split(trend, "(?<!\\d)\\.(?!\\d)")[[1]] # Splitting at dots that are not part of a number
-    TREND <- paste0(TREND[1], ". ",trimws(TREND[3], "both"),". ", str_extract(TREND[4], "The difference between.*"))
+
+    if (grepl("There is no outside comparison", trend)) {
+      final <- paste0(TREND[1], " . There is no outside comparison and it is therefore difficult to determine if this is as a result of protected in the area or climate change.")
+      return(final)
+    }
+
+
+    TREND <- paste0(TREND[1], ". ",trimws(TREND[3], "both"),". ", str_extract(TREND[5], "The difference between.*"))
 
 
     ioPVAL <- str_extract(trend, "\\d+(\\.\\d+)?(?=\\D*$)")
     if (ioPVAL < 0.05) {
-      conclusion <- " and therfore implies that protection in this area may directly be impacting this indicator. It is therefore difficult to determine if changes in this indicator are a result of projection
+      conclusion <- " and therefore implies that protection in this area may directly be impacting this indicator. It is therefore difficult to determine if changes in this indicator are a result of projection
       efforts or climate change."
     } else {
       # No statistical difference (therefore potentially climate change)
