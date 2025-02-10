@@ -16,7 +16,7 @@
 #' @param map a Boolean indicating if the latitude, longitude, boundary, and outside boundary
 #' should be returned. This is likely used for plotting purposes
 #' @importFrom azmpdata Discrete_Occupations_Sections
-#' @importFrom sf st_within st_as_sf
+#' @importFrom sf st_within st_as_sf st_crs
 #' @importFrom dplyr slice_max ungroup group_by
 #' @return
 #' @export
@@ -191,8 +191,8 @@ plot_trend_status <- function(df=NULL, mpa=NULL, area="Western/Emerald Banks Con
         outside=outside_exclusive_multipolygon
       )
     } else {
-      st_crs(df$geom) <- 4326
-      geometry <- st_transform(df$geom, st_crs(multipolygon))
+      sf::st_crs(df$geom) <- 4326
+      geometry <- st_transform(df$geom, sf::st_crs(multipolygon))
       geometry <- st_make_valid(geometry)
       overlaps_poly <- st_intersects(geometry, multipolygon, sparse = FALSE)
 
