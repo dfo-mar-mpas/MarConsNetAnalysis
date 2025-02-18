@@ -120,7 +120,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
             weight = sum(weight)) |>
     mutate(weight=weight/sum(weight),
            pos=cumsum(weight)-weight/2,
-           bg=dplyr::if_else(is.nan(score),"grey93","white"))
+           bg=dplyr::if_else(is.nan(score),"#EDEDED","white"))
   data$score[which(is.nan(data$score))] <- NA
 
   grouped_df <- data |>
