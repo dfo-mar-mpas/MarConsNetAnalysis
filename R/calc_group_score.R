@@ -5,7 +5,7 @@
 #' @param score_var character string for the name of the score column in `df`
 #' @param weight_var character string for the name of the weight column in `df`
 #'
-#' @return
+#' @return data.frame with group scores
 #' @export
 #'
 #' @examples

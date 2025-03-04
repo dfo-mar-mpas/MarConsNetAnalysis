@@ -8,6 +8,8 @@
 #' @param min_score numeric value for the minimum possible value of the scale (i.e. petal length). Default is 0
 #' @param weight character string for the name of the weight column in `df`
 #' @param title Defaults to the unique value of the `area_name` column of the `df`, but can take any character value. Alternatively, use `FALSE` to avoid having a title.
+#' @param bintextsize numeric value for the size of the text in the bins. Default is 3
+#' @param zeroline logical value to add a zero line to the plot. Default is `FALSE`
 #'
 #' @return plot
 #' @importFrom RColorBrewer brewer.pal
@@ -137,6 +139,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
     )
 
   p <- ggplot(data=data,aes(width = weight))+
+    geom_crossbar(aes(x = pos, y = max_score-scalerange*1.5, ymax = max_score-scalerange*1.5, ymin = min_score,fill=calc_letter_grade(weighted.mean(score,weight,na.rm = TRUE))),color="transparent")+
     ggplot2::geom_crossbar(stat="identity",linewidth=0.2,color='lightgrey',aes(x=pos,y=max_score,ymax=max_score,ymin=min_score),fill=data$bg)+
     ggplot2::geom_crossbar(stat="identity",linewidth=0.2,color='black',aes(x=pos,y=score,ymax=score,ymin=min_score,fill=calc_letter_grade(score)))+
     ggplot2::coord_polar()+
@@ -151,27 +154,31 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                        breaks = data$pos)+
     scale_y_continuous(limits = c(max_score-scalerange*1.5,max_score+scalerange*.55))+ #PROBLEM HERE
     scale_fill_manual(values=flowerPalette)+
-      ggplot2::geom_text(aes(label=calc_letter_grade(weighted.mean(score,weight,na.rm = TRUE))),
-              x=min_score,
-              y=max_score-scalerange*1.5,
-              size=8)+
-    ggplot2::geom_text(aes(label=gsub(" ","\n",labels),
-                  x=pos,
-                  y=max_score+scalerange*.2),
-              size=2)+
+    scale_color_manual(values=flowerPalette)+
     ggplot2::geom_errorbar(data=grouped_df,
-                  inherit.aes=FALSE,
-                  aes(x=x,
-                      ymin=0.95*y,
-                      ymax=0.95*y,
-                      width=weight-0.01))+
+                           inherit.aes=FALSE,
+                           aes(x=x,
+                               ymin=y,
+                               ymax=y,
+                               width=weight-0.01,
+                               col = calc_letter_grade(score)),
+                           linewidth = 7)+
+    ggplot2::geom_text(aes(label=calc_letter_grade(weighted.mean(score,weight,na.rm = TRUE))),
+                       x=min_score,
+                       y=max_score-scalerange*1.5,
+                       size=8)+
+    ggplot2::geom_text(aes(label=gsub(" ","\n",labels),
+                           x=pos,
+                           y=max_score+scalerange*.2),
+                       size=2)+
+
     ggplot2::geom_text(data=grouped_df,
-              inherit.aes = FALSE,
-              aes(label=grouping,
-                  x=x,
-                  y=y,
-                  angle=angle),
-              size=bintextsize)
+                       inherit.aes = FALSE,
+                       aes(label=grouping,
+                           x=x,
+                           y=y,
+                           angle=angle),
+                       size=bintextsize)
   if(zeroline){
     p <- p + ggplot2::geom_hline(yintercept = 0,linetype="dotted")
 
