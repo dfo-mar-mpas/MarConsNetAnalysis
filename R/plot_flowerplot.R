@@ -85,28 +85,6 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
   # grades didn't change.
 
 
-  calc_letter_grade <- function(scores) {
-    sapply(scores, function(score) {
-      if (!(is.na(score)) && !(is.nan(score))) {
-        if (score >= 0 && score <= 20) {
-          grade <- "F"
-        } else if (score >= 20 && score < 40) {
-          grade <- "D"
-        } else if (score >= 40 && score < 60) {
-          grade <- "C"
-        } else if (score >= 60 && score < 80) {
-          grade <- "B"
-        } else if (score >= 80 && score <= 100) {
-          grade <- "A"
-        }
-      } else {
-        grade <- "NA"
-      }
-      return(grade)
-    })
-  }
-
-
   grades <- c("A", "B", "C", "D", "F")
   flowerPalette <- rev(colorRampPalette(brewer.pal(5,"RdYlBu"))(length(grades)))
 
