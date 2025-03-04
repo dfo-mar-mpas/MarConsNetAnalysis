@@ -111,24 +111,25 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
   names(flowerPalette) <- grades
 
   ngroups <- length(unique(df[[grouping]]))
-  data <- data.frame(grouping=factor(df[[grouping]],levels = unique(df[[grouping]])),
+  rawdata <- data.frame(grouping=factor(df[[grouping]],levels = unique(df[[grouping]])),
                      labels=factor(df[[labels]],levels = unique(df[[labels]])),
                      score=df[[score]],
                      weight=df[[weight]]) |>
-    group_by(grouping,labels) |>
-    reframe(score = weighted.mean(score,weight,na.rm = TRUE),
-            weight = sum(weight)) |>
-    mutate(weight=weight/sum(weight),
-           pos=cumsum(weight)-weight/2,
+    mutate(weight=weight/sum(weight))
+  data <- calc_group_score(df = rawdata,
+                     grouping_var = "labels",
+                     score_var = "score",
+                     weight_var = "weight") |>
+    mutate(pos=cumsum(weight)-weight/2,
            bg=dplyr::if_else(is.nan(score),"#EDEDED","white"))
   data$score[which(is.nan(data$score))] <- NA
 
-  grouped_df <- data |>
-    group_by(grouping) |>
-    reframe(y=max_score+scalerange*.5,
-            n=dplyr::n(),
-            weight=sum(weight)) |>
-    mutate(x=cumsum(weight)-weight/2,
+  grouped_df <- calc_group_score(df = rawdata,
+                                 grouping_var = "grouping",
+                                 score_var = "score",
+                                 weight_var = "weight") |>
+    mutate(y=max_score+scalerange*.5,
+           x=cumsum(weight)-weight/2,
            angle=360-x*360,
            angle=dplyr::if_else(angle>90&angle<270,
                          angle-180,
