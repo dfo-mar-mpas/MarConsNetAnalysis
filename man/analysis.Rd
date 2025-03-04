@@ -4,13 +4,7 @@
 \alias{analysis}
 \title{Analyse Status and Trends of indicators}
 \usage{
-analysis(
-  DF = list(bloom_df = bloom_df, all_haddock = all_haddock, gsdet = gsdet, zooplankton =
-    zooplankton, surface_height = surface_height, whale_biodiversity =
-    whale_biodiversity),
-  bi = binned_indicators,
-  Discrete_Occupations_Sections = azmpdata::Discrete_Occupations_Sections
-)
+analysis(DF = NULL, bi = binned_indicators)
 }
 \arguments{
 \item{DF}{list of data framed needed for all binned_indicators}

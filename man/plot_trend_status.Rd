@@ -8,9 +8,8 @@ plot_trend_status(
   df = NULL,
   mpa = NULL,
   area = "Western/Emerald Banks Conservation Area (Restricted Fisheries Zone)",
-  type = "surface",
+  type = NULL,
   dataframe = FALSE,
-  parameter = "temperature",
   outside = FALSE,
   map = FALSE
 )
@@ -29,12 +28,12 @@ the name and geoms of the protected areas}
 
 \item{dataframe}{FALSE a Boolean indicating if a data frame is returned or not}
 
-\item{parameter}{a character indicating which parameter to measure}
-
 \item{outside}{a Boolean indicating if an outside comparison is happening}
 
 \item{map}{a Boolean indicating if the latitude, longitude, boundary, and outside boundary
 should be returned. This is likely used for plotting purposes}
+
+\item{parameter}{a character indicating which parameter to measure}
 }
 \description{
 This function plots the trends of indicators. It also provides the values

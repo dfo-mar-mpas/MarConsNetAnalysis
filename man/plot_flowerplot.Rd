@@ -33,6 +33,10 @@ plot_flowerplot(
 \item{max_score}{numeric value for the maximum possible value of the scale (i.e. petal length). Default is 100}
 
 \item{min_score}{numeric value for the minimum possible value of the scale (i.e. petal length). Default is 0}
+
+\item{bintextsize}{numeric value for the size of the text in the bins. Default is 3}
+
+\item{zeroline}{logical value to add a zero line to the plot. Default is \code{FALSE}}
 }
 \value{
 plot
