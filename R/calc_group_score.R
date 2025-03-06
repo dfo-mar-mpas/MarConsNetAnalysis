@@ -6,6 +6,7 @@
 #' @param weight_var character string for the name of the weight column in `df`
 #'
 #' @return data.frame with group scores
+#' @importFrom dplyr select group_by reframe
 #' @export
 #'
 #' @examples
