@@ -18,6 +18,11 @@
 #' @param areaID
 #'
 #' @returns
+#' @importFrom dplyr case_when select rename mutate
+#' @importFrom purrr map map_dbl
+#' @importFrom sf st_as_sf st_join
+#' @importFrom stats lm
+#'
 #' @export
 #'
 #' @examples
