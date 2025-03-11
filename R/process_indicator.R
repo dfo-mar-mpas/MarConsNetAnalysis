@@ -78,8 +78,22 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
         mutate(model = map(data, ~lm(as.formula(paste0(indicator_var_name,"~",year)), data = .x)),
                summaries = map(model,summary),
                coeffs = map(summaries,coefficients),
-               slope_year = map_dbl(coeffs,~.x[2,1]),
-               p = map_dbl(summaries,~.x$coefficients[2,4]),
+               slope_year = map_dbl(coeffs,~{
+                 # Check if coeffs has at least 2 rows
+                 if(nrow(.x) >= 2) {
+                   return(.x[2,1])
+                 } else {
+                   # Return NA or some other default value
+                   return(NA_real_)
+                 }}),
+               p = map_dbl(summaries, ~{
+                 # Check if coefficients has at least 2 rows
+                 if(is.null(.x$coefficients) || nrow(.x$coefficients) < 2) {
+                   return(NA_real_)
+                 } else {
+                   return(.x$coefficients[2,4])
+                 }
+               }),
                score = case_when(
                  endsWith(scoring, "increase") & p < 0.05 & slope_year > 0 ~ 100,
                  endsWith(scoring, "increase") & p < 0.05 & slope_year < 0 ~ 0,
