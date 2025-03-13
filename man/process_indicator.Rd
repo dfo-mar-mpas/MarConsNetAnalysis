@@ -11,7 +11,8 @@ process_indicator(
   type = NA,
   units = NA,
   scoring = NA,
-  project = NA,
+  PPTID = NA,
+  project_short_title = NA,
   climate = FALSE,
   design_target = FALSE,
   crs = 4326,
@@ -24,7 +25,39 @@ process_indicator(
 )
 }
 \arguments{
-\item{areaID}{}
+\item{data}{a data frame or sf data frame that contains the indicator data, the year, and either the latitude and longitude (i.e. data frame) or the geometry (i.e. sf data frame). Other optional columns (e.g. depth) can also be included by naming them in the other_nest_variables parameter.}
+
+\item{indicator_var_name}{character string of the name of the column in the data that contains the indicator data}
+
+\item{indicator}{character string of the name of the indicator}
+
+\item{type}{character string of the instrument/platform/model type of the indicator}
+
+\item{units}{character string of the units of the indicator}
+
+\item{scoring}{character string of the scoring method for the indicator}
+
+\item{PPTID}{numeric project planning tool project ID}
+
+\item{project_short_title}{character string of a short title for the project}
+
+\item{climate}{logical indicating whether the indicator is a climate indicator}
+
+\item{design_target}{logical indicating whether the indicator is a design target}
+
+\item{crs}{coordinate reference system of the data}
+
+\item{latitude}{character string of the name of the column in the data that contains the latitude}
+
+\item{longitude}{character string of the name of the column in the data that contains the longitude}
+
+\item{year}{character string of the name of the column in the data that contains the year}
+
+\item{other_nest_variables}{character vector of the names of other columns in the data that should be nested}
+
+\item{areas}{an sf data frame that contains the areas to which the data should be joined (i.e. MPAs)}
+
+\item{areaID}{character string of the name of the column in the areas data that contains the area ID (i.e. NAME_E by default)}
 }
 \description{
 Title

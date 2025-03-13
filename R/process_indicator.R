@@ -1,21 +1,22 @@
 #' Title
 #'
-#' @param data
-#' @param indicator_var_name
-#' @param indicator
-#' @param type
-#' @param units
-#' @param scoring
-#' @param project
-#' @param climate
-#' @param design_target
-#' @param crs
-#' @param latitude
-#' @param longitude
-#' @param year
-#' @param other_nest_variables
-#' @param areas
-#' @param areaID
+#' @param data a data frame or sf data frame that contains the indicator data, the year, and either the latitude and longitude (i.e. data frame) or the geometry (i.e. sf data frame). Other optional columns (e.g. depth) can also be included by naming them in the other_nest_variables parameter.
+#' @param indicator_var_name character string of the name of the column in the data that contains the indicator data
+#' @param indicator character string of the name of the indicator
+#' @param type character string of the instrument/platform/model type of the indicator
+#' @param PPTID numeric project planning tool project ID
+#' @param project_short_title character string of a short title for the project
+#' @param units  character string of the units of the indicator
+#' @param scoring character string of the scoring method for the indicator
+#' @param climate logical indicating whether the indicator is a climate indicator
+#' @param design_target logical indicating whether the indicator is a design target
+#' @param crs coordinate reference system of the data
+#' @param latitude character string of the name of the column in the data that contains the latitude
+#' @param longitude character string of the name of the column in the data that contains the longitude
+#' @param year character string of the name of the column in the data that contains the year
+#' @param other_nest_variables character vector of the names of other columns in the data that should be nested
+#' @param areas an sf data frame that contains the areas to which the data should be joined (i.e. MPAs)
+#' @param areaID character string of the name of the column in the areas data that contains the area ID (i.e. NAME_E by default)
 #'
 #' @returns
 #' @importFrom dplyr case_when select rename mutate
@@ -26,7 +27,7 @@
 #' @export
 #'
 #' @examples
-process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, project = NA, climate = FALSE, design_target = FALSE, crs = 4326, latitude = "latitude", longitude = "longitude", year = "year",other_nest_variables = NA, areas = NA, areaID = "NAME_E"){
+process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, PPTID = NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326, latitude = "latitude", longitude = "longitude", year = "year",other_nest_variables = NA, areas = NA, areaID = "NAME_E"){
   if(!all(is.na(data))){
     if(!year %in% names(data)){
       stop("year column not found")
@@ -67,7 +68,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                              type = type,
                              units = units,
                              scoring = scoring,
-                             project = project,
+                             PPTID =  PPTID,
+                             project_short_title = project_short_title,
                              climate = climate,
                              design_target = design_target) |>
       nest(data = nest_cols[!is.na(nest_cols)])
@@ -98,9 +100,11 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                  endsWith(scoring, "increase") & p < 0.05 & slope_year > 0 ~ 100,
                  endsWith(scoring, "increase") & p < 0.05 & slope_year < 0 ~ 0,
                  endsWith(scoring, "increase") & p >= 0.05 ~ 50,
+
                  endsWith(scoring, "decrease") & p < 0.05 & slope_year < 0 ~ 100,
                  endsWith(scoring, "decrease") & p < 0.05 & slope_year > 0 ~ 0,
                  endsWith(scoring, "decrease") & p >= 0.05 ~ 50,
+
                  endsWith(scoring, "stable") & p < 0.05 ~ 0,
                  endsWith(scoring, "stable") & p >= 0.05 ~ 100,
                  .default = NA
@@ -132,7 +136,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                type = type,
                units = units,
                scoring = scoring,
-               project = project,
+               PPTID =  PPTID,
+               project_short_title = project_short_title,
                climate = climate,
                design_target = design_target)
   }
