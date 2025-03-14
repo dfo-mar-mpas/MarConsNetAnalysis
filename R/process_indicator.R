@@ -108,7 +108,9 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                  endsWith(scoring, "stable") & p < 0.05 ~ 0,
                  endsWith(scoring, "stable") & p >= 0.05 ~ 100,
                  .default = NA
-               )) |>
+               ),
+               status_statement = "TBD",
+               trend_statement = "TBD") |>
         select(-model,-summaries,-coeffs,-slope_year,-p)
 
       # TODO: confer with Jaimie on how best to generate these statements (e.g.):
