@@ -130,7 +130,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     # make sure this data has a row for each site
     select(as.data.frame(areas),{{areaID}}) |>
       unique() |>
-      left_join(nesteddata, by = setNames("areaID", areaID))
+      left_join(nesteddata, by = setNames("areaID", areaID))|>
+      rename(areaID = {{areaID}})
 
 
   } else {
