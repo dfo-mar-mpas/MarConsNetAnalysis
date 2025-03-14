@@ -19,6 +19,7 @@ aggregate_groups <- function(group_level,group_name,weights=1,...){
       mutate({{group_level}} := group_name,
              weight = weights)
   }
+  distinct(df)
 
 
 }

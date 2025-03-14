@@ -55,7 +55,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     }
 
 
-
     # identify the columns to nest
     nest_cols <- c(year,
                    indicator_var_name,
@@ -128,7 +127,10 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
 
-    nesteddata
+    # make sure this data has a row for each site
+    select(as.data.frame(areas),{{areaID}}) |>
+      unique() |>
+      left_join(nesteddata, by = setNames("areaID", areaID))
 
 
   } else {
@@ -141,7 +143,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                PPTID =  PPTID,
                project_short_title = project_short_title,
                climate = climate,
-               design_target = design_target)
+               design_target = design_target,
+               areaID = unique(select(as.data.frame(areas),{{areaID}})))
   }
 }
 
