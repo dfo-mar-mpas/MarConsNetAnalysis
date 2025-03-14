@@ -136,16 +136,18 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
   } else {
     # NA data case
-    data.frame(data,
-               indicator = indicator,
-               type = type,
-               units = units,
-               scoring = scoring,
-               PPTID =  PPTID,
-               project_short_title = project_short_title,
-               climate = climate,
-               design_target = design_target,
-               areaID = unique(select(as.data.frame(areas),{{areaID}})))
+    data.frame(
+      areaID = as.vector(unique(select(as.data.frame(areas),{{areaID}}))),
+      data,
+      indicator = indicator,
+      type = type,
+      units = units,
+      scoring = scoring,
+      PPTID =  PPTID,
+      project_short_title = project_short_title,
+      climate = climate,
+      design_target = design_target
+               )
   }
 }
 
