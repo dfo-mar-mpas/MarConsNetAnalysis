@@ -137,7 +137,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
   } else {
     # NA data case
     data.frame(
-      areaID = as.vector(unique(select(as.data.frame(areas),{{areaID}}))),
+      areaID = as.vector(unique(select(as.data.frame(areas),{{areaID}}))[,1]),
       data,
       indicator = indicator,
       type = type,
