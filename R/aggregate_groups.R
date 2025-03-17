@@ -27,20 +27,23 @@ aggregate_groups <- function(group_level,group_name,weights_ratio=1,weights_sum=
 
   if(all(unlist(lapply(list(...),function(x) "weight" %in% colnames(x))))){
     df <- bind_rows(...) |>
-      mutate({{group_level}} := group_name)
+      mutate({{group_level}} := group_name) |>
+      distinct()
   } else {
     for (i in seq_along(args)){
       args[[i]] <- args[[i]] |>
-        mutate(weight = weights_ratio[i]/sum(weights_ratio)*weights_sum)
+        mutate(weight = weights_ratio[i])
     }
 
-
-
-
     df <- bind_rows(args) |>
-      mutate({{group_level}} := group_name)
+      distinct() |>
+      group_by(areaID) |>
+      mutate({{group_level}} := group_name,
+             weight = weight/sum(weight)*weights_sum) |>
+      ungroup()
   }
-  distinct(df)
+
+  return(df)
 
 
 }
