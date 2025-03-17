@@ -13,14 +13,32 @@
 #' # FIXME placeholder
 #' }
 aggregate_groups <- function(group_level,group_name,weights_ratio=1,weights_sum=1,...){
+  # browser()
   args <- list(...)
+
+  # if(length(weights_ratio) == length(args)){
+  # } else
+
+  if (length(weights_ratio) == 1){
+    weights_ratio <- rep(weights_ratio,length(args))
+  } else if (length(weights_ratio) != length(args)){
+    stop("weights_ratio must be of length 1 or equal to the number of group components")
+  }
+
   if(all(unlist(lapply(list(...),function(x) "weight" %in% colnames(x))))){
     df <- bind_rows(...) |>
       mutate({{group_level}} := group_name)
   } else {
-    df <- bind_rows(...) |>
-      mutate({{group_level}} := group_name,
-             weight = weights_ratio/sum(weights_ratio)/length(args)*weights_sum)
+    for (i in seq_along(args)){
+      args[[i]] <- args[[i]] |>
+        mutate(weight = weights_ratio[i]/sum(weights_ratio)*weights_sum)
+    }
+
+
+
+
+    df <- bind_rows(args) |>
+      mutate({{group_level}} := group_name)
   }
   distinct(df)
 
