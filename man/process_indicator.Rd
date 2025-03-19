@@ -21,7 +21,11 @@ process_indicator(
   year = "year",
   other_nest_variables = NA,
   areas = NA,
-  areaID = "NAME_E"
+  areaID = "NAME_E",
+  plot_type = "time-series",
+  bin_width = 5,
+  plot_lm = TRUE,
+  plot_lm_se = TRUE
 )
 }
 \arguments{
@@ -58,6 +62,14 @@ process_indicator(
 \item{areas}{an sf data frame that contains the areas to which the data should be joined (i.e. MPAs)}
 
 \item{areaID}{character string of the name of the column in the areas data that contains the area ID (i.e. NAME_E by default)}
+
+\item{plot_type}{character string of the type of plot to generate (e.g. time-series, boxplot, violin)}
+
+\item{bin_width}{numeric width of the bins for the boxplot or violin plot}
+
+\item{plot_lm}{logical indicating whether to plot a linear model on the plot}
+
+\item{plot_lm_se}{logical indicating whether to plot the standard error of the linear model on the plot}
 }
 \description{
 Title

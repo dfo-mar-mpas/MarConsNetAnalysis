@@ -17,6 +17,10 @@
 #' @param other_nest_variables character vector of the names of other columns in the data that should be nested
 #' @param areas an sf data frame that contains the areas to which the data should be joined (i.e. MPAs)
 #' @param areaID character string of the name of the column in the areas data that contains the area ID (i.e. NAME_E by default)
+#' @param plot_type character string of the type of plot to generate (e.g. time-series, boxplot, violin)
+#' @param bin_width numeric width of the bins for the boxplot or violin plot
+#' @param plot_lm logical indicating whether to plot a linear model on the plot
+#' @param plot_lm_se logical indicating whether to plot the standard error of the linear model on the plot
 #'
 #' @returns
 #' @importFrom dplyr case_when select rename mutate
@@ -27,7 +31,7 @@
 #' @export
 #'
 #' @examples
-process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, PPTID = NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326, latitude = "latitude", longitude = "longitude", year = "year",other_nest_variables = NA, areas = NA, areaID = "NAME_E"){
+process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, PPTID = NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326, latitude = "latitude", longitude = "longitude", year = "year",other_nest_variables = NA, areas = NA, areaID = "NAME_E", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE){
   if(!all(is.na(data))){
     if(!year %in% names(data)){
       stop("year column not found")
@@ -131,7 +135,56 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     select(as.data.frame(areas),{{areaID}}) |>
       unique() |>
       left_join(nesteddata, by = setNames("areaID", areaID))|>
-      rename(areaID = {{areaID}})
+      rename(areaID = {{areaID}}) |>
+      # plot!
+      mutate(plot = pmap(list(data,indicator,units), function(d,ind,u){
+        if(is.null(d)) {
+          NULL
+        } else if(plot_type == "time-series") {
+          p <-  ggplot(d,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
+            geom_point()+
+            geom_line()+
+            theme_classic()+
+            ylab(paste0(ind, " (", u, ")"))
+        } else if(plot_type == "time-series-no-line") {
+          p <-  ggplot(d,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
+            geom_point()+
+            theme_classic()+
+            ylab(paste0(ind, " (", u, ")"))
+        } else if(plot_type == "boxplot") {
+          # Create decade grouping
+          d$decade_group <- floor(d[[year]] / bin_width) * bin_width
+
+          # Plot with position_dodge to control width
+          p <- ggplot(d, aes(x = decade_group + bin_width/2, y=.data[[indicator_var_name]], group = decade_group)) +
+            geom_boxplot(width = bin_width*0.9) +
+            scale_x_continuous(name = year,
+                               breaks = unique(d$decade_group),
+                               minor_breaks = NULL) +
+            theme_classic()
+
+
+        } else if(plot_type == "violin") {
+          # Create decade grouping
+          d$decade_group <- floor(d[[year]] / bin_width) * bin_width
+
+          # Plot with position_dodge to control width
+          p <- ggplot(d, aes(x = decade_group + bin_width/2, y=.data[[indicator_var_name]], group = decade_group)) +
+            geom_violin(width = bin_width*0.9) +
+            scale_x_continuous(name = year,
+                               breaks = unique(d$decade_group),
+                               minor_breaks = NULL) +
+            theme_classic()
+
+
+        }
+
+        if (plot_lm) {
+          p <- p + geom_smooth(method = "lm", se = plot_lm_se)
+
+        }
+      }
+      ))
 
 
   } else {
@@ -139,6 +192,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     data.frame(
       areaID = as.vector(unique(select(as.data.frame(areas),{{areaID}}))[,1]),
       data,
+      plot = NA,
       indicator = indicator,
       type = type,
       units = units,
