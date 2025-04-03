@@ -4,14 +4,22 @@
 \alias{aggregate_groups}
 \title{aggregate indicator values into bins or objectives}
 \usage{
-aggregate_groups(group_level, group_name, weights = 1, ...)
+aggregate_groups(
+  group_level,
+  group_name,
+  weights_ratio = 1,
+  weights_sum = 1,
+  ...
+)
 }
 \arguments{
 \item{group_level}{Character string for the name of the group level (e.g. "bin" or "objective")}
 
 \item{group_name}{Character string for the name of the group (e.g. "Biomass Metrics" or "Biodiversity")}
 
-\item{weights}{numeric vector for the relative weight of each group component}
+\item{weights_ratio}{numeric vector for the relative weight of each group component (e.g. the ratio of weights between indicator)}
+
+\item{weights_sum}{numeric value for the sum of the weights of each group (e.g. the sum of the indicator weights in the bin)}
 
 \item{...}{group components (e.g. the indicator data.frames in the case of bins)}
 }
