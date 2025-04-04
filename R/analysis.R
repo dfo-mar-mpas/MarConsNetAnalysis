@@ -9,21 +9,26 @@
 #' @param type a character of either 'trend' or 'status' indicating if the
 #'
 #'
-#' @return data frame with trends and status'
+#' @return a vector of trend and status claims
+#' @examples
+#' \dontrun{
+#' trends <- analysis(data=ind_zooplankton, type='trend')
+#' }
 #' @export
 #'
 analysis <- function(data = NULL, type=NULL) {
   datasets <- data$data
 
-  good <- which(unlist(lapply(datasets, function(x)!is.null(x)))))
+  good <- which(unlist(lapply(datasets, function(x)!is.null(x))))
 
   returns <- NULL
   for (i in seq_along(data$areaID)) {
-    message(i)
     if (i %in% good) {
       # We have data
       DATA <- datasets[[i]]
+      if (any(is.na(DATA[[which(!(names(DATA) %in% c("year", "geometry")))]]))) {
       DATA <- DATA[-(which(is.na(DATA[[which(!(names(DATA) %in% c("year", "geometry")))]]))),]
+      }
 
       # Looking at the last 5 years sampled
       DATA_5_YEARS <- DATA[which(DATA$year %in% tail(sort(unique(DATA$year)), 5)), ]
@@ -89,4 +94,5 @@ analysis <- function(data = NULL, type=NULL) {
     }
 
   }
+  return(returns)
 }
