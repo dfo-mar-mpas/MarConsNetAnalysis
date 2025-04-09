@@ -49,15 +49,14 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       data <- st_as_sf(data,
                        coords = c(longitude, latitude),
                        crs = crs)|>
-        st_join(select(areas,{{areaID}})) |>
+        st_join(dplyr::select(areas,{{areaID}})) |>
         rename(areaID = {{areaID}})
     } else {
       # join with areas
       data <- data |>
-        st_join(select(areas,{{areaID}})) |>
+        st_join(dplyr::select(areas,{{areaID}})) |>
         rename(areaID = {{areaID}})
     }
-
 
     # identify the columns to nest
     nest_cols <- c(year,
@@ -112,27 +111,18 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                  endsWith(scoring, "stable") & p >= 0.05 ~ 100,
                  .default = NA
                ),
-               status_statement = "TBD",
-               trend_statement = "TBD") |>
-        select(-model,-summaries,-coeffs,-slope_year,-p)
-
-      # TODO: confer with Jaimie on how best to generate these statements (e.g.):
-
-      # The most recent year (2023) shows a mean of 3.99 Calanus_finmarchicus_biomass (log_10) (sd=(only one measurement available)). The most recent 5 year mean was 3.88 Calanus_finmarchicus_biomass (log_10) (sd=0.15). No outside comparison was available.
-      #
-      #
-      # A linear regression has shown a decrease of -0.01 Calanus_finmarchicus_biomass  (log_10) over the last 24 years (p=0). The linear trend for the last 5 years was a decrease of 0 Calanus_finmarchicus_biomass  (log_10). There is no outside comparison available.
-
+               #status_statement = map(data, ~analysis(data = .x, type = "status")),
+               #trend_statement = map(data, ~analysis(data = .x, type = "trend"))
+               ) |>
+        dplyr::select(-model,-summaries,-coeffs,-slope_year,-p)
 
     } else {
       warning("scoring method not supported")
 
     }
 
-
-
     # make sure this data has a row for each site
-    select(as.data.frame(areas),{{areaID}}) |>
+    final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
       unique() |>
       left_join(nesteddata, by = setNames("areaID", areaID))|>
       rename(areaID = {{areaID}}) |>
@@ -186,11 +176,14 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       }
       ))
 
+    final$status_statement <- analysis(data=final, type="status")
+    final$trend_statement <- analysis(data=final, type="trend")
+
 
   } else {
     # NA data case
-    data.frame(
-      areaID = as.vector(unique(select(as.data.frame(areas),{{areaID}}))[,1]),
+    final <- data.frame(
+      areaID = as.vector(unique(dplyr::select(as.data.frame(areas),{{areaID}}))[,1]),
       data,
       plot = NA,
       indicator = indicator,
@@ -200,8 +193,11 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       PPTID =  PPTID,
       project_short_title = project_short_title,
       climate = climate,
-      design_target = design_target
+      design_target = design_target,
+      trend_statement = "TBD",
+      status_statement = "TBD"
                )
   }
+  return(final)
 }
 

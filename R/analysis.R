@@ -26,8 +26,15 @@ analysis <- function(data = pillar_ecol_df, type=NULL) {
       message(i)
       # We have data
       DATA <- datasets[[i]]
-      if (any(is.na(DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth")))]]))) {
-      DATA <- DATA[-(which(is.na(DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth")))]]))),]
+
+      if (is.null(names(DATA))) {
+        # placeholder
+        returns[i] <- "TBD"
+        next # go to the next iteration
+      }
+
+      if (any(is.na(DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth", "area")))]]))) {
+      DATA <- DATA[-(which(is.na(DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth", "area")))]]))),]
       }
 
       # Looking at the last 5 years sampled
@@ -36,7 +43,7 @@ analysis <- function(data = pillar_ecol_df, type=NULL) {
       if (type == 'trend') {
 
         if (length(unique(DATA$year)) > 1) {
-          y <- DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth")))]]
+          y <- DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth", "area")))]]
           x <- DATA$year
           model <- lm(y ~ x)
           current_trend_value <- unname(coef(model)[2])
@@ -45,7 +52,7 @@ analysis <- function(data = pillar_ecol_df, type=NULL) {
           } else {
             current_trend_direction <- "decrease"
           }
-          y_5_years <- DATA_5_YEARS[[which(!(names(DATA_5_YEARS) %in% c("year", "geometry", "depth")))]]
+          y_5_years <- DATA_5_YEARS[[which(!(names(DATA_5_YEARS) %in% c("year", "geometry", "depth", "area")))]]
           x_5_years <- DATA_5_YEARS$year
           model_5_years <- lm(y_5_years ~ x_5_years)
 
@@ -69,7 +76,7 @@ analysis <- function(data = pillar_ecol_df, type=NULL) {
             paste0(tail(sort(
               unique(DATA$year)
             ), 5), collapse = ","),
-            "), showed a ", trend_direction_5_years," of ",round(five_year_trend_value,2)," ",names(DATA_5_YEARS)[which(!(names(DATA_5_YEARS) %in% c("year", "geometry", "depth")))],
+            "), showed a ", trend_direction_5_years," of ",round(five_year_trend_value,2)," ",names(DATA_5_YEARS)[which(!(names(DATA_5_YEARS) %in% c("year", "geometry", "depth", "area")))],
             " (" , data$units[i],") (pval =",round(summary(model_5_years)$coefficients[2, 4],2),")."
           )
 
@@ -83,11 +90,11 @@ analysis <- function(data = pillar_ecol_df, type=NULL) {
         #recent year (RECENTYEAR_OUTSIDE) shows an average OUTSIDE_AVERAGE PARAMETER (UNITS) (sd=STANDAND_DEVIATION_OUTSIDE). The most recent
         #5 year mean was MEAN_OUTSIDE_5_YEARS PARAMETER (UNITS) (sd=STANDAND_DEVIATION_OUTSIDE_5_YEARS
 
-        returns[i] <- paste0("The most recent year ," ,tail(DATA$year, 1),", shows a mean of ", round(mean(DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth")))]]),2), " (", data$units[i], ") (sd=",round(mean(DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth")))]]),2) ,
+        returns[i] <- paste0("The most recent year ," ,tail(DATA$year, 1),", shows a mean of ", round(mean(DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth", "area")))]]),2), " (", data$units[i], ") (sd=",round(mean(DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth", "area")))]]),2) ,
                              "). The most recent 5 years of sampling (",paste0(tail(sort(
                                unique(DATA$year)
-                             ), 5), collapse = ","),") showed a mean of ",round(mean(DATA_5_YEARS[[which(!(names(DATA_5_YEARS) %in% c("year", "geometry", "depth")))]]),2),
-                             "(",data$units[i],") (sd=",round(sd(DATA_5_YEARS[[which(!(names(DATA_5_YEARS) %in% c("year", "geometry", "depth")))]]),2),").")
+                             ), 5), collapse = ","),") showed a mean of ",round(mean(DATA_5_YEARS[[which(!(names(DATA_5_YEARS) %in% c("year", "geometry", "depth", "area")))]]),2),
+                             "(",data$units[i],") (sd=",round(sd(DATA_5_YEARS[[which(!(names(DATA_5_YEARS) %in% c("year", "geometry", "depth", "area")))]]),2),").")
       }
     } else {
       returns[i] <- "TBD"
