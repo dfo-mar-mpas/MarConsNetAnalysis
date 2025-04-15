@@ -32,52 +32,54 @@
 #'
 #' @examples
 process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, PPTID = NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326, latitude = "latitude", longitude = "longitude", year = "year",other_nest_variables = NA, areas = NA, areaID = "NAME_E", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE){
+
   if(!all(is.na(data))){
-    if(!year %in% names(data)){
-      stop("year column not found")
-    }
+    if (startsWith(scoring,"desired state:")){
 
-    # check if data is an sf object
-    if (!inherits(data, "sf")) {
-      if(!latitude %in% names(data)){
-        stop("latitude column not found")
+      if(!year %in% names(data)){
+        stop("year column not found")
       }
-      if(!longitude %in% names(data)){
-        stop("longitude column not found")
+
+      # check if data is an sf object
+      if (!inherits(data, "sf")) {
+        if(!latitude %in% names(data)){
+          stop("latitude column not found")
+        }
+        if(!longitude %in% names(data)){
+          stop("longitude column not found")
+        }
+        # convert to sf object and join with areas
+        data <- st_as_sf(data,
+                         coords = c(longitude, latitude),
+                         crs = crs)|>
+          st_join(dplyr::select(areas,{{areaID}})) |>
+          rename(areaID = {{areaID}})
+      } else {
+        # join with areas
+        data <- data |>
+          st_join(dplyr::select(areas,{{areaID}})) |>
+          rename(areaID = {{areaID}})
       }
-      # convert to sf object and join with areas
-      data <- st_as_sf(data,
-                       coords = c(longitude, latitude),
-                       crs = crs)|>
-        st_join(dplyr::select(areas,{{areaID}})) |>
-        rename(areaID = {{areaID}})
-    } else {
-      # join with areas
-      data <- data |>
-        st_join(dplyr::select(areas,{{areaID}})) |>
-        rename(areaID = {{areaID}})
-    }
 
-    # identify the columns to nest
-    nest_cols <- c(year,
-                   indicator_var_name,
-                   attr(data, "sf_column"),
-                   other_nest_variables)
+      # identify the columns to nest
+      nest_cols <- c(year,
+                     indicator_var_name,
+                     attr(data, "sf_column"),
+                     other_nest_variables)
 
 
-    nesteddata <- data.frame(data,
-                             indicator = indicator,
-                             type = type,
-                             units = units,
-                             scoring = scoring,
-                             PPTID =  PPTID,
-                             project_short_title = project_short_title,
-                             climate = climate,
-                             design_target = design_target) |>
-      nest(data = nest_cols[!is.na(nest_cols)])
+      nesteddata <- data.frame(data,
+                               indicator = indicator,
+                               type = type,
+                               units = units,
+                               scoring = scoring,
+                               PPTID =  PPTID,
+                               project_short_title = project_short_title,
+                               climate = climate,
+                               design_target = design_target) |>
+        nest(data = nest_cols[!is.na(nest_cols)])
 
-    # score the data
-    if(startsWith(scoring,"desired state:")) {
+      # score the data
       nesteddata <- nesteddata |>
         mutate(model = map(data, ~lm(as.formula(paste0(indicator_var_name,"~",year)), data = .x)),
                summaries = map(model,summary),
@@ -113,21 +115,91 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                ),
                #status_statement = map(data, ~analysis(data = .x, type = "status")),
                #trend_statement = map(data, ~analysis(data = .x, type = "trend"))
-               ) |>
+        ) |>
         dplyr::select(-model,-summaries,-coeffs,-slope_year,-p)
+
+      nesteddata$status_statement <- analysis(data=nesteddata, type="status")
+      nesteddata$trend_statement <- analysis(data=nesteddata, type="trend")
+
+    } else if (startsWith(scoring,"representation")){
+      if (!inherits(data, "sf")) stop("data must be an sf object for 'representation' scoring")
+      if (!(indicator_var_name %in% names(data))) stop("indicator_var_name column not found in data")
+      if (st_crs(data) != st_crs(areas)) stop("data and areas must have the same CRS")
+
+
+
+      # identify the columns to nest
+      nest_cols <- c(indicator_var_name,
+                     "geoms",
+                     other_nest_variables)
+
+      mpaareas <- st_area(areas[[attr(areas, "sf_column")]]) |>
+        set_units("km^2") |>
+        as.numeric()
+      layerareas <- st_area(data[[attr(data, "sf_column")]]) |>
+        set_units("km^2") |>
+        as.numeric()
+
+      nesteddata <- data |>
+        # intersection with areas
+        st_intersection(areas) |>
+        rename(ID = {{areaID}})|>
+        select(c("ID",nest_cols[!is.na(nest_cols)])) |>
+        filter(!is.na({{indicator_var_name}})) |>
+        rowwise() |>
+        mutate(layerareakm2=st_area(geoms) |>
+                 set_units("km^2") |>
+                 as.numeric() |>
+                 round(1),
+               layerpercentmpa=layerareakm2/mpaareas[as.data.frame(areas)[areaID]==ID]*100,
+               layerpercentlayer=layerareakm2/layerareas[as.data.frame(data)[indicator_var_name]==.data[[indicator_var_name]]]*100,
+        ) |>
+        rename(areaID = ID)|>
+        ungroup() |>
+        nest(rawdata=nest_cols[!is.na(nest_cols)],
+             layerpercents=c({{indicator_var_name}},layerareakm2 ,layerpercentmpa,layerpercentlayer)) |>
+        rowwise() |>
+        # calculate score based on the proportion of non-NA values
+        mutate(score=nrow(rawdata)/nrow(data)*100,
+               indicator = indicator,
+               type = type,
+               units = units,
+               scoring = scoring,
+               PPTID =  PPTID,
+               project_short_title = project_short_title,
+               climate = climate,
+               design_target = design_target,
+               status_statement = paste0(areaID,
+                                         pmap(layerpercents,
+                                              function(layer,
+                                                       layerareakm2,
+                                                       layerpercentmpa,
+                                                       layerpercentlayer){
+                                                paste0(" is ",
+                                                       round(layerpercentmpa,1),
+                                                       "% covered by ",
+                                                       layer,
+                                                       " which represents ",
+                                                       round(layerpercentlayer,1),
+                                                       "% of that feature")}) |>
+                                           paste(collapse = ", and"),
+                                         "."),
+               trend_statement = "There is no temporal dimension in this data.")|>
+        rename(data = rawdata)
+
 
     } else {
       warning("scoring method not supported")
 
     }
 
-    # make sure this data has a row for each site
+    # make sure this data has a row for each site and add plot
     final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
       unique() |>
       left_join(nesteddata, by = setNames("areaID", areaID))|>
       rename(areaID = {{areaID}}) |>
       # plot!
-      mutate(plot = pmap(list(data,indicator,units), function(d,ind,u){
+      mutate(plot = pmap(list(data,indicator,units,areaID), function(d,ind,u,id){
         if(is.null(d)) {
           NULL
         } else if(plot_type == "time-series") {
@@ -167,17 +239,25 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
             theme_classic()
 
 
+        } else if(plot_type == "map"){
+          p <- ggplot() +
+            geom_sf(data = areas[areaID==id,], fill = "white", color = "black") +
+            geom_sf(data = d, aes(fill = .data[[indicator_var_name]])) +
+            theme_classic() +
+            labs(fill = ind, title = id) +
+            coord_sf(crs = st_crs(areas))
+        } else {
+          stop("plot_type not supported")
         }
 
         if (plot_lm) {
           p <- p + geom_smooth(method = "lm", se = plot_lm_se)
 
         }
+        p
       }
       ))
 
-    final$status_statement <- analysis(data=final, type="status")
-    final$trend_statement <- analysis(data=final, type="trend")
 
 
   } else {
@@ -196,7 +276,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       design_target = design_target,
       trend_statement = "TBD",
       status_statement = "TBD"
-               )
+    )
   }
   return(final)
 }
