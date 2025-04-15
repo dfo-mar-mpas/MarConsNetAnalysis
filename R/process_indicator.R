@@ -27,6 +27,12 @@
 #' @importFrom purrr map map_dbl
 #' @importFrom sf st_as_sf st_join
 #' @importFrom stats lm
+#' @importFrom tidyr nest
+#' @importFrom ggplot2 ggplot aes geom_point geom_line theme_classic ylab geom_smooth
+#' @importFrom rlang .data
+#' @importFrom units set_units
+#' @importFrom tibble as_tibble
+#'
 #'
 #' @export
 #'

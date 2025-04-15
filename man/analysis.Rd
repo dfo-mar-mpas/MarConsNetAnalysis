@@ -4,42 +4,25 @@
 \alias{analysis}
 \title{Analyse Status and Trends of indicators}
 \usage{
-analysis(DF = NULL, bi = binned_indicators)
+analysis(data = pillar_ecol_df, type = NULL)
 }
 \arguments{
-\item{DF}{list of data framed needed for all binned_indicators}
+\item{data}{pillar_ecol_df from the targets file}
 
-\item{bi}{binned_indicators data frame likely found in the
-data folder of the MarConsNetAnalysis package}
+\item{type}{a character of either 'trend' or 'status' indicating if the}
 }
 \value{
-data frame with trends and status'
+a vector of trend and status claims
 }
 \description{
 This function automatically calculates status and trends
 for a list of indicators used in the Marine Conservation
-Target (MCT) app. It then uses this information to assign
-a letter grade in two different scenarios:
+Target (MCT) app. This function looks for a shape file
+in MarConsNetAnalaysis/data that is made with the function
+make.names() of the area of interest.
 }
-\section{Scenario 1: If there is a desired trend we want the indicator to go in}{
-A grade of either A, B, or C by doing the following:
-
-It determines the desired trend of the indicator, then
-looks at the actual trend of the indicator. If the trend
-\enumerate{
-\item is statistically significant AND matches the desired direction for the
-indicator, a score of A is assigned.
-\item Has no statistically significant change a C is assigned
-\item is statistically significant and going in the opposite direction,
-a F is assigned.
+\examples{
+\dontrun{
+trends <- analysis(data=pillar_ecol_df, type='trend')
 }
 }
-
-\section{Scenario 2: If we want the trend of the indicator to be stable}{
-A grade of either A or F is assigned based on:
-\enumerate{
-\item If the trend of the indicator has no significant change an A is assigned
-\item If there is a significant change, a F in assigned
-}
-}
-
