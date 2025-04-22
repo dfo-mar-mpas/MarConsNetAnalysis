@@ -191,7 +191,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                            paste(collapse = ", and"),
                                          "."),
                trend_statement = "There is no temporal dimension in this data.")|>
-        rename(data = rawdata)
+        rename(data = rawdata) |>
+        select(-layerpercents)
 
 
     } else {
@@ -206,61 +207,65 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       rename(areaID = {{areaID}}) |>
       # plot!
       mutate(plot = pmap(list(data,indicator,units,areaID), function(d,ind,u,id){
-        if(is.null(d)) {
-          NULL
-        } else if(plot_type == "time-series") {
-          p <-  ggplot(d,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
-            geom_point()+
-            geom_line()+
-            theme_classic()+
-            ylab(paste0(ind, " (", u, ")"))
-        } else if(plot_type == "time-series-no-line") {
-          p <-  ggplot(d,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
-            geom_point()+
-            theme_classic()+
-            ylab(paste0(ind, " (", u, ")"))
-        } else if(plot_type == "boxplot") {
-          # Create decade grouping
-          d$decade_group <- floor(d[[year]] / bin_width) * bin_width
+        p <- NULL
+        if(!is.null(d)){
+          if(plot_type == "time-series") {
+            p <-  ggplot(d,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
+              geom_point()+
+              geom_line()+
+              theme_classic()+
+              ylab(paste0(ind, " (", u, ")"))
+          } else if(plot_type == "time-series-no-line") {
+            p <-  ggplot(d,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
+              geom_point()+
+              theme_classic()+
+              ylab(paste0(ind, " (", u, ")"))
+          } else if(plot_type == "boxplot") {
+            # Create decade grouping
+            d$decade_group <- floor(d[[year]] / bin_width) * bin_width
 
-          # Plot with position_dodge to control width
-          p <- ggplot(d, aes(x = decade_group + bin_width/2, y=.data[[indicator_var_name]], group = decade_group)) +
-            geom_boxplot(width = bin_width*0.9) +
-            scale_x_continuous(name = year,
-                               breaks = unique(d$decade_group),
-                               minor_breaks = NULL) +
-            theme_classic()
-
-
-        } else if(plot_type == "violin") {
-          # Create decade grouping
-          d$decade_group <- floor(d[[year]] / bin_width) * bin_width
-
-          # Plot with position_dodge to control width
-          p <- ggplot(d, aes(x = decade_group + bin_width/2, y=.data[[indicator_var_name]], group = decade_group)) +
-            geom_violin(width = bin_width*0.9) +
-            scale_x_continuous(name = year,
-                               breaks = unique(d$decade_group),
-                               minor_breaks = NULL) +
-            theme_classic()
+            # Plot with position_dodge to control width
+            p <- ggplot(d, aes(x = decade_group + bin_width/2, y=.data[[indicator_var_name]], group = decade_group)) +
+              geom_boxplot(width = bin_width*0.9) +
+              scale_x_continuous(name = year,
+                                 breaks = unique(d$decade_group),
+                                 minor_breaks = NULL) +
+              theme_classic()
 
 
-        } else if(plot_type == "map"){
-          p <- ggplot() +
-            geom_sf(data = areas[areaID==id,], fill = "white", color = "black") +
-            geom_sf(data = d, aes(fill = .data[[indicator_var_name]])) +
-            theme_classic() +
-            labs(fill = ind, title = id) +
-            coord_sf(crs = st_crs(areas))
+          } else if(plot_type == "violin") {
+            # Create decade grouping
+            d$decade_group <- floor(d[[year]] / bin_width) * bin_width
+
+            # Plot with position_dodge to control width
+            p <- ggplot(d, aes(x = decade_group + bin_width/2, y=.data[[indicator_var_name]], group = decade_group)) +
+              geom_violin(width = bin_width*0.9) +
+              scale_x_continuous(name = year,
+                                 breaks = unique(d$decade_group),
+                                 minor_breaks = NULL) +
+              theme_classic()
+
+
+          } else if(plot_type == "map"){
+            p <- ggplot() +
+              geom_sf(data = areas[areaID==id,], fill = "white", color = "black") +
+              geom_sf(data = d, aes(fill = .data[[indicator_var_name]])) +
+              theme_classic() +
+              labs(fill = ind, title = id) +
+              coord_sf(crs = st_crs(areas))
+          } else {
+            stop("plot_type not supported")
+          }
+
+          if (plot_lm) {
+            return(p + geom_smooth(method = "lm", se = plot_lm_se))
+          } else {
+            return(p)
+          }
+
         } else {
-          stop("plot_type not supported")
+          return(p)
         }
-
-        if (plot_lm) {
-          p <- p + geom_smooth(method = "lm", se = plot_lm_se)
-
-        }
-        p
       }
       ))
 
