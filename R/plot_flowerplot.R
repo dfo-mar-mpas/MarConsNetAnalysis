@@ -91,6 +91,8 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
   names(flowerPalette) <- grades
 
   ngroups <- length(unique(df[[grouping]]))
+
+  df <- arrange(df,!!sym(grouping),!!sym(labels))
   rawdata <- data.frame(grouping=factor(df[[grouping]],levels = unique(df[[grouping]])),
                      labels=factor(df[[labels]],levels = unique(df[[labels]])),
                      score=df[[score]],
