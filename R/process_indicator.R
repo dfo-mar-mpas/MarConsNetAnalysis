@@ -131,6 +131,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       if (!inherits(data, "sf")) stop("data must be an sf object for 'representation' scoring")
       if (!(indicator_var_name %in% names(data))) stop("indicator_var_name column not found in data")
       if (st_crs(data) != st_crs(areas)) stop("data and areas must have the same CRS")
+      if (endsWith(scoring, "site-maximum regional threshold") & !("regions" %in% names(areas))) stop("The scoring method 'representation: site-maximum regional threshold' requires a 'region' in 'areas'")
 
 
 
@@ -193,6 +194,19 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                trend_statement = "There is no temporal dimension in this data.")|>
         rename(data = rawdata) |>
         select(-layerpercents)
+
+      if(endsWith(scoring, "site-maximum regional threshold")){
+        if
+        nesteddata |>
+          left_join(areas |>
+                      as.data.frame() |>
+                      dplyr::select({{areaID}}, region) |>
+                      unique() |>
+                      rename(areaID = {{areaID}}),
+                    by = "areaID") |>
+          group_by(region) |>
+          mutate(score = score/max(score))
+      }
 
 
     } else {
