@@ -149,18 +149,18 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       nesteddata <- data |>
         # intersection with areas
         st_intersection(areas) |>
-        rename(ID = {{areaID}})|>
-        select(c("ID",nest_cols[!is.na(nest_cols)])) |>
+        rename(IDtemp = {{areaID}})|>
+        select(c("IDtemp",nest_cols[!is.na(nest_cols)])) |>
         filter(!is.na({{indicator_var_name}})) |>
         rowwise() |>
         mutate(layerareakm2=st_area(geoms) |>
                  set_units("km^2") |>
                  as.numeric() |>
                  round(1),
-               layerpercentmpa=layerareakm2/mpaareas[as.data.frame(areas)[areaID]==ID]*100,
+               layerpercentmpa=layerareakm2/mpaareas[as.data.frame(areas)[areaID]==IDtemp]*100,
                layerpercentlayer=layerareakm2/layerareas[as.data.frame(data)[indicator_var_name]==.data[[indicator_var_name]]]*100,
         ) |>
-        rename(areaID = ID)|>
+        rename(areaID = IDtemp)|>
         ungroup() |>
         nest(rawdata=nest_cols[!is.na(nest_cols)],
              layerpercents=c({{indicator_var_name}},layerareakm2 ,layerpercentmpa,layerpercentlayer)) |>
@@ -176,15 +176,15 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                climate = climate,
                design_target = design_target,
                status_statement = paste0(areaID,
-                                         pmap(layerpercents,
-                                              function(layer,
-                                                       layerareakm2,
+                                         pmap_chr(layerpercents,
+                                              function(layerareakm2,
                                                        layerpercentmpa,
-                                                       layerpercentlayer){
+                                                       layerpercentlayer,
+                                                       ...){
                                                 paste0(" is ",
                                                        round(layerpercentmpa,1),
                                                        "% covered by ",
-                                                       layer,
+                                                       list(...)[[indicator_var_name]],
                                                        " which represents ",
                                                        round(layerpercentlayer,1),
                                                        "% of that feature")}) |>
