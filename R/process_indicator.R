@@ -196,7 +196,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
         select(-layerpercents)
 
       if(endsWith(scoring, "site-maximum regional threshold")){
-        if
         nesteddata |>
           left_join(areas |>
                       as.data.frame() |>
