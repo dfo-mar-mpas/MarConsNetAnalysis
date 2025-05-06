@@ -205,6 +205,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                     by = "areaID") |>
           group_by(region) |>
           mutate(score = score/max(score)*100) |>
+          ungroup() |>
           select(-region)
       }
 
