@@ -131,7 +131,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       if (!inherits(data, "sf")) stop("data must be an sf object for 'representation' scoring")
       if (!(indicator_var_name %in% names(data))) stop("indicator_var_name column not found in data")
       if (st_crs(data) != st_crs(areas)) stop("data and areas must have the same CRS")
-      if (endsWith(scoring, "site-maximum regional threshold") & !("regions" %in% names(areas))) stop("The scoring method 'representation: site-maximum regional threshold' requires a 'region' in 'areas'")
+      if (endsWith(scoring, "site-maximum regional threshold") & !("region" %in% names(areas))) stop("The scoring method 'representation: site-maximum regional threshold' requires a 'region' in 'areas'")
 
 
 
