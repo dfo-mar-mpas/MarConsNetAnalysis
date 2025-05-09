@@ -140,60 +140,124 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                      "geoms",
                      other_nest_variables)
 
-      mpaareas <- st_area(areas[[attr(areas, "sf_column")]]) |>
-        set_units("km^2") |>
-        as.numeric()
-      layerareas <- st_area(data[[attr(data, "sf_column")]]) |>
-        set_units("km^2") |>
-        as.numeric()
+      if (all(endsWith(as.character(st_geometry_type(data)),"POLYGON"))){
+        # if data contains only polygons, use the area based statuses
 
-      nesteddata <- data |>
-        # intersection with areas
-        st_intersection(areas) |>
-        rename(IDtemp = {{areaID}})|>
-        select(c("IDtemp",nest_cols[!is.na(nest_cols)])) |>
-        filter(!is.na({{indicator_var_name}})) |>
-        rowwise() |>
-        mutate(layerareakm2=st_area(geoms) |>
-                 set_units("km^2") |>
-                 as.numeric() |>
-                 round(1),
-               layerpercentmpa=layerareakm2/mpaareas[as.data.frame(areas)[areaID]==IDtemp]*100,
-               layerpercentlayer=layerareakm2/layerareas[as.data.frame(data)[indicator_var_name]==.data[[indicator_var_name]]]*100,
-        ) |>
-        rename(areaID = IDtemp)|>
-        ungroup() |>
-        nest(rawdata=nest_cols[!is.na(nest_cols)],
-             layerpercents=c({{indicator_var_name}},layerareakm2 ,layerpercentmpa,layerpercentlayer)) |>
-        rowwise() |>
-        # calculate score based on the proportion of non-NA values
-        mutate(score=nrow(rawdata)/nrow(data)*100,
-               indicator = indicator,
-               type = type,
-               units = units,
-               scoring = scoring,
-               PPTID =  PPTID,
-               project_short_title = project_short_title,
-               climate = climate,
-               design_target = design_target,
-               status_statement = paste0(areaID,
-                                         pmap_chr(layerpercents,
-                                              function(layerareakm2,
-                                                       layerpercentmpa,
-                                                       layerpercentlayer,
-                                                       ...){
-                                                paste0(" is ",
-                                                       round(layerpercentmpa,1),
-                                                       "% covered by ",
-                                                       list(...)[[indicator_var_name]],
-                                                       " which represents ",
-                                                       round(layerpercentlayer,1),
-                                                       "% of that feature")}) |>
-                                           paste(collapse = ", and"),
-                                         "."),
-               trend_statement = "There is no temporal dimension in this data.")|>
-        rename(data = rawdata) |>
-        select(-layerpercents)
+        mpaareas <- st_area(areas[[attr(areas, "sf_column")]]) |>
+          set_units("km^2") |>
+          as.numeric()
+        layerareas <- st_area(data[[attr(data, "sf_column")]]) |>
+          set_units("km^2") |>
+          as.numeric()
+
+        nesteddata <- data |>
+          # intersection with areas
+          st_intersection(areas) |>
+          rename(IDtemp = {{areaID}})|>
+          select(c("IDtemp",nest_cols[!is.na(nest_cols)])) |>
+          filter(!is.na({{indicator_var_name}})) |>
+          rowwise() |>
+          mutate(layerareakm2=st_area(geoms) |>
+                   set_units("km^2") |>
+                   as.numeric() |>
+                   round(1),
+                 layerpercentmpa=layerareakm2/mpaareas[as.data.frame(areas)[areaID]==IDtemp]*100,
+                 layerpercentlayer=layerareakm2/layerareas[as.data.frame(data)[indicator_var_name]==.data[[indicator_var_name]]]*100,
+          ) |>
+          rename(areaID = IDtemp)|>
+          ungroup() |>
+          nest(rawdata=nest_cols[!is.na(nest_cols)],
+               layerpercents=c({{indicator_var_name}},layerareakm2 ,layerpercentmpa,layerpercentlayer)) |>
+          rowwise() |>
+          # calculate score based on the proportion of non-NA values
+          mutate(score=nrow(rawdata)/nrow(data)*100,
+                 indicator = indicator,
+                 type = type,
+                 units = units,
+                 scoring = scoring,
+                 PPTID =  PPTID,
+                 project_short_title = project_short_title,
+                 climate = climate,
+                 design_target = design_target,
+                 status_statement = paste0(areaID,
+                                           pmap_chr(layerpercents,
+                                                    function(layerareakm2,
+                                                             layerpercentmpa,
+                                                             layerpercentlayer,
+                                                             ...){
+                                                      paste0(" is ",
+                                                             round(layerpercentmpa,1),
+                                                             "% covered by ",
+                                                             list(...)[[indicator_var_name]],
+                                                             " which represents ",
+                                                             round(layerpercentlayer,1),
+                                                             "% of that feature")}) |>
+                                             paste(collapse = ", and"),
+                                           "."),
+                 trend_statement = "There is no temporal dimension in this data.")|>
+          rename(data = rawdata) |>
+          select(-layerpercents)
+      } else {
+        totaloccurrences <- data |>
+          mutate(occurrences = case_when(
+            st_geometry_type(geoms) == "POINT" ~ 1,
+            st_geometry_type(geoms) == "MULTIPOINT" ~ lengths(st_geometry(geoms))/2,
+            TRUE ~ NA_integer_
+          ))
+
+        nesteddata <- data |>
+          # intersection with areas
+          st_intersection(areas) |>
+          rename(areaID = {{areaID}}) |>
+          select(c("areaID",nest_cols[!is.na(nest_cols)])) |>
+          filter(!is.na({{indicator_var_name}})) |>
+          rowwise() |>
+          mutate(occurrences = case_when(
+            st_geometry_type(geoms) == "POINT" ~ 1,
+            st_geometry_type(geoms) == "MULTIPOINT" ~ lengths(st_geometry(geoms))/2,
+            TRUE ~ NA_integer_),
+            total_occurrences = totaloccurrences$occurrences[totaloccurrences[[indicator_var_name]]==name]) |>
+          nest(rawdata=nest_cols[!is.na(nest_cols)],
+               layeroccurrences=c({{indicator_var_name}},total_occurrences ,occurrences)) |>
+          rowwise() |>
+          # calculate score based on the proportion of non-NA values
+          mutate(score=nrow(rawdata)/nrow(data)*100,
+                 indicator = indicator,
+                 type = type,
+                 units = units,
+                 scoring = scoring,
+                 PPTID =  PPTID,
+                 project_short_title = project_short_title,
+                 climate = climate,
+                 design_target = design_target,
+                 status_statement = paste0(areaID,
+                                           " has had recorded occurrences of ",
+                                           nrow(rawdata),
+                                           " taxa which represents ",
+                                           round(nrow(rawdata)/nrow(data)*100,1),
+                                           "% of taxa recorded in this dataset",
+                                           pmap_chr(layeroccurrences,
+                                                    function(total_occurrences,
+                                                             occurrences,
+                                                             ...){
+                                                      if_else(occurrences/total_occurrences>0.8,
+                                                              paste0(", and ",
+                                                                     occurrences,
+                                                                     " occurrences of ",
+                                                                     list(...)[[indicator_var_name]],
+                                                                     " which represents ",
+                                                                     round(occurrences/total_occurrences*100,1),
+                                                                     "% of occurrences for that taxa"),
+                                                              "")
+                                                    }) |>
+                                             paste(collapse = ""),
+                                           "."),
+                 trend_statement = "There is no temporal dimension in this data.")|>
+          rename(data = rawdata) |>
+          select(-layeroccurrences)
+      }
+
+
 
       if(endsWith(scoring, "site-maximum regional threshold")){
         nesteddata <- nesteddata |>
