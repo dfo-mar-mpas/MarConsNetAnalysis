@@ -259,7 +259,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
 
-      if(endsWith(scoring, "site-maximum regional threshold")){
+      if(endsWith(scoring, "site-maximum as regional thresholds")){
         nesteddata <- nesteddata |>
           left_join(areas |>
                       as.data.frame() |>
@@ -269,6 +269,20 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                     by = "areaID") |>
           group_by(region) |>
           mutate(score = score/max(score)*100) |>
+          ungroup() |>
+          select(-region)
+      }
+
+      if(endsWith(scoring, "cumulative distribution with regional thresholds")){
+        nesteddata <- nesteddata |>
+          left_join(areas |>
+                      as.data.frame() |>
+                      dplyr::select({{areaID}}, region) |>
+                      unique() |>
+                      rename(areaID = {{areaID}}),
+                    by = "areaID") |>
+          group_by(region) |>
+          mutate(score = cume_dist(score)*100) |>
           ungroup() |>
           select(-region)
       }
