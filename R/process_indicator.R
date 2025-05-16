@@ -216,7 +216,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
             st_geometry_type(geoms) == "POINT" ~ 1,
             st_geometry_type(geoms) == "MULTIPOINT" ~ lengths(st_geometry(geoms))/2,
             TRUE ~ NA_integer_),
-            total_occurrences = totaloccurrences$occurrences[totaloccurrences[[indicator_var_name]]==name]) |>
+            total_occurrences = totaloccurrences$occurrences[totaloccurrences[[indicator_var_name]]==.data[[indicator_var_name]]]) |>
           nest(rawdata=nest_cols[!is.na(nest_cols)],
                layeroccurrences=c({{indicator_var_name}},total_occurrences ,occurrences)) |>
           rowwise() |>
