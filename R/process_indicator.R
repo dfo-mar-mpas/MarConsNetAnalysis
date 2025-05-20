@@ -21,6 +21,8 @@
 #' @param bin_width numeric width of the bins for the boxplot or violin plot
 #' @param plot_lm logical indicating whether to plot a linear model on the plot
 #' @param plot_lm_se logical indicating whether to plot the standard error of the linear model on the plot
+#' @param direction character string of the direction of the indicator (e.g. normal, inverse)
+#' @param regionID character string of the name of the column in the areas data that contains the region ID (e.g. region)
 #'
 #' @returns
 #' @importFrom dplyr case_when select rename mutate
@@ -37,9 +39,16 @@
 #' @export
 #'
 #' @examples
-process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, PPTID = NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326, latitude = "latitude", longitude = "longitude", year = "year",other_nest_variables = NA, areas = NA, areaID = "NAME_E", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE){
+process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, direction = "normal", PPTID = NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326, latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA, areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE){
 
-  if(!all(is.na(data))){
+  if (inherits(data, "stars")) {
+    dataisna <- all(is.na(unclass(data[[1]])))
+  } else {
+    dataisna <- all(is.na(data))
+  }
+
+
+  if(!dataisna){
     if (startsWith(scoring,"desired state:")){
 
       if(!year %in% names(data)){
@@ -131,7 +140,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       if (!inherits(data, "sf")) stop("data must be an sf object for 'representation' scoring")
       if (!(indicator_var_name %in% names(data))) stop("indicator_var_name column not found in data")
       if (st_crs(data) != st_crs(areas)) stop("data and areas must have the same CRS")
-      if (endsWith(scoring, "site-maximum regional threshold") & !("region" %in% names(areas))) stop("The scoring method 'representation: site-maximum regional threshold' requires a 'region' in 'areas'")
+      if (endsWith(scoring, "regional thresholds") & !(regionID %in% names(areas))) stop(paste0("Scoring methods that use 'regional thresholds' require a '",regionID,"' (set by regionID) in 'areas'"))
 
 
 
@@ -277,21 +286,77 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
         nesteddata <- nesteddata |>
           left_join(areas |>
                       as.data.frame() |>
-                      dplyr::select({{areaID}}, region) |>
+                      dplyr::select({{areaID}}, {{regionID}}) |>
                       unique() |>
                       rename(areaID = {{areaID}}),
                     by = "areaID") |>
-          group_by(region) |>
+          group_by({{regionID}}) |>
           mutate(score = cume_dist(score)*100) |>
           ungroup() |>
-          select(-region)
+          select(-{{regionID}})
       }
+
+
+    } else if (startsWith(scoring,"median")){
+
+      # check if data is an stars object
+      if (!inherits(data, "stars")) {
+        stop("data must be an stars object for 'median' scoring")
+      }
+      # identify the columns to nest
+      nest_cols <- c(indicator_var_name,
+                     "geometry",
+                     other_nest_variables)
+
+
+
+      nesteddata <- st_as_sf(data, as_points = TRUE) |>
+        st_join(areas, left = FALSE)|>
+        rename(areaID = {{areaID}}) |>
+        select(c("areaID",nest_cols[!is.na(nest_cols)])) |>
+        filter(!is.na({{indicator_var_name}})) |>
+        nest(rawdata=nest_cols[!is.na(nest_cols)]) |>
+        mutate(median = map_dbl(rawdata,~median(.x[[indicator_var_name]],na.rm=TRUE)),
+               nrowdata = map_dbl(rawdata,~nrow(.x)),
+               score = median/max(data[[indicator_var_name]], na.rm = TRUE),
+               indicator = indicator,
+               type = type,
+               units = units,
+               scoring = scoring,
+               PPTID =  PPTID,
+               project_short_title = project_short_title,
+               climate = climate,
+               design_target = design_target,
+               status_statement = paste0(areaID,
+                                         " has median value of ",
+                                         round(median,2),
+                                         " (n = ",
+                                         nrowdata,
+                                         ") and ranges from ",
+                                         map_dbl(rawdata,~round(min(.x[[indicator_var_name]],na.rm=TRUE),2)),
+                                         " to ",
+                                         map_dbl(rawdata,~round(max(.x[[indicator_var_name]],na.rm=TRUE),2)),
+                                         "."),
+               trend_statement = "There is no temporal dimension in this data.")|>
+        rename(data = rawdata) |>
+        select(-median,-nrowdata)
+
 
 
     } else {
       warning("scoring method not supported")
 
     }
+
+
+
+    if (direction == "inverse") {
+      nesteddata <- nesteddata |>
+        mutate(score = 100-score)
+    } else if (direction != "normal") {
+      stop("direction must be 'normal' or 'inverse'")
+    }
+
 
     # make sure this data has a row for each site and add plot
     final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
