@@ -77,11 +77,11 @@ analysis <- function(data = pillar_ecol_df, type=NULL) {
               unique(DATA$year)
             ), 5), collapse = ","),
             "), showed a ", trend_direction_5_years," of ",round(five_year_trend_value,2)," ",names(DATA_5_YEARS)[which(!(names(DATA_5_YEARS) %in% c("year", "geometry", "depth", "area")))],
-            " (" , data$units[i],") (pval =",round(summary(model_5_years)$coefficients[2, 4],2),")."
+            " (" , data$units[i],") (pval =",round(summary(model_5_years)$coefficients[2, 4],2),")"
           )
 
         } else {
-          returns[i] <- "Only one year of data available, and therefore no trend analysis available."
+          returns[i] <- "Only one year of data available, and therefore no trend analysis available"
         }
 
       } else if (type == 'status') {
@@ -90,11 +90,11 @@ analysis <- function(data = pillar_ecol_df, type=NULL) {
         #recent year (RECENTYEAR_OUTSIDE) shows an average OUTSIDE_AVERAGE PARAMETER (UNITS) (sd=STANDAND_DEVIATION_OUTSIDE). The most recent
         #5 year mean was MEAN_OUTSIDE_5_YEARS PARAMETER (UNITS) (sd=STANDAND_DEVIATION_OUTSIDE_5_YEARS
 
-        returns[i] <- paste0("The most recent year ," ,tail(DATA$year, 1),", shows a mean of ", round(mean(DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth", "area")))]]),2), " (", data$units[i], ") (sd=",round(mean(DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth", "area")))]]),2) ,
+        returns[i] <- paste0("The most recent year," ,tail(DATA$year, 1),", shows a mean of ", round(mean(DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth", "area")))]]),2), " (", data$units[i], ") (sd=",round(mean(DATA[[which(!(names(DATA) %in% c("year", "geometry", "depth", "area")))]]),2) ,
                              "). The most recent 5 years of sampling (",paste0(tail(sort(
                                unique(DATA$year)
                              ), 5), collapse = ","),") showed a mean of ",round(mean(DATA_5_YEARS[[which(!(names(DATA_5_YEARS) %in% c("year", "geometry", "depth", "area")))]]),2),
-                             "(",data$units[i],") (sd=",round(sd(DATA_5_YEARS[[which(!(names(DATA_5_YEARS) %in% c("year", "geometry", "depth", "area")))]]),2),").")
+                             "(",data$units[i],") (sd=",round(sd(DATA_5_YEARS[[which(!(names(DATA_5_YEARS) %in% c("year", "geometry", "depth", "area")))]]),2),")")
       }
     } else {
       returns[i] <- "TBD"
