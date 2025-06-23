@@ -140,7 +140,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       if (!inherits(data, "sf")) stop("data must be an sf object for 'representation' scoring")
       if (!(indicator_var_name %in% names(data))) stop("indicator_var_name column not found in data")
       if (st_crs(data) != st_crs(areas)) stop("data and areas must have the same CRS")
-      if (endsWith(scoring, "regional thresholds") & !(regionID %in% names(areas))) stop(paste0("Scoring methods that use 'regional thresholds' require a '",regionID,"' (set by regionID) in 'areas'"))
+      if (endsWith(scoring, "regional thresholds") & !(regionID %in% names(areas))) stop(paste0("Scoring methods that use 'regional thresholds' require a '",regionID,"' (set by the regionID argument) in your 'areas' argument"))
 
 
 
@@ -268,21 +268,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
 
-      if(endsWith(scoring, "site-maximum as regional thresholds")){
-        nesteddata <- nesteddata |>
-          left_join(areas |>
-                      as.data.frame() |>
-                      dplyr::select({{areaID}}, region) |>
-                      unique() |>
-                      rename(areaID = {{areaID}}),
-                    by = "areaID") |>
-          group_by(region) |>
-          mutate(score = score/max(score)*100) |>
-          ungroup() |>
-          select(-region)
-      }
-
-      if(endsWith(scoring, "cumulative distribution with regional thresholds")){
+      if(endsWith(scoring, "regional thresholds")){
         nesteddata <- nesteddata |>
           left_join(areas |>
                       as.data.frame() |>
@@ -290,12 +276,13 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                       unique() |>
                       rename(areaID = {{areaID}}),
                     by = "areaID") |>
-          group_by({{regionID}}) |>
-          mutate(score = cume_dist(score)*100) |>
-          ungroup() |>
-          select(-{{regionID}})
+          group_by(across(all_of(regionID))) |>
+          mutate(score = case_when(grepl("site-maximum",scoring) ~ score/max(score)*100,
+                                   grepl("cumulative distribution",scoring) ~ cume_dist(score)*100,
+                                   .default = NA)) |>
+                   ungroup() |>
+                   select(-{{regionID}})
       }
-
 
     } else if (startsWith(scoring,"median")){
 
