@@ -205,7 +205,26 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                            "."),
                  trend_statement = "There is no temporal dimension in this data.")|>
           rename(data = rawdata) |>
-          select(-layerpercents)
+          select(-layerpercents) |>
+          right_join(areas |>
+                       as.data.frame() |>
+                       dplyr::select({{areaID}}) |>
+                       unique() |>
+                       rename(areaID = {{areaID}}),
+                     by = "areaID") |>
+          mutate(score = if_else(is.na(score),0,score),
+                 indicator = coalesce(indicator, !!indicator),
+                 type = coalesce(type, !!type),
+                 units = coalesce(units, !!units),
+                 scoring = coalesce(scoring, !!scoring),
+                 PPTID = coalesce(PPTID, !!PPTID),
+                 project_short_title = coalesce(project_short_title, !!project_short_title),
+                 climate = coalesce(climate, !!climate),
+                 design_target = coalesce(design_target, !!design_target),
+                 status_statement = if_else(is.na(status_statement),
+                                            "No features are represented.",
+                                            status_statement),
+                 trend_statement = "There is no temporal dimension in this data.")
       } else {
         totaloccurrences <- data |>
           mutate(occurrences = case_when(
@@ -263,12 +282,32 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                            "."),
                  trend_statement = "There is no temporal dimension in this data.")|>
           rename(data = rawdata) |>
-          select(-layeroccurrences)
+          select(-layeroccurrences) |>
+          right_join(areas |>
+                       as.data.frame() |>
+                       dplyr::select({{areaID}}) |>
+                       unique() |>
+                       rename(areaID = {{areaID}}),
+                     by = "areaID") |>
+          mutate(score = if_else(is.na(score),0,score),
+                 indicator = coalesce(indicator, !!indicator),
+                 type = coalesce(type, !!type),
+                 units = coalesce(units, !!units),
+                 scoring = coalesce(scoring, !!scoring),
+                 PPTID = coalesce(PPTID, !!PPTID),
+                 project_short_title = coalesce(project_short_title, !!project_short_title),
+                 climate = coalesce(climate, !!climate),
+                 design_target = coalesce(design_target, !!design_target),
+                 status_statement = if_else(is.na(status_statement),
+                                            "No features are represented.",
+                                            status_statement),
+                 trend_statement = "There is no temporal dimension in this data.")
       }
 
 
 
       if(endsWith(scoring, "regional thresholds")){
+
         nesteddata <- nesteddata |>
           left_join(areas |>
                       as.data.frame() |>
