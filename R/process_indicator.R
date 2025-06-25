@@ -493,6 +493,14 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       unique() |>
       left_join(nesteddata, by = setNames("areaID", areaID))|>
       rename(areaID = {{areaID}}) |>
+      mutate(indicator = coalesce(indicator, !!indicator),
+             type = coalesce(type, !!type),
+             units = coalesce(units, !!units),
+             scoring = coalesce(scoring, !!scoring),
+             PPTID = coalesce(PPTID, !!PPTID),
+             project_short_title = coalesce(project_short_title, !!project_short_title),
+             climate = coalesce(climate, !!climate),
+             design_target = coalesce(design_target, !!design_target)) |>
       # plot!
       mutate(plot = pmap(list(data,indicator,units,areaID), function(d,ind,u,id){
         p <- NULL
