@@ -132,13 +132,152 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                  endsWith(scoring, "stable") & p >= 0.05 ~ 100,
                  .default = NA
                ),
-               #status_statement = map(data, ~analysis(data = .x, type = "status")),
-               #trend_statement = map(data, ~analysis(data = .x, type = "trend"))
-        ) |>
+        )
+
+      # TEST
+
+      status_statement <- list()
+      trend_statement <- list()
+
+      for (i in seq_along(nesteddata$data)) {
+        message(i)
+        DATA <- nesteddata$data[[i]]
+        if (!(is.null(DATA))) {
+          DATA_5_YEARS <- nesteddata$data[[i]][which(nesteddata$data[[i]]$year %in% tail(sort(as.numeric(
+            unique(DATA$year)
+          )), 5)),]
+
+          # STATUS
+
+          status_statement[[i]] <- paste0("The most recent year," ,tail(sort(as.numeric(DATA$year)),1),", shows a mean of ", round(mean(DATA[[indicator_var_name]]),2), " (", units, ") (sd=",round(mean(DATA[[indicator_var_name]]),2) ,
+                                        "). The most recent 5 years of sampling (",paste0(tail(sort(as.numeric(
+                                          unique(DATA$year)
+                                        )), 5), collapse = ","),") showed a mean of ",round(mean(DATA_5_YEARS[[indicator_var_name]]),2),
+                                        "(",units,") (sd=",round(sd(DATA_5_YEARS[[indicator_var_name]]),2),")")
+
+
+          # TREND
+          if (length(unique(data$year)) > 1) {
+          data_5_year <- data[which(data$year %in% tail(sort(as.numeric(data$year)),5)),]
+          if (length(unique(data_5_year$year)) > 1) { # Can perform linear regression on 5 year
+          nesteddata_5_year <- data.frame(data_5_year,
+                                   indicator = indicator,
+                                   type = type,
+                                   units = units,
+                                   scoring = scoring,
+                                   PPTID =  PPTID,
+                                   project_short_title = project_short_title,
+                                   climate = climate,
+                                   design_target = design_target) |>
+            nest(data = nest_cols[!is.na(nest_cols)])
+
+          # score the data
+          nesteddata_5_year <- nesteddata_5_year |>
+            mutate(model = map(data, ~lm(as.formula(paste0(indicator_var_name,"~",year)), data = .x)),
+                   summaries = map(model,summary),
+                   coeffs = map(summaries,coefficients),
+                   slope_year = map_dbl(coeffs,~{
+                     # Check if coeffs has at least 2 rows
+                     if(nrow(.x) >= 2) {
+                       return(.x[2,1])
+                     } else {
+                       # Return NA or some other default value
+                       return(NA_real_)
+                     }}),
+                   p = map_dbl(summaries, ~{
+                     # Check if coefficients has at least 2 rows
+                     if(is.null(.x$coefficients) || nrow(.x$coefficients) < 2) {
+                       return(NA_real_)
+                     } else {
+                       return(.x$coefficients[2,4])
+                     }
+                   }),
+                   score = case_when(
+                     endsWith(scoring, "increase") & p < 0.05 & slope_year > 0 ~ 100,
+                     endsWith(scoring, "increase") & p < 0.05 & slope_year < 0 ~ 0,
+                     endsWith(scoring, "increase") & p >= 0.05 ~ 50,
+
+                     endsWith(scoring, "decrease") & p < 0.05 & slope_year < 0 ~ 100,
+                     endsWith(scoring, "decrease") & p < 0.05 & slope_year > 0 ~ 0,
+                     endsWith(scoring, "decrease") & p >= 0.05 ~ 50,
+
+                     endsWith(scoring, "stable") & p < 0.05 ~ 0,
+                     endsWith(scoring, "stable") & p >= 0.05 ~ 100,
+                     .default = NA
+                   ),
+            )
+
+          trend_direction_5_years <- ifelse(unname(nesteddata_5_year$model[[i]][1]$coefficients[2]) > 0, "increase", "decrease")
+          five_year_trend_value <- unname(nesteddata_5_year$model[[i]][1]$coefficients[2])
+          } # more than 1 year condition
+          current_trend_direction <- ifelse(unname(nesteddata$model[[i]][1]$coefficients[2]) > 0, "increase", "decrease")
+          current_trend_value <- unname(nesteddata$model[[i]][1]$coefficients[2])
+
+
+
+          if (length(unique(data_5_year$year)) > 1) { # Condition what type of statement to print out.
+          trend_statement[[i]] <- paste0(
+            "A linear regression has shown a ",current_trend_direction," of ",round(current_trend_value,2),"(",units,
+            "),over ",length(unique(DATA$year))," years (pval=",round(nesteddata$p[i],2),").The linear trend for the last 5 years sampled (",
+            paste0(tail(sort(
+              unique(DATA$year)
+            ), 5), collapse = ","),
+            "), showed a ", trend_direction_5_years," of ",round(five_year_trend_value,2)," ", indicator_var_name,
+            " (" , units,") (pval =",round(nesteddata_5_year$p[i],2),")"
+          )
+          }  else {
+            trend_statement[[i]] <- paste0(
+              "A linear regression has shown a ",current_trend_direction," of ",round(current_trend_value,2),"(",units,
+              "),over ",length(unique(DATA$year))," years (pval=",round(nesteddata$p[i],2),"). There is only one year of data sampled in the last 5 years, and therefore a linear regression is not possible.")
+
+            }# condition (statement)
+        } else {
+          trend_statement[[i]] <- "There is only one year of data, and therefore a linear regression is not possible."
+
+        } # condition here
+
+        } else {
+          status_statement[[i]] <- "TBD"
+        }
+
+      }
+
+      nesteddata <- nesteddata |>
         dplyr::select(-model,-summaries,-coeffs,-slope_year,-p)
 
-      nesteddata$status_statement <- analysis(data=nesteddata, type="status")
-      nesteddata$trend_statement <- analysis(data=nesteddata, type="trend")
+      nesteddata$status_statement <- unlist(status_statement)
+      nesteddata$trend_statement <- unlist(trend_statement)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     } else if (startsWith(scoring,"representation")){
       if (!inherits(data, "sf")) stop("data must be an sf object for 'representation' scoring")
@@ -472,11 +611,19 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                ),
                #status_statement = map(data, ~analysis(data = .x, type = "status")),
                #trend_statement = map(data, ~analysis(data = .x, type = "trend"))
-        ) |>
+        )
+
+      status_statement <- list()
+      trend_statement <- list()
+      for (i in seq_along(nesteddata$data))  {
+      status_statement[[i]] <-ifelse(nesteddata$p[i] < 0.05, "Protection seems to be positively impacting this variable", "Protection is not having a direct impact on this variable")
+      trend_statement[[i]] <- paste0('There is ',ifelse(nesteddata$p[i] < 0.05, "a significant", "no"), " change between the MPA and outer boundary.")
+      }
+      nesteddata <- nesteddata |>
         dplyr::select(-model,-summaries,-coeffs,-controlTRUE,-p)
 
-      #nesteddata$status_statement <- analysis(data=nesteddata, type="status") # FIXME
-      #nesteddata$trend_statement <- analysis(data=nesteddata, type="trend") # FIXME
+      nesteddata$status_statement <- unlist(status_statement)
+      nesteddata$trend_statement <- unlist(trend_statement)
 
     } else {
       warning("scoring method not supported")
