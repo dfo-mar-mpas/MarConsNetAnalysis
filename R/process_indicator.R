@@ -23,11 +23,12 @@
 #' @param plot_lm_se logical indicating whether to plot the standard error of the linear model on the plot
 #' @param direction character string of the direction of the indicator (e.g. normal, inverse)
 #' @param regionID character string of the name of the column in the areas data that contains the region ID (e.g. region)
+#' @param control_polygon a polygon of class "sfc_POLYGON" "sfc" that is used as a buffer for outside comparison.
 #'
 #' @returns
 #' @importFrom dplyr case_when select rename mutate
 #' @importFrom purrr map map_dbl
-#' @importFrom sf st_as_sf st_join
+#' @importFrom sf st_as_sf st_join st_transform st_difference
 #' @importFrom stats lm
 #' @importFrom tidyr nest
 #' @importFrom ggplot2 ggplot aes geom_point geom_line theme_classic ylab geom_smooth
@@ -39,7 +40,7 @@
 #' @export
 #'
 #' @examples
-process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, direction = "normal", PPTID = NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326, latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA, areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE){
+process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, direction = "normal", PPTID = NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326, latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA, areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE, control_polygon=NA){
 
   if (inherits(data, "stars")) {
     dataisna <- all(is.na(unclass(data[[1]])))
@@ -47,8 +48,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     dataisna <- all(is.na(data))
   }
 
-
-  if(!dataisna){
+    if(!dataisna){
     if (startsWith(scoring,"desired state:")){
 
       if(!year %in% names(data)){
@@ -63,12 +63,16 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
         if(!longitude %in% names(data)){
           stop("longitude column not found")
         }
+
         # convert to sf object and join with areas
         data <- st_as_sf(data,
                          coords = c(longitude, latitude),
                          crs = crs)|>
           st_join(dplyr::select(areas,{{areaID}})) |>
           rename(areaID = {{areaID}})
+
+
+
       } else {
         # join with areas
         data <- data |>
@@ -335,7 +339,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                      other_nest_variables)
 
 
-
       nesteddata <- st_as_sf(data, as_points = TRUE) |>
         st_join(areas, left = FALSE)|>
         rename(areaID = {{areaID}}) |>
@@ -369,12 +372,116 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
 
+    } else if (startsWith(scoring, "control site linear trend")) {
+      if (!inherits(data, "sf")) {
+        if(!latitude %in% names(data)){
+          stop("latitude column not found")
+        }
+        if(!longitude %in% names(data)){
+          stop("longitude column not found")
+        }
+
+        # convert to sf object and join with areas
+        data <- st_as_sf(data,
+                         coords = c(longitude, latitude),
+                         crs = crs)|>
+          st_join(dplyr::select(areas,{{areaID}})) |>
+          rename(site_areaID = {{areaID}}) |>
+          st_join(dplyr::select(control_polygon, {{areaID}})) |>
+          rename(control_areaID = {{areaID}}) |>
+          mutate(areaID=if_else(is.na(site_areaID), control_areaID, site_areaID),
+                 control=case_when(is.na(site_areaID)&is.na(control_areaID)~NA,
+                                   !is.na(site_areaID)&is.na(control_areaID)~FALSE,
+                                   is.na(site_areaID)&!is.na(control_areaID)~TRUE,
+                                   .default = NA)) |>
+          dplyr::select(-site_areaID, -control_areaID)
+
+      } else {
+        # join with areas
+        data <- data |>
+          st_join(dplyr::select(areas,{{areaID}})) |>
+          rename(site_areaID = {{areaID}}) |>
+          st_join(dplyr::select(control_polygon, {{areaID}})) |>
+          rename(control_areaID = {{areaID}}) |>
+          mutate(areaID=if_else(is.na(site_areaID), control_areaID, site_areaID),
+                 control=case_when(is.na(site_areaID)&is.na(control_areaID)~NA,
+                                   !is.na(site_areaID)&is.na(control_areaID)~FALSE,
+                                   is.na(site_areaID)&!is.na(control_areaID)~TRUE,
+                                   .default = NA))|>
+          dplyr::select(-site_areaID, -control_areaID)
+      }
+
+      nest_cols <- c(year,
+                     indicator_var_name,
+                     attr(data, "sf_column"),
+                     other_nest_variables,
+                     "control")
+
+
+      nesteddata <- data.frame(data|>
+                                 filter(!is.na(control)) |>
+                                 group_by(areaID) |>
+                                 mutate(garbage = case_when(all(control)~TRUE,
+                                                            all(!control)~TRUE,
+                                                            .default = FALSE)) |>
+                                 filter(!garbage) |>
+                                 dplyr::select(-garbage) |>
+                                 ungroup(),
+                               indicator = indicator,
+                               type = type,
+                               units = units,
+                               scoring = scoring,
+                               PPTID =  PPTID,
+                               project_short_title = project_short_title,
+                               climate = climate,
+                               design_target = design_target) |>
+        nest(data = nest_cols[!is.na(nest_cols)])
+
+
+      # score the data
+      nesteddata <- nesteddata |>
+        mutate(model = map(data, ~lm(as.formula(paste0(indicator_var_name,"~",year, "+ control")), data = .x)),
+               summaries = map(model,summary),
+               coeffs = map(summaries,coefficients),
+               controlTRUE = map_dbl(coeffs,~{
+                 # Check if coeffs has at least 2 rows
+                 if(nrow(.x) >= 3) {
+                   return(.x[3,1])
+                 } else {
+                   # Return NA or some other default value
+                   return(NA_real_)
+                 }}),
+               p = map_dbl(summaries, ~{
+                 # Check if coefficients has at least 2 rows
+                 if(is.null(.x$coefficients) || nrow(.x$coefficients) < 3) {
+                   return(NA_real_)
+                 } else {
+                   return(.x$coefficients[3,4])
+                 }
+               }),
+               score = case_when(
+                 endsWith(scoring, "less inside") & p < 0.05 & controlTRUE > 0 ~ 100,
+                 endsWith(scoring, "less inside") & p < 0.05 & controlTRUE < 0 ~ 0,
+                 endsWith(scoring, "less inside") & p >= 0.05 ~ 50,
+
+                 endsWith(scoring, "more inside") & p < 0.05 & controlTRUE < 0 ~ 100,
+                 endsWith(scoring, "more inside") & p < 0.05 & controlTRUE > 0 ~ 0,
+                 endsWith(scoring, "more inside") & p >= 0.05 ~ 50,
+
+                 .default = NA
+               ),
+               #status_statement = map(data, ~analysis(data = .x, type = "status")),
+               #trend_statement = map(data, ~analysis(data = .x, type = "trend"))
+        ) |>
+        dplyr::select(-model,-summaries,-coeffs,-controlTRUE,-p)
+
+      #nesteddata$status_statement <- analysis(data=nesteddata, type="status") # FIXME
+      #nesteddata$trend_statement <- analysis(data=nesteddata, type="trend") # FIXME
+
     } else {
       warning("scoring method not supported")
 
     }
-
-
 
     if (direction == "inverse") {
       nesteddata <- nesteddata |>
@@ -382,9 +489,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     } else if (direction != "normal") {
       stop("direction must be 'normal' or 'inverse'")
     }
-
-
-    # make sure this data has a row for each site and add plot
     final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
       unique() |>
       left_join(nesteddata, by = setNames("areaID", areaID))|>
@@ -437,6 +541,21 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
               theme_classic() +
               labs(fill = ind, title = id) +
               coord_sf(crs = st_crs(areas))
+          } else if (plot_type == "outside-comparison") {
+            summary_data <- d %>%
+              group_by(.data[[year]], control) %>%
+              summarize(mean_value = mean(.data[[indicator_var_name]], na.rm = TRUE), .groups = "drop")
+
+            # Plot with separate lines for inside vs outside
+            p <- ggplot(summary_data, aes(x = .data[[year]], y = mean_value, color = control)) +
+              geom_point() +
+              geom_line() +
+              theme_classic() +
+              ylab(paste0(ind, " (", u, ")")) +
+              scale_color_manual(values = c("FALSE" = "blue", "TRUE" = "red"),
+                                 labels = c("Inside MPA", "Outside MPA"),
+                                 name = "Location")
+
           } else {
             stop("plot_type not supported")
           }
