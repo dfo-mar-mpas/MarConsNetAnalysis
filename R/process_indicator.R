@@ -347,7 +347,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
         nest(rawdata=nest_cols[!is.na(nest_cols)]) |>
         mutate(median = map_dbl(rawdata,~median(.x[[indicator_var_name]],na.rm=TRUE)),
                nrowdata = map_dbl(rawdata,~nrow(.x)),
-               score = median/max(data[[indicator_var_name]], na.rm = TRUE),
+               score = round(median/max(data[[indicator_var_name]], na.rm = TRUE)*100),
                indicator = indicator,
                type = type,
                units = units,
