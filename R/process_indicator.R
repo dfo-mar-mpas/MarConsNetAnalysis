@@ -618,8 +618,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       trend_statement <- list()
       for (i in seq_along(nesteddata$data))  {
         if (length(unique(nesteddata$data[[i]]$year)) > 1) {
-      status_statement[[i]] <-ifelse(nesteddata$p[i] < 0.05, "Protection seems to be positively impacting this variable", "Protection is not having a direct impact on this variable")
-      trend_statement[[i]] <- paste0('There is ',ifelse(nesteddata$p[i] < 0.05, "a significant", "no"), " change between the MPA and outer boundary.")
+      status_statement[[i]] <-ifelse(nesteddata$p[i] < 0.05, paste0("There was a significant difference between the inside and outside comparison (p=",round(nesteddata$p[i],2), ").Protection could therefore be positively impacting this variable"), paste0("There was a significant difference between the inside and outside comparison (p=",round(nesteddata$p[i],2),"Protection could therefore not be having a direct impact on this variable"))
+      trend_statement[[i]] <- paste0('There is ',ifelse(nesteddata$p[i] < 0.05, "a significant", "no"), " change between the MPA and outer boundary (p= ", round(nesteddata$p[i],2), ")")
         } else {
           status_statement[[i]] <- paste0("Data only sampled in year ", unique(nesteddata$data[[i]]$year))
           trend_statement[[i]] <- paste0("Data only sampled in year ", unique(nesteddata$data[[i]]$year))

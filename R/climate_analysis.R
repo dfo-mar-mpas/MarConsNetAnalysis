@@ -54,10 +54,7 @@ climate_analysis <- function(trend=NULL, itp=indicator_to_plot) {
 
       } else if (itp$status_grade[which(tolower(itp$trend) == tolower(trend))] %in% c("C")) {
         # "there is not a significant change"
-
         conclusion <- paste0(conclusion, " , but the change is not significant.")
-
-
 
       } else if (itp$status_grade[which(tolower(itp$trend) == tolower(trend))] == "F") {
         "stat.sig going in the wrong direction"
