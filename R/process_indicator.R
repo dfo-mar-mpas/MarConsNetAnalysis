@@ -140,7 +140,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       trend_statement <- list()
 
       for (i in seq_along(nesteddata$data)) {
-        message(i)
         DATA <- nesteddata$data[[i]]
         if (!(is.null(DATA))) {
           DATA_5_YEARS <- nesteddata$data[[i]][which(nesteddata$data[[i]]$year %in% tail(sort(as.numeric(
@@ -149,15 +148,15 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
           # STATUS
 
-          status_statement[[i]] <- paste0("The most recent year," ,tail(sort(as.numeric(DATA$year)),1),", shows a mean of ", round(mean(DATA[[indicator_var_name]]),2), " (", units, ") (sd=",round(mean(DATA[[indicator_var_name]]),2) ,
+          status_statement[[i]] <- paste0("The most recent year," ,tail(sort(as.numeric(DATA$year)),1),", shows a mean of ", round(mean(DATA[[indicator_var_name]], na.rm=TRUE),2), " (", units, ") (sd=",round(sd(DATA[[indicator_var_name]], na.rm=TRUE),2) ,
                                         "). The most recent 5 years of sampling (",paste0(tail(sort(as.numeric(
                                           unique(DATA$year)
-                                        )), 5), collapse = ","),") showed a mean of ",round(mean(DATA_5_YEARS[[indicator_var_name]]),2),
-                                        "(",units,") (sd=",round(sd(DATA_5_YEARS[[indicator_var_name]]),2),")")
+                                        )), 5), collapse = ","),") showed a mean of ",round(mean(DATA_5_YEARS[[indicator_var_name]], na.rm=TRUE),2),
+                                        "(",units,") (sd=",round(sd(DATA_5_YEARS[[indicator_var_name]], na.rm=TRUE),2),")")
 
 
           # TREND
-          if (length(unique(data$year)) > 1) {
+          if (length(unique(data$year[which(!(is.na(data[[indicator_var_name]])))])) > 1) {
           data_5_year <- data[which(data$year %in% tail(sort(as.numeric(data$year)),5)),]
           if (length(unique(data_5_year$year)) > 1) { # Can perform linear regression on 5 year
           nesteddata_5_year <- data.frame(data_5_year,
@@ -206,6 +205,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                      .default = NA
                    ),
             )
+
+
 
           trend_direction_5_years <- ifelse(unname(nesteddata_5_year$model[[i]][1]$coefficients[2]) > 0, "increase", "decrease")
           five_year_trend_value <- unname(nesteddata_5_year$model[[i]][1]$coefficients[2])
