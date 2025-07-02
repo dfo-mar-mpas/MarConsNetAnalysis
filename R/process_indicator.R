@@ -676,6 +676,12 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       mutate(plot = pmap(list(data,indicator,units,areaID), function(d,ind,u,id){
         p <- NULL
         if(!is.null(d)){
+
+          if (plot_type == 'map-species') {
+            if (!(length(data[[which(areas$NAME_E == id)]][[indicator_var_name]]) > 25)) {
+              plot_type <- "map"
+            }
+          }
           if(plot_type == "time-series") {
             p <-  ggplot(d,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
               geom_point()+
@@ -714,39 +720,37 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
           } else if(plot_type == "map"){
-            if (!(length(data[[which(areas$NAME_E == id)]][[indicator_var_name]]) > 25)) {
               p <- ggplot() +
                 geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
                 geom_sf(data = d, aes(fill = .data[[indicator_var_name]]), shape = 21, color = "black", size = 2) +
                 theme_classic() +
                 labs(fill = ind, title = id) +
                 coord_sf(crs = st_crs(areas))
-            } else {
-              # We need to group by taxize to show something meaningful in the legend/ plot.
 
-              subclass <- NULL
-              for (i in seq_along(data[[which(areas$NAME_E == id)]][[indicator_var_name]])) {
-                result <- try(worrms::wm_records_name(data[[which(areas$NAME_E == id)]][[indicator_var_name]][i]), silent=TRUE)
-                if (inherits(result, "try-error")) {
-                  subclass[i] <- NA
-                } else {
-                  aphia_id <- result$AphiaID[1]  # Use the first match, or refine if needed
-                  classification <- worrms::wm_classification(id = aphia_id)
-                  subclass[i] <- ifelse(length(classification$scientificname[which(classification$rank == "Subclass")]) == 0, NA, classification$scientificname[which(classification$rank == "Subclass")])
-                }
+          } else if (plot_type == "map-species") {
+            subclass <- NULL
+            for (i in seq_along(data[[which(areas$NAME_E == id)]][[indicator_var_name]])) {
+              message(i)
+              result <- try(worrms::wm_records_name(data[[which(areas$NAME_E == id)]][[indicator_var_name]][i]), silent=TRUE)
+              if (inherits(result, "try-error")) {
+                subclass[i] <- NA
+              } else {
+                aphia_id <- result$AphiaID[1]  # Use the first match, or refine if needed
+                classification <- worrms::wm_classification(id = aphia_id)
+                subclass[i] <- ifelse(length(classification$scientificname[which(classification$rank == "Subclass")]) == 0, NA, classification$scientificname[which(classification$rank == "Subclass")])
               }
-
-              data$subclass <- subclass
-
-              p <- ggplot() +
-                geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
-                geom_sf(data = d, aes(fill = subclass), shape = 21, color = "black", size = 2) +
-                theme_classic() +
-                labs(fill = "Subclass", title = id) +
-                coord_sf(crs = st_crs(areas))
-              data$subclass <- NULL
-
             }
+
+            data$subclass <- subclass
+
+            p <- ggplot() +
+              geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
+              geom_sf(data = d, aes(fill = subclass), shape = 21, color = "black", size = 2) +
+              theme_classic() +
+              labs(fill = "Subclass", title = id) +
+              coord_sf(crs = st_crs(areas))
+            data$subclass <- NULL
+
           } else if (plot_type == "outside-comparison") {
             summary_data <- d %>%
               group_by(.data[[year]], control) %>%
