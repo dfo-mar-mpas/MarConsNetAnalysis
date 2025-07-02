@@ -35,7 +35,7 @@
 #' @importFrom rlang .data
 #' @importFrom units set_units
 #' @importFrom tibble as_tibble
-#' @importFrom worms wm_records_name wm_classification
+#' @importFrom worrms wm_records_name wm_classification
 #'
 #'
 #' @export
@@ -714,26 +714,24 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
           } else if(plot_type == "map"){
-            #browser()
-
             if (!(length(data[[which(areas$NAME_E == id)]][[indicator_var_name]]) > 25)) {
-            p <- ggplot() +
-              geom_sf(data = areas[areaID==id,], fill = "white", color = "black") +
-              geom_sf(data = d, aes(fill = .data[[indicator_var_name]])) +
-              theme_classic() +
-              labs(fill = ind, title = id) +
-              coord_sf(crs = st_crs(areas))
+              p <- ggplot() +
+                geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
+                geom_sf(data = d, aes(fill = .data[[indicator_var_name]]), shape = 21, color = "black", size = 2) +
+                theme_classic() +
+                labs(fill = ind, title = id) +
+                coord_sf(crs = st_crs(areas))
             } else {
               # We need to group by taxize to show something meaningful in the legend/ plot.
 
               subclass <- NULL
               for (i in seq_along(data[[which(areas$NAME_E == id)]][[indicator_var_name]])) {
-                result <- try(wm_records_name(data[[which(areas$NAME_E == id)]][[indicator_var_name]][i]), silent=TRUE)
+                result <- try(worrms::wm_records_name(data[[which(areas$NAME_E == id)]][[indicator_var_name]][i]), silent=TRUE)
                 if (inherits(result, "try-error")) {
                   subclass[i] <- NA
                 } else {
                   aphia_id <- result$AphiaID[1]  # Use the first match, or refine if needed
-                  classification <- wm_classification(id = aphia_id)
+                  classification <- worrms::wm_classification(id = aphia_id)
                   subclass[i] <- ifelse(length(classification$scientificname[which(classification$rank == "Subclass")]) == 0, NA, classification$scientificname[which(classification$rank == "Subclass")])
                 }
               }
