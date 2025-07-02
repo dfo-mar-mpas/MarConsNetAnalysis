@@ -35,6 +35,7 @@
 #' @importFrom rlang .data
 #' @importFrom units set_units
 #' @importFrom tibble as_tibble
+#' @importFrom worms wm_records_name wm_classification
 #'
 #'
 #' @export
@@ -148,11 +149,16 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
           # STATUS
 
-          status_statement[[i]] <- paste0("The most recent year," ,tail(sort(as.numeric(DATA$year)),1),", shows a mean of ", round(mean(DATA[[indicator_var_name]], na.rm=TRUE),2), " (", units, ") (sd=",round(sd(DATA[[indicator_var_name]], na.rm=TRUE),2) ,
-                                        "). The most recent 5 years of sampling (",paste0(tail(sort(as.numeric(
-                                          unique(DATA$year)
-                                        )), 5), collapse = ","),") showed a mean of ",round(mean(DATA_5_YEARS[[indicator_var_name]], na.rm=TRUE),2),
-                                        "(",units,") (sd=",round(sd(DATA_5_YEARS[[indicator_var_name]], na.rm=TRUE),2),")")
+          status_statement[[i]] <- paste0(
+            "The most recent year, ", tail(sort(as.numeric(DATA$year)), 1),
+            ", shows a mean of ", round(mean(DATA[[indicator_var_name]], na.rm = TRUE), 2),
+            if (!is.na(units)) paste0(" (", units, ")") else "",
+            " (sd = ", round(sd(DATA[[indicator_var_name]], na.rm = TRUE), 2), "). ",
+            "The most recent 5 years of sampling (", paste0(tail(sort(as.numeric(unique(DATA$year))), 5), collapse = ","),
+            ") showed a mean of ", round(mean(DATA_5_YEARS[[indicator_var_name]], na.rm = TRUE), 2),
+            if (!is.na(units)) paste0(" (", units, ")") else "",
+            " (sd = ", round(sd(DATA_5_YEARS[[indicator_var_name]], na.rm = TRUE), 2), ")"
+          )
 
 
           # TREND
@@ -217,23 +223,27 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
           if (length(unique(data_5_year$year)) > 1) { # Condition what type of statement to print out.
-          trend_statement[[i]] <- paste0(
-            "A linear regression has shown a ",current_trend_direction," of ",round(current_trend_value,2),"(",units,
-            "),over ",length(unique(DATA$year))," years (pval=",round(nesteddata$p[i],2),").The linear trend for the last 5 years sampled (",
-            paste0(tail(sort(
-              unique(DATA$year)
-            ), 5), collapse = ","),
-            "), showed a ", trend_direction_5_years," of ",round(five_year_trend_value,2)," ", indicator_var_name,
-            " (" , units,") (pval =",round(nesteddata_5_year$p[i],2),")"
-          )
+            trend_statement[[i]] <- paste0(
+              "A linear regression has shown a ", current_trend_direction, " of ", round(current_trend_value, 2),
+              if (!is.na(units) && units != "") paste0(" (", units, ")") else "",
+              ", over ", length(unique(DATA$year)), " years (pval = ", round(nesteddata$p[i], 2), "). The linear trend for the last 5 years sampled (",
+              paste0(tail(sort(unique(DATA$year)), 5), collapse = ","),
+              "), showed a ", trend_direction_5_years, " of ", round(five_year_trend_value, 2), " ", indicator_var_name,
+              if (!is.na(units) && units != "") paste0(" (", units, ")") else "",
+              " (pval = ", round(nesteddata_5_year$p[i], 2), ")"
+            )
+
           }  else {
             trend_statement[[i]] <- paste0(
-              "A linear regression has shown a ",current_trend_direction," of ",round(current_trend_value,2),"(",units,
-              "),over ",length(unique(DATA$year))," years (pval=",round(nesteddata$p[i],2),"). There is only one year of data sampled in the last 5 years, and therefore a linear regression is not possible.")
+              "A linear regression has shown a ", current_trend_direction, " of ", round(current_trend_value, 2),
+              if (!is.na(units) && units != "") paste0(" (", units, ")") else "",
+              ", over ", length(unique(DATA$year)), " years (pval = ", round(nesteddata$p[i], 2), "). ",
+              "There is only one year of data sampled in the last 5 years, and therefore a linear regression is not possible"
+            )
 
             }# condition (statement)
         } else {
-          trend_statement[[i]] <- "There is only one year of data, and therefore a linear regression is not possible."
+          trend_statement[[i]] <- "There is only one year of data, and therefore a linear regression is not possible"
 
         } # condition here
 
@@ -307,7 +317,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
           # intersection with areas
           st_intersection(areas) |>
           rename(IDtemp = {{areaID}})|>
-          select(c("IDtemp",nest_cols[!is.na(nest_cols)])) |>
+          dplyr::select(c("IDtemp",nest_cols[!is.na(nest_cols)])) |>
           filter(!is.na({{indicator_var_name}})) |>
           rowwise() |>
           mutate(layerareakm2=st_area(geoms) |>
@@ -349,7 +359,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                            "."),
                  trend_statement = "There is no temporal dimension in this data.")|>
           rename(data = rawdata) |>
-          select(-layerpercents) |>
+          dplyr::select(-layerpercents) |>
           right_join(areas |>
                        as.data.frame() |>
                        dplyr::select({{areaID}}) |>
@@ -381,7 +391,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
           # intersection with areas
           st_intersection(areas) |>
           rename(areaID = {{areaID}}) |>
-          select(c("areaID",nest_cols[!is.na(nest_cols)])) |>
+          dplyr::select(c("areaID",nest_cols[!is.na(nest_cols)])) |>
           filter(!is.na({{indicator_var_name}})) |>
           rowwise() |>
           mutate(occurrences = case_when(
@@ -402,31 +412,37 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                  project_short_title = project_short_title,
                  climate = climate,
                  design_target = design_target,
+                 # status_statement = paste0(areaID,
+                 #                           " has had recorded occurrences of ",
+                 #                           nrow(rawdata),
+                 #                           " taxa which represents ",
+                 #                           round(nrow(rawdata)/nrow(data)*100,1),
+                 #                           "% of taxa recorded in this dataset",
+                 #                           pmap_chr(layeroccurrences,
+                 #                                    function(total_occurrences,
+                 #                                             occurrences,
+                 #                                             ...){
+                 #                                      if_else(occurrences/total_occurrences>0.8,
+                 #                                              paste0(", and ",
+                 #                                                     occurrences,
+                 #                                                     " occurrences of ",
+                 #                                                     list(...)[[indicator_var_name]],
+                 #                                                     " which represents ",
+                 #                                                     round(occurrences/total_occurrences*100,1),
+                 #                                                     "% of occurrences for that taxa"),
+                 #                                              "")
+                 #                                    }) |>
+                 #                             paste(collapse = ""),
+                 #                           "."),
                  status_statement = paste0(areaID,
                                            " has had recorded occurrences of ",
                                            nrow(rawdata),
                                            " taxa which represents ",
                                            round(nrow(rawdata)/nrow(data)*100,1),
-                                           "% of taxa recorded in this dataset",
-                                           pmap_chr(layeroccurrences,
-                                                    function(total_occurrences,
-                                                             occurrences,
-                                                             ...){
-                                                      if_else(occurrences/total_occurrences>0.8,
-                                                              paste0(", and ",
-                                                                     occurrences,
-                                                                     " occurrences of ",
-                                                                     list(...)[[indicator_var_name]],
-                                                                     " which represents ",
-                                                                     round(occurrences/total_occurrences*100,1),
-                                                                     "% of occurrences for that taxa"),
-                                                              "")
-                                                    }) |>
-                                             paste(collapse = ""),
-                                           "."),
+                                           "% of taxa recorded in this dataset"),
                  trend_statement = "There is no temporal dimension in this data.")|>
           rename(data = rawdata) |>
-          select(-layeroccurrences) |>
+          dplyr::select(-layeroccurrences) |>
           right_join(areas |>
                        as.data.frame() |>
                        dplyr::select({{areaID}}) |>
@@ -464,7 +480,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                    grepl("cumulative distribution",scoring) ~ cume_dist(score)*100,
                                    .default = NA)) |>
                    ungroup() |>
-                   select(-{{regionID}})
+          dplyr::select(-{{regionID}})
       }
 
     } else if (startsWith(scoring,"median")){
@@ -482,7 +498,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       nesteddata <- st_as_sf(data, as_points = TRUE) |>
         st_join(areas, left = FALSE)|>
         rename(areaID = {{areaID}}) |>
-        select(c("areaID",nest_cols[!is.na(nest_cols)])) |>
+        dplyr::select(c("areaID",nest_cols[!is.na(nest_cols)])) |>
         filter(!is.na({{indicator_var_name}})) |>
         nest(rawdata=nest_cols[!is.na(nest_cols)]) |>
         mutate(median = map_dbl(rawdata,~median(.x[[indicator_var_name]],na.rm=TRUE)),
@@ -508,7 +524,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                          "."),
                trend_statement = "There is no temporal dimension in this data.")|>
         rename(data = rawdata) |>
-        select(-median,-nrowdata)
+        dplyr::select(-median,-nrowdata)
 
 
 
@@ -698,12 +714,41 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
           } else if(plot_type == "map"){
+            #browser()
+
+            if (!(length(data[[which(areas$NAME_E == id)]][[indicator_var_name]]) > 25)) {
             p <- ggplot() +
               geom_sf(data = areas[areaID==id,], fill = "white", color = "black") +
               geom_sf(data = d, aes(fill = .data[[indicator_var_name]])) +
               theme_classic() +
               labs(fill = ind, title = id) +
               coord_sf(crs = st_crs(areas))
+            } else {
+              # We need to group by taxize to show something meaningful in the legend/ plot.
+
+              subclass <- NULL
+              for (i in seq_along(data[[which(areas$NAME_E == id)]][[indicator_var_name]])) {
+                result <- try(wm_records_name(data[[which(areas$NAME_E == id)]][[indicator_var_name]][i]), silent=TRUE)
+                if (inherits(result, "try-error")) {
+                  subclass[i] <- NA
+                } else {
+                  aphia_id <- result$AphiaID[1]  # Use the first match, or refine if needed
+                  classification <- wm_classification(id = aphia_id)
+                  subclass[i] <- ifelse(length(classification$scientificname[which(classification$rank == "Subclass")]) == 0, NA, classification$scientificname[which(classification$rank == "Subclass")])
+                }
+              }
+
+              data$subclass <- subclass
+
+              p <- ggplot() +
+                geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
+                geom_sf(data = d, aes(fill = subclass), shape = 21, color = "black", size = 2) +
+                theme_classic() +
+                labs(fill = "Subclass", title = id) +
+                coord_sf(crs = st_crs(areas))
+              data$subclass <- NULL
+
+            }
           } else if (plot_type == "outside-comparison") {
             summary_data <- d %>%
               group_by(.data[[year]], control) %>%
