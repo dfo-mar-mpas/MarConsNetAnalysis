@@ -5,6 +5,7 @@
 #' @param indicator character string of the name of the indicator
 #' @param type character string of the instrument/platform/model type of the indicator
 #' @param PPTID numeric project planning tool project ID
+#' @param source source where the data was obtained from
 #' @param project_short_title character string of a short title for the project
 #' @param units  character string of the units of the indicator
 #' @param scoring character string of the scoring method for the indicator
@@ -41,7 +42,7 @@
 #' @export
 #'
 #' @examples
-process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, direction = "normal", PPTID = NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326, latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA, areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE, control_polygon=NA){
+process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, direction = "normal", PPTID = NA, source=NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326, latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA, areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE, control_polygon=NA){
 
   if (inherits(data, "stars")) {
     dataisna <- all(is.na(unclass(data[[1]])))
@@ -669,6 +670,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
              units = coalesce(units, !!units),
              scoring = coalesce(scoring, !!scoring),
              PPTID = coalesce(PPTID, !!PPTID),
+             source = coalesce(source, !!source),
              project_short_title = coalesce(project_short_title, !!project_short_title),
              climate = coalesce(climate, !!climate),
              design_target = coalesce(design_target, !!design_target)) |>
@@ -790,6 +792,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       areaID = as.vector(unique(dplyr::select(as.data.frame(areas),{{areaID}}))[,1]),
       data,
       plot = NA,
+      source=source,
       indicator = indicator,
       type = type,
       units = units,
