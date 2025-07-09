@@ -41,6 +41,7 @@
 #' @importFrom units set_units
 #' @importFrom tibble as_tibble
 #' @importFrom worrms wm_records_name wm_classification
+#' @importFrom patchwork wrap_plots
 #'
 #'
 #' @export
@@ -282,36 +283,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
       nesteddata$status_statement <- unlist(status_statement)
       nesteddata$trend_statement <- unlist(trend_statement)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     } else if (startsWith(scoring,"representation")){
@@ -705,28 +676,33 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
         p <- NULL
         if(!is.null(d)){
 
-          if (plot_type == 'map-species') {
+          plot_list <- list()
+
+          for (i in seq_along(plot_type)) {
+          if ('map-species' %in% plot_type[i]) {
             if (!(length(data[[which(areas$NAME_E == id)]][[indicator_var_name]]) > 25)) {
               plot_type <- "map"
             }
           }
-          if(plot_type == "time-series") {
-            p <-  ggplot(d,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
+          if("time-series" %in% plot_type[i]) {
+            plot_list[[i]] <-  ggplot(d,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
               geom_point()+
               geom_line()+
               theme_classic()+
               ylab(paste0(ind, " (", u, ")"))
-          } else if(plot_type == "time-series-no-line") {
-            p <-  ggplot(d,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
+          }
+          if("time-series-no-line" %in% plot_type[i]) {
+            plot_list[[i]] <-  ggplot(d,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
               geom_point()+
               theme_classic()+
               ylab(paste0(ind, " (", u, ")"))
-          } else if(plot_type == "boxplot") {
+          }
+          if("boxplot" %in% plot_type[i]) {
             # Create decade grouping
             d$decade_group <- floor(d[[year]] / bin_width) * bin_width
 
             # Plot with position_dodge to control width
-            p <- ggplot(d, aes(x = decade_group + bin_width/2, y=.data[[indicator_var_name]], group = decade_group)) +
+            plot_list[[i]] <- ggplot(d, aes(x = decade_group + bin_width/2, y=.data[[indicator_var_name]], group = decade_group)) +
               geom_boxplot(width = bin_width*0.9) +
               scale_x_continuous(name = year,
                                  breaks = unique(d$decade_group),
@@ -734,12 +710,13 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
               theme_classic()
 
 
-          } else if(plot_type == "violin") {
+          }
+          if("violin" %in% plot_type[i]) {
             # Create decade grouping
             d$decade_group <- floor(d[[year]] / bin_width) * bin_width
 
             # Plot with position_dodge to control width
-            p <- ggplot(d, aes(x = decade_group + bin_width/2, y=.data[[indicator_var_name]], group = decade_group)) +
+            plot_list[[i]] <- ggplot(d, aes(x = decade_group + bin_width/2, y=.data[[indicator_var_name]], group = decade_group)) +
               geom_violin(width = bin_width*0.9) +
               scale_x_continuous(name = year,
                                  breaks = unique(d$decade_group),
@@ -747,18 +724,34 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
               theme_classic()
 
 
-          } else if(plot_type == "map"){
-              p <- ggplot() +
-                geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
-                geom_sf(data = d, aes(fill = .data[[indicator_var_name]]), shape = 21, color = "black", size = 2) +
-                theme_classic() +
-                labs(fill = ind, title = id) +
-                coord_sf(crs = st_crs(areas))
+          }
+          if("map" %in% plot_type[i]){
+            if ((!("sf" %in% class(d)))) {
+              aes_geom <- d$geometry
+            } else {
+              aes_geom <- d$geoms
+            }
 
-          } else if (plot_type == "map-species") {
+            plot_list[[i]] <- ggplot() +
+              geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
+              geom_sf(
+                # ifelse((!("sf" %in% class(d))),geometry,eval(parse(text = attr(d, "sf_column"))))
+                data = d,
+                aes(geometry=aes_geom, fill = .data[[indicator_var_name]]),
+                shape = 21,      # Use a fillable shape
+                color = "black",
+                size = 2
+              ) +
+              theme_classic() +
+              labs(
+                fill = indicator_var_name,
+                title = id
+              ) +
+              coord_sf(crs = st_crs(areas))
+          }
+          if ("map-species" %in% plot_type[i]) {
             subclass <- NULL
             for (i in seq_along(data[[which(areas$NAME_E == id)]][[indicator_var_name]])) {
-              message(i)
               result <- try(worrms::wm_records_name(data[[which(areas$NAME_E == id)]][[indicator_var_name]][i]), silent=TRUE)
               if (inherits(result, "try-error")) {
                 subclass[i] <- NA
@@ -771,7 +764,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
             data$subclass <- subclass
 
-            p <- ggplot() +
+            plot_list[[i]] <- ggplot() +
               geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
               geom_sf(data = d, aes(fill = subclass), shape = 21, color = "black", size = 2) +
               theme_classic() +
@@ -779,13 +772,14 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
               coord_sf(crs = st_crs(areas))
             data$subclass <- NULL
 
-          } else if (plot_type == "outside-comparison") {
+          }
+          if ("outside-comparison" %in% plot_type[i]) {
             summary_data <- d %>%
               group_by(.data[[year]], control) %>%
               summarize(mean_value = mean(.data[[indicator_var_name]], na.rm = TRUE), .groups = "drop")
 
             # Plot with separate lines for inside vs outside
-            p <- ggplot(summary_data, aes(x = .data[[year]], y = mean_value, color = control)) +
+            plot_list[[i]] <- ggplot(summary_data, aes(x = .data[[year]], y = mean_value, color = control)) +
               geom_point() +
               geom_line() +
               theme_classic() +
@@ -794,22 +788,25 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                  labels = c("Inside MPA", "Outside MPA"),
                                  name = "Location")
 
-          } else {
-            stop("plot_type not supported")
           }
 
-          if (plot_lm) {
-            return(p + geom_smooth(method = "lm", se = plot_lm_se))
-          } else {
-            return(p)
-          }
+            # FIXME
+
+          # if (plot_lm) {
+          #   return(p + geom_smooth(method = "lm", se = plot_lm_se))
+          # } else {
+          #   return(p)
+          # }
+
+            # END FIXME
+        } #END LOOP
+          p <- wrap_plots(plot_list, ncol = min(length(plot_type), 3))
 
         } else {
           return(p)
         }
       }
       ))
-
 
 
   } else {
