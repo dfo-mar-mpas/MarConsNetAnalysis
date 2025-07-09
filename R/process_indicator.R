@@ -25,6 +25,10 @@
 #' @param direction character string of the direction of the indicator (e.g. normal, inverse)
 #' @param regionID character string of the name of the column in the areas data that contains the region ID (e.g. region)
 #' @param control_polygon a polygon of class "sfc_POLYGON" "sfc" that is used as a buffer for outside comparison.
+#' @param climate_expectation a statement for climate indicators indicating what we expect to happen to that indicator
+#' with the impacts of climate change
+#' @param indicator_rationale a string indicating why the rational is of significance
+#' @param bin_rationale a string indicator why the indicator is associated with a certain bin
 #'
 #' @returns
 #' @importFrom dplyr case_when select rename mutate
@@ -42,7 +46,26 @@
 #' @export
 #'
 #' @examples
-process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, direction = "normal", PPTID = NA, source=NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326, latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA, areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE, control_polygon=NA){
+process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, direction = "normal",
+                              PPTID = NA, source=NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326,
+                              latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA,
+                              areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE,
+                              control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA){
+
+  if(climate) {
+    if(is.na(climate_expectation)) {
+      stop("Must provide a climate_expectation argument for climate indicators.")
+    }
+  }
+
+  if(is.na(indicator_rationale)) {
+    stop("Must provide a indicator_rationale argument")
+  }
+  if(is.na(bin_rationale)) {
+
+    stop("Must provide a bin_rationale argument")
+  }
+
 
   if (inherits(data, "stars")) {
     dataisna <- all(is.na(unclass(data[[1]])))
@@ -671,6 +694,9 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
              scoring = coalesce(scoring, !!scoring),
              PPTID = coalesce(PPTID, !!PPTID),
              source = coalesce(source, !!source),
+             climate_expectation = coalesce(climate_expectation, !!climate_expectation),
+             indicator_rationale = coalesce(indicator_rationale, !!indicator_rationale),
+             bin_rationale = coalesce(bin_rationale, !!bin_rationale),
              project_short_title = coalesce(project_short_title, !!project_short_title),
              climate = coalesce(climate, !!climate),
              design_target = coalesce(design_target, !!design_target)) |>
@@ -793,6 +819,9 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       data,
       plot = NA,
       source=source,
+      climate_expectation=climate_expectation,
+      indicator_rationale=indicator_rationale,
+      bin_rationale=bin_rationale,
       indicator = indicator,
       type = type,
       units = units,
