@@ -737,10 +737,16 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
           }
           if("map" %in% plot_type[i]){
+
             if ((!("sf" %in% class(d)))) {
               aes_geom <- d$geometry
             } else {
-              aes_geom <- d$geoms
+              if ("geoms" %in% names(d)) {
+                aes_geom <- d$geoms
+              } else {
+                aes_geom <- d$geometry
+              }
+
             }
 
             plot_list[[i]] <- ggplot() +
