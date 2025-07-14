@@ -53,6 +53,17 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                               areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE,
                               control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA){
 
+
+  if ("map-species" %in% plot_type) {
+    if (is.na(other_nest_variables)) {
+      stop("Must provide other_nest_variable named containing subclass when plot_type = 'map-species'")
+    } else {
+      if (!('subclass' %in% other_nest_variables)) {
+        stop("Must provide other_nest_variable named containing subclass when plot_type = 'map-species'")
+      }
+    }
+  }
+
   if(climate) {
     if(is.na(climate_expectation)) {
       stop("Must provide a climate_expectation argument for climate indicators.")
@@ -750,19 +761,20 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
               coord_sf(crs = st_crs(areas))
           }
           if ("map-species" %in% plot_type[i]) {
-            subclass <- NULL
-            for (i in seq_along(data[[which(areas$NAME_E == id)]][[indicator_var_name]])) {
-              result <- try(worrms::wm_records_name(data[[which(areas$NAME_E == id)]][[indicator_var_name]][i]), silent=TRUE)
-              if (inherits(result, "try-error")) {
-                subclass[i] <- NA
-              } else {
-                aphia_id <- result$AphiaID[1]  # Use the first match, or refine if needed
-                classification <- worrms::wm_classification(id = aphia_id)
-                subclass[i] <- ifelse(length(classification$scientificname[which(classification$rank == "Subclass")]) == 0, NA, classification$scientificname[which(classification$rank == "Subclass")])
-              }
-            }
+            #subclass <- NULL
 
-            data$subclass <- subclass
+            # for (i in seq_along(data[[which(areas$NAME_E == id)]][[indicator_var_name]])) {
+            #   result <- try(worrms::wm_records_name(data[[which(areas$NAME_E == id)]][[indicator_var_name]][i]), silent=TRUE)
+            #   if (inherits(result, "try-error")) {
+            #     subclass[i] <- NA
+            #   } else {
+            #     aphia_id <- result$AphiaID[1]  # Use the first match, or refine if needed
+            #     classification <- worrms::wm_classification(id = aphia_id)
+            #     subclass[i] <- ifelse(length(classification$scientificname[which(classification$rank == "Subclass")]) == 0, NA, classification$scientificname[which(classification$rank == "Subclass")])
+            #   }
+            # }
+            #
+            # data$subclass <- subclass
 
             plot_list[[i]] <- ggplot() +
               geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
@@ -770,7 +782,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
               theme_classic() +
               labs(fill = "Subclass", title = id) +
               coord_sf(crs = st_crs(areas))
-            data$subclass <- NULL
+            #data$subclass <- NULL
 
           }
           if ("outside-comparison" %in% plot_type[i]) {
@@ -800,13 +812,26 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
             # END FIXME
         } #END LOOP
-          p <- wrap_plots(plot_list, ncol = min(length(plot_type), 3))
+          p <- try(patchwork::wrap_plots(plot_list, ncol = min(length(plot_type), 3)), silent=TRUE)
+
+          if (inherits(p, "try-error")) {
+            p <- try(patchwork::wrap_plots(plot_list[!vapply(plot_list, is.null, logical(1))], ncol = min(length(plot_type), 3)), silent=TRUE)
+          }
+
+          if (inherits(p, "try-error")) {
+            #browser()  # Enter debug mode here if there's an error
+          }
+
+          return(p)
+
 
         } else {
           return(p)
         }
       }
       ))
+    #browser() it worked here
+
 
 
   } else {
