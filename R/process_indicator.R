@@ -766,7 +766,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
             if (any(grepl("control site", unique(scoring), ignore.case = TRUE))) {
               coords <- st_coordinates(aes_geom)
               d_coords <- cbind(d, coords)
-              ggplot() +
+              plot_list[[i]] <- ggplot() +
                 geom_sf(
                   data = areas[areaID == id, ],
                   fill = "white",
