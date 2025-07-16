@@ -40,7 +40,6 @@
 #' @importFrom rlang .data
 #' @importFrom units set_units
 #' @importFrom tibble as_tibble
-#' @importFrom worrms wm_records_name wm_classification
 #' @importFrom patchwork wrap_plots
 #'
 #'
@@ -55,13 +54,12 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
   if ("map-species" %in% plot_type) {
-    if (is.na(other_nest_variables)) {
-      stop("Must provide other_nest_variable named containing subclass when plot_type = 'map-species'")
-    } else {
-      if (!('subclass' %in% other_nest_variables)) {
-        stop("Must provide other_nest_variable named containing subclass when plot_type = 'map-species'")
+    if (all(is.na(other_nest_variables))) {
+      stop("Must provide other_nest_variable named containing subclass and class when plot_type = 'map-species'")
+    } else if (!('subclass' %in% other_nest_variables)) {
+        stop("Must provide other_nest_variable named containing subclass and class when plot_type = 'map-species'")
       }
-    }
+
   }
 
   if(climate) {
@@ -726,18 +724,35 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
             # Create decade grouping
             d$decade_group <- floor(d[[year]] / bin_width) * bin_width
 
+            violin_ok <- d %>%
+              group_by(decade_group) %>%
+              summarise(n_obs = n()) %>%
+              summarise(any_group_has_enough = any(n_obs >= 2)) %>%
+              pull(any_group_has_enough)
+
+            if (!(violin_ok)) {
+              # violin plot not possible
+              plot_list[[i]] <-  ggplot(d,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
+                geom_point()+
+                theme_classic()+
+                ylab(paste0(ind, " (", u, ")"))
+
+
+            } else {
+
             # Plot with position_dodge to control width
-            plot_list[[i]] <- ggplot(d, aes(x = decade_group + bin_width/2, y=.data[[indicator_var_name]], group = decade_group)) +
-              geom_violin(width = bin_width*0.9) +
+            plot_list[[i]] <- ggplot(d, aes(x = decade_group + bin_width/2, y = .data[[indicator_var_name]], group = decade_group)) +
+              geom_violin(width = bin_width * 0.9) +
               scale_x_continuous(name = year,
                                  breaks = unique(d$decade_group),
                                  minor_breaks = NULL) +
-              theme_classic()
+              theme_classic() +
+              theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+            }
 
 
           }
           if("map" %in% plot_type[i]){
-
             if ((!("sf" %in% class(d)))) {
               aes_geom <- d$geometry
             } else {
@@ -748,47 +763,119 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
               }
 
             }
+            if (any(grepl("control site", unique(scoring), ignore.case = TRUE))) {
+              coords <- st_coordinates(aes_geom)
+              d_coords <- cbind(d, coords)
+              ggplot() +
+                geom_sf(
+                  data = areas[areaID == id, ],
+                  fill = "white",
+                  color = "black"
+                ) +
 
-            plot_list[[i]] <- ggplot() +
-              geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
-              geom_sf(
-                # ifelse((!("sf" %in% class(d))),geometry,eval(parse(text = attr(d, "sf_column"))))
-                data = d,
-                aes(geometry=aes_geom, fill = .data[[indicator_var_name]]),
-                shape = 21,      # Use a fillable shape
-                color = "black",
-                size = 2
-              ) +
-              theme_classic() +
-              labs(
-                fill = indicator_var_name,
-                title = id
-              ) +
-              coord_sf(crs = st_crs(areas))
+                # Main spatial layer without contributing to shape legend
+                geom_sf(
+                  data = d,
+                  aes(
+                    geometry = aes_geom,
+                    fill = .data[[indicator_var_name]]
+                  ),
+                  shape = 21,
+                  color = "black",
+                  size = 2,
+                  show.legend = FALSE  # Disable broken shape legend here
+                ) +
+
+                # Add a separate geom_point layer just for legend
+                geom_point(
+                  data = d_coords,
+                  aes(
+                    x = X,
+                    y = Y,
+                    shape = as.factor(control),
+                    fill = .data[[indicator_var_name]]
+                  ),
+                  color = "black",
+                  size = 2
+                ) +
+
+                # Shape legend (works now because of geom_point)
+                scale_shape_manual(
+                  values = c("FALSE" = 21, "TRUE" = 24),  # Circle = Inside, Triangle = Outside
+                  name = "Site Type",
+                  labels = c("FALSE" = "Inside", "TRUE" = "Outside")
+                ) +
+
+                theme_classic() +
+                labs(
+                  fill = indicator_var_name,
+                  title = id,
+                  x=NULL,
+                  y=NULL
+                ) +
+                theme(
+                  plot.title = element_text(size = 10),
+                  axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+                ) +
+                coord_sf(crs = st_crs(areas))
+
+            } else {
+
+              # Standard case (no control site logic)
+              plot_list[[i]] <- ggplot() +
+                geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
+                geom_sf(
+                  data = d,
+                  aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
+                  shape = 21,
+                  color = "black",
+                  size = 2
+                ) +
+                theme_classic() +
+                labs(
+                  fill = indicator_var_name,
+                  title = id
+                ) +
+                theme(
+                  plot.title = element_text(size = 10),
+                  axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+                ) +
+                coord_sf(crs = st_crs(areas))
+            }
+
+
+            # plot_list[[i]] <- ggplot() +
+            #   geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
+            #   geom_sf(
+            #     data = d,
+            #     aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
+            #     shape = 21,
+            #     color = "black",
+            #     size = 2
+            #   ) +
+            #   theme_classic() +
+            #   labs(
+            #     fill = indicator_var_name,
+            #     title = id
+            #   ) +
+            #   theme(
+            #     plot.title = element_text(size = 10),  # Adjust size as needed
+            #     axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+            #
+            #   ) +
+            #   coord_sf(crs = st_crs(areas))
           }
           if ("map-species" %in% plot_type[i]) {
-            #subclass <- NULL
-
-            # for (i in seq_along(data[[which(areas$NAME_E == id)]][[indicator_var_name]])) {
-            #   result <- try(worrms::wm_records_name(data[[which(areas$NAME_E == id)]][[indicator_var_name]][i]), silent=TRUE)
-            #   if (inherits(result, "try-error")) {
-            #     subclass[i] <- NA
-            #   } else {
-            #     aphia_id <- result$AphiaID[1]  # Use the first match, or refine if needed
-            #     classification <- worrms::wm_classification(id = aphia_id)
-            #     subclass[i] <- ifelse(length(classification$scientificname[which(classification$rank == "Subclass")]) == 0, NA, classification$scientificname[which(classification$rank == "Subclass")])
-            #   }
-            # }
-            #
-            # data$subclass <- subclass
-
             plot_list[[i]] <- ggplot() +
               geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
               geom_sf(data = d, aes(fill = subclass), shape = 21, color = "black", size = 2) +
               theme_classic() +
               labs(fill = "Subclass", title = id) +
+              theme(
+                plot.title = element_text(size = 10),
+                axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+              ) +
               coord_sf(crs = st_crs(areas))
-            #data$subclass <- NULL
 
           }
           if ("outside-comparison" %in% plot_type[i]) {
@@ -823,11 +910,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
           if (inherits(p, "try-error")) {
             p <- try(patchwork::wrap_plots(plot_list[!vapply(plot_list, is.null, logical(1))], ncol = min(length(plot_type), 3)), silent=TRUE)
           }
-
-          if (inherits(p, "try-error")) {
-            #browser()  # Enter debug mode here if there's an error
-          }
-
           return(p)
 
 
@@ -836,9 +918,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
         }
       }
       ))
-    #browser() it worked here
-
-
 
   } else {
     # NA data case
