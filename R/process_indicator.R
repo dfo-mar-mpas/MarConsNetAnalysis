@@ -98,7 +98,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
         if(!longitude %in% names(data)){
           stop("longitude column not found")
         }
-
         # convert to sf object and join with areas
         data <- st_as_sf(data,
                          coords = c(longitude, latitude),
@@ -292,8 +291,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
       nesteddata$status_statement <- unlist(status_statement)
       nesteddata$trend_statement <- unlist(trend_statement)
-
-
     } else if (startsWith(scoring,"representation")){
       if (!inherits(data, "sf")) stop("data must be an sf object for 'representation' scoring")
       if (!(indicator_var_name %in% names(data))) stop("indicator_var_name column not found in data")
@@ -664,7 +661,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     } else if (direction != "normal") {
       stop("direction must be 'normal' or 'inverse'")
     }
-    final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
+
+      final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
       unique() |>
       left_join(nesteddata, by = setNames("areaID", areaID))|>
       rename(areaID = {{areaID}}) |>
@@ -894,6 +892,34 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                  name = "Location")
 
           }
+            if ("community-composition" %in% plot_type[i]) {
+              # JAIM HERE
+
+
+             if ("station" %in% names(d)) {
+                plot_list[[i]] <- ggplot(d, aes(x = indicator_var_name, y = year, fill = taxa)) +
+                  geom_bar(stat = "identity") +
+                  facet_wrap(~ station) +
+                  labs(x = indicator_var_name, y = "Year", fill = "Taxa") +
+                  theme_minimal() +
+                  theme(
+                    legend.text = element_text(size = 8),
+                    legend.title = element_text(size = 9),
+                    legend.key.size = unit(0.5, "cm")
+                  )
+              } else {
+                plot_list[[i]] <- ggplot(d, aes(x = year, y = indicator_var_name, fill = taxa)) +
+                  geom_area() +
+                  labs(x = "Year", y = indicator_var_name, fill = "Taxa") +
+                  theme_minimal() +
+                  theme(
+                    legend.text = element_text(size = 8),
+                    legend.title = element_text(size = 9),
+                    legend.key.size = unit(0.5, "cm")
+                  )
+              }
+
+            }
 
             # FIXME
 
@@ -918,6 +944,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
         }
       }
       ))
+      #browser()
 
   } else {
     # NA data case
@@ -941,6 +968,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       status_statement = "TBD"
     )
   }
+
   return(final)
 }
 
