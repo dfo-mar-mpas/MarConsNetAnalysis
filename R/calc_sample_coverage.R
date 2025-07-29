@@ -1,4 +1,6 @@
+#' Calculate Chao's Sample Coverage Estimator
 #'
+#' This function calculates sample coverage for a given species by sample abundance matrix or dataframe. Uses equation 4a from Chao, A. and Jost, L. (2012), Coverage-based rarefaction and extrapolation: standardizing samples by completeness rather than size. Ecology, 93: 2533-2547. https://doi.org/10.1890/11-1952.1
 #'
 #' @param x species by sample abundance matrix or dataframe. Rows represent samples and columns represent species.
 #' @param permutations integer number of permutations to calculate sample coverage.
@@ -36,11 +38,3 @@ calc_sample_coverage <- function(x, permutations = 100) {
   result$sd <- apply(result$SC, 1, sd, na.rm = TRUE)
   return(result)
 }
-
-data(BCI,package = "vegan")
-SC <- calc_sample_coverage(BCI[1:30,1:50])
-ggplot(as.data.frame(SC[-1]), aes(x = N, y = means)) +
-  geom_line() +
-  geom_ribbon(aes(ymin = means - sd, ymax = means + sd), alpha = 0.2) +
-  labs(title = "Sample Coverage", x = "Sample Size", y = "Coverage") +
-  theme_minimal()

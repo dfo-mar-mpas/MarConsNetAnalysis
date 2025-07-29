@@ -11,7 +11,9 @@ process_indicator(
   type = NA,
   units = NA,
   scoring = NA,
+  direction = "normal",
   PPTID = NA,
+  source = NA,
   project_short_title = NA,
   climate = FALSE,
   design_target = FALSE,
@@ -22,10 +24,15 @@ process_indicator(
   other_nest_variables = NA,
   areas = NA,
   areaID = "NAME_E",
+  regionID = "region",
   plot_type = "time-series",
   bin_width = 5,
   plot_lm = TRUE,
-  plot_lm_se = TRUE
+  plot_lm_se = TRUE,
+  control_polygon = NA,
+  climate_expectation = NA,
+  indicator_rationale = NA,
+  bin_rationale = NA
 )
 }
 \arguments{
@@ -41,7 +48,11 @@ process_indicator(
 
 \item{scoring}{character string of the scoring method for the indicator}
 
+\item{direction}{character string of the direction of the indicator (e.g. normal, inverse)}
+
 \item{PPTID}{numeric project planning tool project ID}
+
+\item{source}{source where the data was obtained from}
 
 \item{project_short_title}{character string of a short title for the project}
 
@@ -63,6 +74,8 @@ process_indicator(
 
 \item{areaID}{character string of the name of the column in the areas data that contains the area ID (i.e. NAME_E by default)}
 
+\item{regionID}{character string of the name of the column in the areas data that contains the region ID (e.g. region)}
+
 \item{plot_type}{character string of the type of plot to generate (e.g. time-series, boxplot, violin)}
 
 \item{bin_width}{numeric width of the bins for the boxplot or violin plot}
@@ -70,6 +83,15 @@ process_indicator(
 \item{plot_lm}{logical indicating whether to plot a linear model on the plot}
 
 \item{plot_lm_se}{logical indicating whether to plot the standard error of the linear model on the plot}
+
+\item{control_polygon}{a polygon of class "sfc_POLYGON" "sfc" that is used as a buffer for outside comparison.}
+
+\item{climate_expectation}{a statement for climate indicators indicating what we expect to happen to that indicator
+with the impacts of climate change}
+
+\item{indicator_rationale}{a string indicating why the rational is of significance}
+
+\item{bin_rationale}{a string indicator why the indicator is associated with a certain bin}
 }
 \description{
 Title
