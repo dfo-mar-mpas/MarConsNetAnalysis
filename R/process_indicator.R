@@ -292,6 +292,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       nesteddata$status_statement <- unlist(status_statement)
       nesteddata$trend_statement <- unlist(trend_statement)
     } else if (startsWith(scoring,"representation")){
+      areas <- areas[-which(areas$NAME_E == "Non_Conservation_Area"),]
+
       if (!inherits(data, "sf")) stop("data must be an sf object for 'representation' scoring")
       if (!(indicator_var_name %in% names(data))) stop("indicator_var_name column not found in data")
       if (st_crs(data) != st_crs(areas)) stop("data and areas must have the same CRS")
@@ -530,6 +532,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
     } else if (startsWith(scoring, "control site linear trend")) {
+      #browser()
+      areas <- areas[-which(areas$NAME_E == "Non_Conservation_Area"),]
       if (!inherits(data, "sf")) {
         if(!latitude %in% names(data)){
           stop("latitude column not found")
@@ -573,7 +577,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                      attr(data, "sf_column"),
                      other_nest_variables,
                      "control")
-
 
       nesteddata <- data.frame(data|>
                                  filter(!is.na(control)) |>
