@@ -292,7 +292,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       nesteddata$status_statement <- unlist(status_statement)
       nesteddata$trend_statement <- unlist(trend_statement)
     } else if (startsWith(scoring,"representation")){
-      areas <- areas[-which(areas$NAME_E == "Non_Conservation_Area"),]
+      #browser()
+      #areas <- areas[-which(areas$NAME_E == "Non_Conservation_Area"),]
 
       if (!inherits(data, "sf")) stop("data must be an sf object for 'representation' scoring")
       if (!(indicator_var_name %in% names(data))) stop("indicator_var_name column not found in data")
