@@ -25,7 +25,6 @@ ind_ProtConn <- function(distkm,dkm,bioregion,area=NULL){
   if (is.null(area)) {
     stop("Must provide an area argument")
   }
-  pexp <-
   p <- 1-pexp(distkm,log(2)/dkm)
   p[p<median(p)/10] <- 0
   protg <- igraph::graph_from_adjacency_matrix(p,weighted = TRUE)
