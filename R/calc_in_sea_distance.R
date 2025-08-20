@@ -56,12 +56,12 @@ calc_in_sea_distance <- function(cellsize = 1000,
   combinedgridall <- grid |>
     filter(protname %in% areas$NAME_E) |>
     group_by(protname) |>
-    reframe(x=(x),
-                   protected=TRUE,
-                   combined=TRUE) |>
+    reframe(x=st_union(x),
+            protected=TRUE,
+            combined=TRUE) |>
     ungroup() |>
     st_as_sf() |>
-    st_make_valid()|>
+    st_make_valid() |>
     bind_rows(mutate(grid,combined=FALSE)) |>
     st_as_sf()
 
@@ -87,14 +87,16 @@ calc_in_sea_distance <- function(cellsize = 1000,
       # print(paste("Calculating distances for ",f," and ",t))
       if(f==t){
         distm[areanames %in% c(f,t),areanames %in% c(f,t)] <- 0
+      } else if (!is.na(distm[areanames==t,areanames==f])){
+        next
       } else if(all(is.na(c(distm[areanames==t,areanames==f],distm[areanames==t,areanames==f])))){
 
         g <- delete_vertices(gall,(igraph::V(gall)$combined&!V(gall)$protname %in% c(t,f))|
-                                       (!(V(gall)$combined)&V(gall)$protname %in% c(t,f)))
+                               (!(V(gall)$combined)&V(gall)$protname %in% c(t,f)))
 
         distmat <- (distances(g,
-                                      v = V(g)[V(g)$protected&V(g)$combined],
-                                      to = V(g)[V(g)$protected&V(g)$combined]))*cellsize
+                              v = V(g)[V(g)$protected&V(g)$combined],
+                              to = V(g)[V(g)$protected&V(g)$combined]))*cellsize
         distm[areanames==t,areanames==f] <- distmat[1,2]
         distm[areanames==f,areanames==t] <- distmat[1,2]
       }

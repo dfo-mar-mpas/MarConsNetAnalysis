@@ -4,7 +4,15 @@
 \alias{ind_ProtConn}
 \title{ProtConn}
 \usage{
-ind_ProtConn(distkm, dkm, bioregion, area = NULL)
+ind_ProtConn(
+  distkm,
+  dkm,
+  bioregion,
+  area = NULL,
+  stepcutoff = 3,
+  probcutoff = 1e-04,
+  returns = "PC"
+)
 }
 \arguments{
 \item{distkm}{distance matrix in km. Can be created by the 'in_sea_distance()' in this package}
@@ -14,6 +22,12 @@ ind_ProtConn(distkm, dkm, bioregion, area = NULL)
 \item{bioregion}{sf polygon of the study area (i.e. the sea!)}
 
 \item{area}{output of data_CPCAS_areas}
+
+\item{stepcutoff}{Maximum length of the paths (i.e. stepping stones) that are considered. Default is 3 (i.e. start -> stepping stone -> end) for a single stepping stone. If negative, no cutoff is used but will greatly increase computational requirements.}
+
+\item{probcutoff}{Minimum probability of a connection between two areas. Default is 0.0001, i.e. any probability lower than 1 in 10000 is considered unconnected.}
+
+\item{returns}{string describing what the function should return. By default, "PC", the function returns the ProtConn value. To return a data frame with the edge list of the network use "EL".}
 }
 \value{
 numeric
