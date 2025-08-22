@@ -35,8 +35,9 @@ ind_ProtConn <- function(distkm,dkm,bioregion,area=NULL,stepcutoff=3,probcutoff=
 
   edgelist <- data.frame()
 
-  for(f in row.names(distkm)){
-    for(t in colnames(distkm)){
+  for(f in area$NAME_E){
+    for(t in area$NAME_E){
+      print(paste("f = ",f,"; t = ",t))
       if (t==f){
         pstar = 1
       } else {
