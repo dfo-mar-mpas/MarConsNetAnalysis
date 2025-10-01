@@ -688,6 +688,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     } else if (direction != "normal") {
       stop("direction must be 'normal' or 'inverse'")
     }
+      #browser()
 
       final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
       unique() |>
@@ -961,7 +962,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       status_statement = "TBD",
     )
   }
+  #browser()
 
-  return(final)
+  return(as_tibble(final))
 }
 

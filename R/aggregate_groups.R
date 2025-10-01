@@ -13,11 +13,7 @@
 #' # FIXME placeholder
 #' }
 aggregate_groups <- function(group_level,group_name,weights_ratio=1,weights_sum=1,...){
-  # browser()
   args <- list(...)
-
-  # if(length(weights_ratio) == length(args)){
-  # } else
 
   if (length(weights_ratio) == 1){
     weights_ratio <- rep(weights_ratio,length(args))
@@ -28,15 +24,25 @@ aggregate_groups <- function(group_level,group_name,weights_ratio=1,weights_sum=
   if(all(unlist(lapply(list(...),function(x) "weight" %in% colnames(x))))){
     df <- bind_rows(...) |>
       mutate({{group_level}} := group_name) |>
-      distinct()
+      distinct(across(-plot), .keep_all = TRUE)
   } else {
+    #browser()
     for (i in seq_along(args)){
+      message(i)
       args[[i]] <- args[[i]] |>
         mutate(weight = weights_ratio[i])
     }
 
+
+    # df <- bind_rows(args) |>
+    #   distinct() |>
+    #   group_by(areaID) |>
+    #   mutate({{group_level}} := group_name,
+    #          weight = weight/sum(weight)*weights_sum) |>
+    #   ungroup()
+
     df <- bind_rows(args) |>
-      distinct() |>
+      distinct(across(-plot), .keep_all = TRUE) |>
       group_by(areaID) |>
       mutate({{group_level}} := group_name,
              weight = weight/sum(weight)*weights_sum) |>
