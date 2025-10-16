@@ -1,10 +1,16 @@
 #' Create example FAKE data
 #'
-#' @param ind_name
-#' @param areas
-#' @param areaName
+#' @param ind_name An indicator name
+#' @param areas A data frame containing MPA names in both English and French as
+#'  well as the MPA's shape file (see MPAs target)
+#' @param areaName Indicates what column in areas data frame MPA names can be
+#' found
+#' @param readiness a character argument that is either 'Ready', 'Readily
+#'  Available', 'Not currently collected' or 'Conceptual'.
 #'
-#' @return
+#' @param source indicates where data comes from
+#'
+#' @return data.frame
 #' @export
 #'
 #' @examples
@@ -12,7 +18,7 @@
 #' # FIXME placeholder
 #' }
 ind_placeholder <- function(ind_name = "placeholder",
-                            areas, areaName = "NAME_E", readiness=NA) {
+                            areas, areaName = "NAME_E", readiness=NA, source=NA) {
 
   if (is.na(readiness)) {
     stop('Must specify a readiness argument of either Ready, Readily Available,Not currently collected,  or Conceptual.')
@@ -38,7 +44,7 @@ ind_placeholder <- function(ind_name = "placeholder",
     score = NA_real_,
     status_statement = "TBD",
     trend_statement = "TBD",
-    source = NA_character_,
+    source = source,
     climate_expectation = "FIXME",
     indicator_rationale = "FIXME",
     objectives = NA_character_,
