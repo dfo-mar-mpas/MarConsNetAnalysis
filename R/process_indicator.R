@@ -40,6 +40,9 @@
 #' @param objectives A character string specifying which conservation or
 #'   management objectives the indicator informs. Please directly copy and paste
 #'   the objective from the objectives.xlsx. (See examples)
+#'
+#' @param readiness a character argument that is either 'Ready', 'Readily Available',
+#' 'Not currently collected' or 'Conceptual'.
 #' @param ... Additional arguments passed to internal functions.
 #'
 #' @return A data frame (tibble) with one row per area and indicator, containing:
@@ -94,7 +97,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                               PPTID = NA, source=NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326,
                               latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA,
                               areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE,
-                              control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA, objectives=NA){
+                              control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA, objectives=NA,
+                              readiness="Ready"){
 
 
   if ("map-species" %in% plot_type) {
@@ -110,6 +114,10 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     if(is.na(climate_expectation)) {
       stop("Must provide a climate_expectation argument for climate indicators.")
     }
+  }
+
+  if (!(readiness %in% c('Ready', 'Readily Available','Not currently collected','Conceptual'))) {
+    stop('readiness must be one of the following: Ready, Readily Available,Not currently collected,  or Conceptual.')
   }
 
   if(is.na(indicator_rationale)) {

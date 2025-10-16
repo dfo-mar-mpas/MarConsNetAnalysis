@@ -12,7 +12,15 @@
 #' # FIXME placeholder
 #' }
 ind_placeholder <- function(ind_name = "placeholder",
-                            areas, areaName = "NAME_E") {
+                            areas, areaName = "NAME_E", readiness=NA) {
+
+  if (is.na(readiness)) {
+    stop('Must specify a readiness argument of either Ready, Readily Available,Not currently collected,  or Conceptual.')
+  }
+
+  if (!(readiness %in% c('Ready', 'Readily Available','Not currently collected','Conceptual'))) {
+    stop('readiness must be one of the following: Ready, Readily Available,Not currently collected,  or Conceptual.')
+  }
 
   n <- nrow(areas)
 
@@ -35,7 +43,8 @@ ind_placeholder <- function(ind_name = "placeholder",
     indicator_rationale = "FIXME",
     objectives = NA_character_,
     bin_rationale = "FIXME",
-    plot = rep(list(NULL), n)    # list-column of NULL
+    plot = rep(list(NULL), n),    # list-column of NULL
+    readiness=readiness
   )
 
   return(x)
