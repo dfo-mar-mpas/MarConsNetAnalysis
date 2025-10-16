@@ -9,6 +9,7 @@
 #'  Available', 'Not currently collected', 'Conceptual', or 'Unknown'.
 #'
 #' @param source indicates where data comes from
+#' @param objectives indicates the management objective an indicator informs
 #'
 #' @return data.frame
 #' @export
@@ -18,7 +19,7 @@
 #' # FIXME placeholder
 #' }
 ind_placeholder <- function(ind_name = "placeholder",
-                            areas, areaName = "NAME_E", readiness=NA, source=NA) {
+                            areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA) {
 
   if (is.na(readiness)) {
     stop('Must specify a readiness argument of either Ready, Readily Available,Not currently collected, Conceptual, or Unknown.')
@@ -47,7 +48,7 @@ ind_placeholder <- function(ind_name = "placeholder",
     source = source,
     climate_expectation = "FIXME",
     indicator_rationale = "FIXME",
-    objectives = NA_character_,
+    objectives = objectives,
     bin_rationale = "FIXME",
     plot = rep(list(NULL), n),    # list-column of NULL
     readiness=readiness
