@@ -42,7 +42,7 @@
 #'   the objective from the objectives.xlsx. (See examples)
 #'
 #' @param readiness a character argument that is either 'Ready', 'Readily Available',
-#' 'Not currently collected' or 'Conceptual'.
+#' 'Not currently collected', 'Conceptual', or 'Unknown'.
 #' @param ... Additional arguments passed to internal functions.
 #'
 #' @return A data frame (tibble) with one row per area and indicator, containing:
@@ -116,8 +116,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     }
   }
 
-  if (!(readiness %in% c('Ready', 'Readily Available','Not currently collected','Conceptual'))) {
-    stop('readiness must be one of the following: Ready, Readily Available,Not currently collected,  or Conceptual.')
+  if (!(readiness %in% c('Ready', 'Readily Available','Not currently collected','Conceptual', 'Unknown'))) {
+    stop('readiness must be one of the following: Ready, Readily Available,Not currently collected, Conceptual, or Unknown.')
   }
 
   if(is.na(indicator_rationale)) {

@@ -6,7 +6,7 @@
 #' @param areaName Indicates what column in areas data frame MPA names can be
 #' found
 #' @param readiness a character argument that is either 'Ready', 'Readily
-#'  Available', 'Not currently collected' or 'Conceptual'.
+#'  Available', 'Not currently collected', 'Conceptual', or 'Unknown'.
 #'
 #' @param source indicates where data comes from
 #'
@@ -21,11 +21,11 @@ ind_placeholder <- function(ind_name = "placeholder",
                             areas, areaName = "NAME_E", readiness=NA, source=NA) {
 
   if (is.na(readiness)) {
-    stop('Must specify a readiness argument of either Ready, Readily Available,Not currently collected,  or Conceptual.')
+    stop('Must specify a readiness argument of either Ready, Readily Available,Not currently collected, Conceptual, or Unknown.')
   }
 
-  if (!(readiness %in% c('Ready', 'Readily Available','Not currently collected','Conceptual'))) {
-    stop('readiness must be one of the following: Ready, Readily Available,Not currently collected,  or Conceptual.')
+  if (!(readiness %in% c('Ready', 'Readily Available','Not currently collected','Conceptual', 'Unknown'))) {
+    stop('readiness must be one of the following: Ready, Readily Available,Not currently collected, Conceptual, Unknown.')
   }
 
   n <- nrow(areas)
