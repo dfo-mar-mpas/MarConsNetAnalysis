@@ -24,7 +24,7 @@ aggregate_groups <- function(group_level,group_name,weights_ratio=1,weights_sum=
   if(all(unlist(lapply(list(...),function(x) "weight" %in% colnames(x))))){
     df <- bind_rows(...) |>
       mutate({{group_level}} := group_name) |>
-      distinct(-any_of("plot"), .keep_all = TRUE)
+      distinct(across(!any_of("plot")), .keep_all = TRUE)
   } else {
     #browser()
     for (i in seq_along(args)){
@@ -42,7 +42,7 @@ aggregate_groups <- function(group_level,group_name,weights_ratio=1,weights_sum=
     #   ungroup()
 
     df <- bind_rows(args) |>
-      distinct(-any_of("plot"), .keep_all = TRUE) |>
+      distinct(across(!any_of("plot")), .keep_all = TRUE) |>
       group_by(areaID) |>
       mutate({{group_level}} := group_name,
              weight = weight/sum(weight)*weights_sum) |>
