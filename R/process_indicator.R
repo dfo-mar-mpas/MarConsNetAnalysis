@@ -225,7 +225,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
       status_statement <- list()
       trend_statement <- list()
-
+#browser()
       for (i in seq_along(nesteddata$data)) {
         DATA <- nesteddata$data[[i]]
         if (!(is.null(DATA))) {
@@ -248,6 +248,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
           # TREND
+
           if (length(unique(data$year[which(!(is.na(data[[indicator_var_name]])))])) > 1) {
           data_5_year <- data[which(data$year %in% tail(sort(as.numeric(data$year)),5)),]
           if (length(unique(data_5_year$year)) > 1) { # Can perform linear regression on 5 year
@@ -719,10 +720,11 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       mutate(plot = pmap(list(data,indicator,units,areaID), function(d,ind,u,id){
         p <- NULL
         if(!is.null(d)){
-
           plot_list <- list()
 
           for (i in seq_along(plot_type)) {
+            par(mar = c(4, 4.5, 0.5, 1))
+
           if ('map-species' %in% plot_type[i]) {
             if (!(length(data[[which(areas$NAME_E == id)]][[indicator_var_name]]) > 25)) {
               plot_type <- "map"
@@ -932,7 +934,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
               }
 
             }
-        }
+          }
           p <- try(patchwork::wrap_plots(plot_list, ncol = min(length(plot_type), 3)), silent=TRUE)
 
           if (inherits(p, "try-error")) {
@@ -945,7 +947,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
           return(p)
         }
       }
-      ))
+      ))  |>
+        mutate(readiness=readiness)
 
   } else {
     # NA data case
@@ -968,6 +971,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       design_target = design_target,
       trend_statement = "TBD",
       status_statement = "TBD",
+      readiness=readiness
     )
   }
   #browser()
