@@ -1,36 +1,86 @@
-#' Title
+#' Process ecological or environmental indicator data
 #'
-#' @param data a data frame or sf data frame that contains the indicator data, the year, and either the latitude and longitude (i.e. data frame) or the geometry (i.e. sf data frame). Other optional columns (e.g. depth) can also be included by naming them in the other_nest_variables parameter.
-#' @param indicator_var_name character string of the name of the column in the data that contains the indicator data
-#' @param indicator character string of the name of the indicator
-#' @param type character string of the instrument/platform/model type of the indicator
-#' @param PPTID numeric project planning tool project ID
-#' @param source source where the data was obtained from
-#' @param project_short_title character string of a short title for the project
-#' @param units  character string of the units of the indicator
-#' @param scoring character string of the scoring method for the indicator
-#' @param climate logical indicating whether the indicator is a climate indicator
-#' @param design_target logical indicating whether the indicator is a design target
-#' @param crs coordinate reference system of the data
-#' @param latitude character string of the name of the column in the data that contains the latitude
-#' @param longitude character string of the name of the column in the data that contains the longitude
-#' @param year character string of the name of the column in the data that contains the year
-#' @param other_nest_variables character vector of the names of other columns in the data that should be nested
-#' @param areas an sf data frame that contains the areas to which the data should be joined (i.e. MPAs)
-#' @param areaID character string of the name of the column in the areas data that contains the area ID (i.e. NAME_E by default)
-#' @param plot_type character string of the type of plot to generate (e.g. time-series, boxplot, violin)
-#' @param bin_width numeric width of the bins for the boxplot or violin plot
-#' @param plot_lm logical indicating whether to plot a linear model on the plot
-#' @param plot_lm_se logical indicating whether to plot the standard error of the linear model on the plot
-#' @param direction character string of the direction of the indicator (e.g. normal, inverse)
-#' @param regionID character string of the name of the column in the areas data that contains the region ID (e.g. region)
-#' @param control_polygon a polygon of class "sfc_POLYGON" "sfc" that is used as a buffer for outside comparison.
-#' @param climate_expectation a statement for climate indicators indicating what we expect to happen to that indicator
-#' with the impacts of climate change
-#' @param indicator_rationale a string indicating why the rational is of significance
-#' @param bin_rationale a string indicator why the indicator is associated with a certain bin
+#' This function standardizes, scores, summarizes, and generates plots for
+#' ecological or environmental indicator datasets for use in monitoring,
+#' reporting, and visualization. It supports different data types (tabular,
+#' spatial, raster) and scoring methods (e.g., desired trend, representation,
+#' control-site comparison).
 #'
-#' @returns
+#' @param data A data frame or `sf` object containing indicator data. Must include
+#'   at minimum columns for year, value, and an identifier for spatial location
+#'   (e.g., area ID, site, or coordinates).
+#' @param areas An `sf` polygon object defining the areas of interest (e.g.,
+#'   conservation areas, regions). Used for spatial joins and reporting.
+#' @param areaID Character. The name of the column in `areas` and `data` used to
+#'   match records to geographic areas.
+#' @param indicator Character. Indicator name or short description.
+#' @param rationale Character. Rationale for including this indicator (why it
+#'   matters for conservation objectives).
+#' @param units Character. Units of the indicator (e.g., "kg/ha", "% cover").
+#' @param type Character. Type of indicator (e.g., "biological", "habitat",
+#'   "climate").
+#' @param scoring Character. Method used to score the indicator. Options include:
+#'   \itemize{
+#'     \item `"desired trend"` – Uses regression to score based on increase,
+#'       decrease, or stability.
+#'     \item `"representation"` – Scores based on % overlap of feature within
+#'       protected areas.
+#'     \item `"median"` – Uses median value of raster or continuous data, rescaled
+#'       to 0–100.
+#'     \item `"control site comparison"` – Compares trends inside vs. outside
+#'       managed areas.
+#'   }
+#' @param direction Character. If `"inverse"`, scores are reversed (e.g., lower
+#'   values are better).
+#' @param climate_expectation Character. Expected effect of climate change on this
+#'   indicator (e.g., `"increase"`, `"decrease"`, `"stable"`).
+#' @param plot Logical. If `TRUE`, generates indicator-specific plots (time-series,
+#'   violin plots, maps, etc.).
+#'
+#' @param objectives A character string specifying which conservation or
+#'   management objectives the indicator informs. Please directly copy and paste
+#'   the objective from the objectives.xlsx. (See examples)
+#'
+#' @param readiness a character argument that is either 'Ready', 'Readily Available',
+#' 'Not currently collected', 'Conceptual', or 'Unknown'.
+#' @param ... Additional arguments passed to internal functions.
+#'
+#' @return A data frame (tibble) with one row per area and indicator, containing:
+#'   \itemize{
+#'     \item \code{areaID}, \code{indicator}, \code{score}, \code{status},
+#'       \code{trend}, \code{units}, \code{type}, \code{rationale}
+#'     \item Plain-language \code{status_statement} and \code{trend_statement}
+#'     \item If `plot = TRUE`, a list-column of ggplot objects
+#'   }
+#'
+#' @details
+#' The function performs the following steps:
+#' \enumerate{
+#'   \item Validates inputs and joins data with `areas`.
+#'   \item Nests data by area and indicator.
+#'   \item Applies the specified `scoring` method.
+#'   \item Generates plain-language narrative statements about status and trend.
+#'   \item Optionally produces plots for visualization.
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' # Example with a data frame of biomass values
+#' results <- process_indicator(
+#'   data = biomass_df,
+#'   areas = mpa_polygons,
+#'   areaID = "site_id",
+#'   indicator = "Biomass",
+#'   rationale = "Biomass reflects ecosystem productivity",
+#'   units = "kg/ha",
+#'   type = "biological",
+#'   scoring = "desired trend",
+#'   direction = "positive",
+#'   climate_expectation = "increase",
+#'   plot = TRUE,
+#'   objectives=c("Minimize aquaculture escapes", "Conserve 30% of Land, Waters, and Seas")
+#' )
+#' }
 #' @importFrom dplyr case_when select rename mutate
 #' @importFrom purrr map map_dbl
 #' @importFrom sf st_as_sf st_join st_transform st_difference
@@ -41,16 +91,14 @@
 #' @importFrom units set_units
 #' @importFrom tibble as_tibble
 #' @importFrom patchwork wrap_plots
-#'
-#'
 #' @export
-#'
-#' @examples
+
 process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, direction = "normal",
                               PPTID = NA, source=NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326,
                               latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA,
                               areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE,
-                              control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA){
+                              control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA, objectives=NA,
+                              readiness="Ready"){
 
 
   if ("map-species" %in% plot_type) {
@@ -68,14 +116,19 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     }
   }
 
+  if (!(readiness %in% c('Ready', 'Readily Available','Not currently collected','Conceptual', 'Unknown'))) {
+    stop('readiness must be one of the following: Ready, Readily Available,Not currently collected, Conceptual, or Unknown.')
+  }
+
   if(is.na(indicator_rationale)) {
     stop("Must provide a indicator_rationale argument")
   }
+
+
   if(is.na(bin_rationale)) {
 
     stop("Must provide a bin_rationale argument")
   }
-
 
   if (inherits(data, "stars")) {
     dataisna <- all(is.na(unclass(data[[1]])))
@@ -172,7 +225,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
       status_statement <- list()
       trend_statement <- list()
-
+#browser()
       for (i in seq_along(nesteddata$data)) {
         DATA <- nesteddata$data[[i]]
         if (!(is.null(DATA))) {
@@ -195,6 +248,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
           # TREND
+
           if (length(unique(data$year[which(!(is.na(data[[indicator_var_name]])))])) > 1) {
           data_5_year <- data[which(data$year %in% tail(sort(as.numeric(data$year)),5)),]
           if (length(unique(data_5_year$year)) > 1) { # Can perform linear regression on 5 year
@@ -292,7 +346,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       nesteddata$status_statement <- unlist(status_statement)
       nesteddata$trend_statement <- unlist(trend_statement)
     } else if (startsWith(scoring,"representation")){
-      #browser()
       #areas <- areas[-which(areas$NAME_E == "Non_Conservation_Area"),]
 
       if (!inherits(data, "sf")) stop("data must be an sf object for 'representation' scoring")
@@ -416,28 +469,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                  project_short_title = project_short_title,
                  climate = climate,
                  design_target = design_target,
-                 # status_statement = paste0(areaID,
-                 #                           " has had recorded occurrences of ",
-                 #                           nrow(rawdata),
-                 #                           " taxa which represents ",
-                 #                           round(nrow(rawdata)/nrow(data)*100,1),
-                 #                           "% of taxa recorded in this dataset",
-                 #                           pmap_chr(layeroccurrences,
-                 #                                    function(total_occurrences,
-                 #                                             occurrences,
-                 #                                             ...){
-                 #                                      if_else(occurrences/total_occurrences>0.8,
-                 #                                              paste0(", and ",
-                 #                                                     occurrences,
-                 #                                                     " occurrences of ",
-                 #                                                     list(...)[[indicator_var_name]],
-                 #                                                     " which represents ",
-                 #                                                     round(occurrences/total_occurrences*100,1),
-                 #                                                     "% of occurrences for that taxa"),
-                 #                                              "")
-                 #                                    }) |>
-                 #                             paste(collapse = ""),
-                 #                           "."),
                  status_statement = paste0(areaID,
                                            " has had recorded occurrences of ",
                                            nrow(rawdata),
@@ -534,7 +565,9 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
     } else if (startsWith(scoring, "control site linear trend")) {
       #browser()
+      if (any(areas$NAME_E == "Non_Conservation_Areas")) {
       areas <- areas[-which(areas$NAME_E == "Non_Conservation_Area"),]
+      }
       if (!inherits(data, "sf")) {
         if(!latitude %in% names(data)){
           stop("latitude column not found")
@@ -578,16 +611,15 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                      attr(data, "sf_column"),
                      other_nest_variables,
                      "control")
-
       nesteddata <- data.frame(data|>
                                  filter(!is.na(control)) |>
                                  filter(!is.na(.data[[indicator_var_name]])) |>
                                  group_by(areaID) |>
-                                 mutate(garbage = case_when(all(control)~TRUE,
-                                                            all(!control)~TRUE,
-                                                            .default = FALSE)) |>
-                                 filter(!garbage) |>
-                                 dplyr::select(-garbage) |>
+                                 #mutate(garbage = case_when(all(control)~TRUE,
+                                 #                           all(!control)~TRUE,
+                                  #                          .default = FALSE)) |>
+                                 #filter(!garbage) |>
+                                 #dplyr::select(-garbage) |>
                                  ungroup(),
                                indicator = indicator,
                                type = type,
@@ -665,6 +697,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     } else if (direction != "normal") {
       stop("direction must be 'normal' or 'inverse'")
     }
+      #browser()
 
       final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
       unique() |>
@@ -678,6 +711,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
              source = coalesce(source, !!source),
              climate_expectation = coalesce(climate_expectation, !!climate_expectation),
              indicator_rationale = coalesce(indicator_rationale, !!indicator_rationale),
+             objectives=paste0(objectives, collapse=" ;;; "),
              bin_rationale = coalesce(bin_rationale, !!bin_rationale),
              project_short_title = coalesce(project_short_title, !!project_short_title),
              climate = coalesce(climate, !!climate),
@@ -686,10 +720,11 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       mutate(plot = pmap(list(data,indicator,units,areaID), function(d,ind,u,id){
         p <- NULL
         if(!is.null(d)){
-
           plot_list <- list()
 
           for (i in seq_along(plot_type)) {
+            par(mar = c(4, 4.5, 0.5, 1))
+
           if ('map-species' %in% plot_type[i]) {
             if (!(length(data[[which(areas$NAME_E == id)]][[indicator_var_name]]) > 25)) {
               plot_type <- "map"
@@ -844,28 +879,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                 ) +
                 coord_sf(crs = st_crs(areas))
             }
-
-
-            # plot_list[[i]] <- ggplot() +
-            #   geom_sf(data = areas[areaID == id, ], fill = "white", color = "black") +
-            #   geom_sf(
-            #     data = d,
-            #     aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
-            #     shape = 21,
-            #     color = "black",
-            #     size = 2
-            #   ) +
-            #   theme_classic() +
-            #   labs(
-            #     fill = indicator_var_name,
-            #     title = id
-            #   ) +
-            #   theme(
-            #     plot.title = element_text(size = 10),  # Adjust size as needed
-            #     axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-            #
-            #   ) +
-            #   coord_sf(crs = st_crs(areas))
           }
           if ("map-species" %in% plot_type[i]) {
             plot_list[[i]] <- ggplot() +
@@ -897,9 +910,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
           }
             if ("community-composition" %in% plot_type[i]) {
-              # JAIM HERE
-
-
              if ("station" %in% names(d)) {
                 plot_list[[i]] <- ggplot(d, aes(x = indicator_var_name, y = year, fill = taxa)) +
                   geom_bar(stat = "identity") +
@@ -924,17 +934,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
               }
 
             }
-
-            # FIXME
-
-          # if (plot_lm) {
-          #   return(p + geom_smooth(method = "lm", se = plot_lm_se))
-          # } else {
-          #   return(p)
-          # }
-
-            # END FIXME
-        } #END LOOP
+          }
           p <- try(patchwork::wrap_plots(plot_list, ncol = min(length(plot_type), 3)), silent=TRUE)
 
           if (inherits(p, "try-error")) {
@@ -947,8 +947,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
           return(p)
         }
       }
-      ))
-      #browser()
+      ))  |>
+        mutate(readiness=readiness)
 
   } else {
     # NA data case
@@ -959,6 +959,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       source=source,
       climate_expectation=climate_expectation,
       indicator_rationale=indicator_rationale,
+      objectives="TBD",
       bin_rationale=bin_rationale,
       indicator = indicator,
       type = type,
@@ -969,10 +970,12 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       climate = climate,
       design_target = design_target,
       trend_statement = "TBD",
-      status_statement = "TBD"
+      status_statement = "TBD",
+      readiness=readiness
     )
   }
+  #browser()
 
-  return(final)
+  return(as_tibble(final))
 }
 

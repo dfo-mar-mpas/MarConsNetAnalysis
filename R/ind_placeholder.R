@@ -1,25 +1,58 @@
 #' Create example FAKE data
 #'
-#' @param ind_name
-#' @param areas
-#' @param areaName
+#' @param ind_name An indicator name
+#' @param areas A data frame containing MPA names in both English and French as
+#'  well as the MPA's shape file (see MPAs target)
+#' @param areaName Indicates what column in areas data frame MPA names can be
+#' found
+#' @param readiness a character argument that is either 'Ready', 'Readily
+#'  Available', 'Not currently collected', 'Conceptual', or 'Unknown'.
 #'
-#' @return
+#' @param source indicates where data comes from
+#' @param objectives indicates the management objective an indicator informs
+#'
+#' @return data.frame
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' # FIXME placeholder
 #' }
-ind_placeholder <- function(ind_name = paste0("placeholder_",round(runif(1,1,100))),areas,areaName = "NAME_E"){
-  data.frame(area_name = areas[[areaName]],
-             ind_name = ind_name,
-             ind_status = round(100 * rbeta(nrow(areas), shape1=5, shape2=2)),
-             ind_trend = runif(nrow(areas),min=-30,max=30),
-             ind_projects = paste(
-               sample(c(229,395,480,642,691,835,857,1438,1448,1874,1921,1938,1957,2009,2052,2202,2224,2576,2604,2609),
-                      round(runif(1,1,4))),
-               collapse = ", "),
-             ind_rawdata_type = sample(c("direct in-situ measurements","validated model data","unvalidated model data","Expert opinion"),1),
-             ind_certainy = sample(c("very certain","certain","uncertain","very uncertain"),1))
+ind_placeholder <- function(ind_name = "placeholder",
+                            areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA) {
+
+  if (is.na(readiness)) {
+    stop('Must specify a readiness argument of either Ready, Readily Available,Not currently collected, Conceptual, or Unknown.')
   }
+
+  if (!(readiness %in% c('Ready', 'Readily Available','Not currently collected','Conceptual', 'Unknown'))) {
+    stop('readiness must be one of the following: Ready, Readily Available,Not currently collected, Conceptual, Unknown.')
+  }
+
+  n <- nrow(areas)
+
+  x <- tibble::tibble(
+    areaID = areas[[areaName]],
+    indicator = ind_name,
+    type = NA_character_,
+    units = NA_character_,
+    scoring = "placeholder score",
+    PPTID = NA_integer_,
+    project_short_title = NA_character_,
+    climate = FALSE,
+    design_target = FALSE,
+    data = rep(list(NULL), n),   # list-column of NULL
+    score = NA_real_,
+    status_statement = "TBD",
+    trend_statement = "TBD",
+    source = source,
+    climate_expectation = "FIXME",
+    indicator_rationale = "FIXME",
+    objectives = objectives,
+    bin_rationale = "FIXME",
+    plot = rep(list(NULL), n),    # list-column of NULL
+    readiness=readiness
+  )
+
+  return(x)
+}

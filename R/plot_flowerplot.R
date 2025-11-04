@@ -14,7 +14,7 @@
 #' @return plot
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom dplyr if_else n
-#' @importFrom ggplot2 geom_crossbar geom_text geom_errorbar geom_hline coord_polar
+#' @importFrom ggplot2 ggplot geom_bar ylim theme_void coord_flip guides scale_x_continuous scale_fill_manual scale_color_manual labs theme element_text element_blank element_line element_rect geom_text geom_hline geom_crossbar
 #' @export
 #'
 #' @examples
