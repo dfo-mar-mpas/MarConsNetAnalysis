@@ -12,7 +12,7 @@
 #' calc_letter_grade(scores)
 #'
 calc_letter_grade <- function(scores) {
-  sapply(scores, function(score) {
+  sapply(floor(scores), function(score) {
     if (!(is.na(score)) && !(is.nan(score))) {
       if (score >= 0 && score <= 20) {
         grade <- "F"
