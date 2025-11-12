@@ -564,7 +564,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
     } else if (startsWith(scoring, "control site linear trend")) {
-      #browser()
       if (any(areas$NAME_E == "Non_Conservation_Areas")) {
       areas <- areas[-which(areas$NAME_E == "Non_Conservation_Area"),]
       }
@@ -579,24 +578,16 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
         # convert to sf object and join with areas
         data <- st_as_sf(data,
                          coords = c(longitude, latitude),
-                         crs = crs)|>
-          st_join(dplyr::select(areas,{{areaID}})) |>
-          rename(site_areaID = {{areaID}}) |>
-          st_join(dplyr::select(control_polygon, {{areaID}})) |>
-          rename(control_areaID = {{areaID}}) |>
-          mutate(areaID=if_else(is.na(site_areaID), control_areaID, site_areaID),
-                 control=case_when(is.na(site_areaID)&is.na(control_areaID)~NA,
-                                   !is.na(site_areaID)&is.na(control_areaID)~FALSE,
-                                   is.na(site_areaID)&!is.na(control_areaID)~TRUE,
-                                   .default = NA)) |>
-          dplyr::select(-site_areaID, -control_areaID)
+                         crs = crs)
 
-      } else {
+      }
         # join with areas
+
+      browser()
         data <- data |>
           st_join(dplyr::select(areas,{{areaID}})) |>
           rename(site_areaID = {{areaID}}) |>
-          st_join(dplyr::select(control_polygon, {{areaID}})) |>
+          st_join(dplyr::select(control_polygon, buffer_distance,  {{areaID}})) |>
           rename(control_areaID = {{areaID}}) |>
           mutate(areaID=if_else(is.na(site_areaID), control_areaID, site_areaID),
                  control=case_when(is.na(site_areaID)&is.na(control_areaID)~NA,
@@ -604,7 +595,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                    is.na(site_areaID)&!is.na(control_areaID)~TRUE,
                                    .default = NA))|>
           dplyr::select(-site_areaID, -control_areaID)
-      }
+
 
       nest_cols <- c(year,
                      indicator_var_name,
