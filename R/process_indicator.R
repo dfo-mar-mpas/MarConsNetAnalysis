@@ -564,8 +564,13 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
     } else if (startsWith(scoring, "control site linear trend")) {
-      if (any(areas$NAME_E == "Non_Conservation_Areas")) {
-      areas <- areas[-which(areas$NAME_E == "Non_Conservation_Area"),]
+      if (any(areas$NAME_E == "Non_Conservation_Area")) {
+        unioncontrolpolygon <- st_union(control_polygon) |>
+          st_make_valid()
+        areas2 <- areas
+        areas2$geoms[areas$NAME_E == "Non_Conservation_Area"] <- areas$geoms[areas$NAME_E == "Non_Conservation_Area"] |>
+          st_difference(unioncontrolpolygon) |>
+          st_combine()
       }
       if (!inherits(data, "sf")) {
         if(!latitude %in% names(data)){
@@ -583,25 +588,50 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       }
         # join with areas
 
-      browser()
+      buffers_sorted <- c("twenty_km", "forty_km", "sixty_km", "eighty_km")
+
         data <- data |>
           st_join(dplyr::select(areas,{{areaID}})) |>
           rename(site_areaID = {{areaID}}) |>
           st_join(dplyr::select(control_polygon, buffer_distance,  {{areaID}})) |>
           rename(control_areaID = {{areaID}}) |>
-          mutate(areaID=if_else(is.na(site_areaID), control_areaID, site_areaID),
-                 control=case_when(is.na(site_areaID)&is.na(control_areaID)~NA,
-                                   !is.na(site_areaID)&is.na(control_areaID)~FALSE,
-                                   is.na(site_areaID)&!is.na(control_areaID)~TRUE,
-                                   .default = NA))|>
-          dplyr::select(-site_areaID, -control_areaID)
+          group_by(control_areaID) |>
+          mutate(
+            buffer_order = match(buffer_distance, buffers_sorted)
+          ) |>
+          mutate(
+            # For each buffer, check if any smaller buffer has 5+ years
+            needs_this_buffer = purrr::map_lgl(buffer_order, function(current_order) {
+              if(is.na(current_order)) return(FALSE)
+              if(current_order == 1) return(TRUE)  # Always keep smallest buffer
+              # Check cumulative years in each smaller buffer level
+              max_years_in_smaller <- max(purrr::map_dbl(1:(current_order - 1), function(smaller_order) {
+                dplyr::n_distinct(year[buffer_order <= smaller_order])
+              }))
 
+              max_years_in_smaller < 5
+            }),
+            max_buffer_used = buffers_sorted[max(buffer_order[needs_this_buffer],na.rm=TRUE)]
+          ) |>
+          ungroup() |>
+          mutate(
+            areaID=if_else(is.na(site_areaID) | site_areaID == "Non_Conservation_Area", control_areaID, site_areaID),
+            control = case_when(
+              is.na(site_areaID) & is.na(control_areaID) ~ NA,
+              !is.na(site_areaID) & is.na(control_areaID) ~ FALSE,
+              (is.na(site_areaID) | site_areaID == "Non_Conservation_Area") &
+                !is.na(control_areaID) & needs_this_buffer ~ TRUE,
+              .default = FALSE
+            )
+          ) |>
+          dplyr::select(-site_areaID, -control_areaID, -buffer_order, -needs_this_buffer, -buffer_distance)
 
       nest_cols <- c(year,
                      indicator_var_name,
                      attr(data, "sf_column"),
                      other_nest_variables,
-                     "control")
+                     "control",
+                     "max_buffer_used")
       nesteddata <- data.frame(data|>
                                  filter(!is.na(control)) |>
                                  filter(!is.na(.data[[indicator_var_name]])) |>
@@ -688,7 +718,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     } else if (direction != "normal") {
       stop("direction must be 'normal' or 'inverse'")
     }
-      #browser()
+      # browser()
 
       final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
       unique() |>
