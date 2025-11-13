@@ -590,6 +590,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
       buffers_sorted <- c("twenty_km", "forty_km", "sixty_km", "eighty_km")
 
+      # browser()
+
         data <- data |>
           st_join(dplyr::select(areas,{{areaID}})) |>
           rename(site_areaID = {{areaID}}) |>
@@ -615,16 +617,19 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
           ) |>
           ungroup() |>
           mutate(
-            areaID=if_else(is.na(site_areaID) | site_areaID == "Non_Conservation_Area", control_areaID, site_areaID),
+            inmpa = !is.na(site_areaID) & site_areaID != "Non_Conservation_Area",
             control = case_when(
               is.na(site_areaID) & is.na(control_areaID) ~ NA,
               !is.na(site_areaID) & is.na(control_areaID) ~ FALSE,
               (is.na(site_areaID) | site_areaID == "Non_Conservation_Area") &
                 !is.na(control_areaID) & needs_this_buffer ~ TRUE,
               .default = FALSE
-            )
+            ),
+            areaID=case_when(inmpa ~ site_areaID,
+                             control ~ control_areaID,
+                             .default = "Non_Conservation_Area"),
           ) |>
-          dplyr::select(-site_areaID, -control_areaID, -buffer_order, -needs_this_buffer, -buffer_distance)
+          dplyr::select(-site_areaID, -control_areaID, -buffer_order, -needs_this_buffer, -buffer_distance, -inmpa)
 
       nest_cols <- c(year,
                      indicator_var_name,
