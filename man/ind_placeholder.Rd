@@ -5,13 +5,32 @@
 \title{Create example FAKE data}
 \usage{
 ind_placeholder(
-  ind_name = paste0("placeholder_", round(runif(1, 1, 100))),
+  ind_name = "placeholder",
   areas,
-  areaName = "NAME_E"
+  areaName = "NAME_E",
+  readiness = NA,
+  source = NA,
+  objectives = NA
 )
 }
 \arguments{
-\item{areaName}{}
+\item{ind_name}{An indicator name}
+
+\item{areas}{A data frame containing MPA names in both English and French as
+well as the MPA's shape file (see MPAs target)}
+
+\item{areaName}{Indicates what column in areas data frame MPA names can be
+found}
+
+\item{readiness}{a character argument that is either 'Ready', 'Readily
+Available', 'Not currently collected', 'Conceptual', or 'Unknown'.}
+
+\item{source}{indicates where data comes from}
+
+\item{objectives}{indicates the management objective an indicator informs}
+}
+\value{
+data.frame
 }
 \description{
 Create example FAKE data
