@@ -1,7 +1,7 @@
 #' Plot Indicator
 #'
 #' @inheritParams process_indicator
-#' @param data data processed in `process_indicator()`
+#' @param data data processed in `assess_indicator()`
 #' @inherit process_indicator params indicator units plot_type year indicator_var_name scoring areaID areas
 #' @param id Equivalent to `areaID` in [process_indicator()]
 #'

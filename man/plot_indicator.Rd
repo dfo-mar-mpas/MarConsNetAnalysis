@@ -18,7 +18,7 @@ plot_indicator(
 )
 }
 \arguments{
-\item{data}{data processed in \code{process_indicator()}}
+\item{data}{data processed in \code{assess_indicator()}}
 
 \item{indicator}{Character. Indicator name or short description.}
 
