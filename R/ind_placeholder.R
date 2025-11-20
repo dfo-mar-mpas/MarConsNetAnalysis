@@ -20,6 +20,7 @@
 #' }
 ind_placeholder <- function(ind_name = "placeholder",
                             areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA) {
+  browser()
 
   if (is.na(readiness)) {
     stop('Must specify a readiness argument of either Ready, Readily Available,Not currently collected, Conceptual, or Unknown.')
