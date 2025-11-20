@@ -14,7 +14,8 @@ plot_indicator(
   indicator_var_name,
   scoring,
   areaID,
-  areas
+  areas,
+  bin_width
 )
 }
 \arguments{
