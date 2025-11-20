@@ -20,7 +20,7 @@
 #' }
 ind_placeholder <- function(ind_name = "placeholder",
                             areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA) {
-  browser()
+  #browser()
 
   if (is.na(readiness)) {
     stop('Must specify a readiness argument of either Ready, Readily Available,Not currently collected, Conceptual, or Unknown.')
@@ -49,7 +49,7 @@ ind_placeholder <- function(ind_name = "placeholder",
     source = source,
     climate_expectation = "FIXME",
     indicator_rationale = "FIXME",
-    objectives = objectives,
+    objectives = paste0(objectives, collapse=" ;;; "),
     bin_rationale = "FIXME",
     plot = rep(list(NULL), n),    # list-column of NULL
     readiness=readiness
