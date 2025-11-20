@@ -22,7 +22,8 @@ assess_indicator(
   latitude,
   longitude,
   crs,
-  indicator
+  indicator,
+  control_polygon
 )
 }
 \arguments{

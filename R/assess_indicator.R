@@ -4,7 +4,7 @@
 #' @inherit process_indicator params data scoring direction areas year
 #'  indicator_var_name areaID other_nest_variables type units PPTID
 #'  project_short_title climate design_target latitude longitude crs
-#' indicator
+#' indicator control_polygon
 #'
 #' @returns
 #' @export
@@ -21,7 +21,8 @@ assess_indicator <- function(data, scoring, direction,
                              latitude,
                              longitude,
                              crs,
-                             indicator) {
+                             indicator,
+                             control_polygon) {
 
   if (startsWith(scoring,"desired state:")){
     #browser()

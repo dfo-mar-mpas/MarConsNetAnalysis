@@ -100,7 +100,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                               control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA, objectives=NA,
                               readiness="Ready"){
 
-
   if ("map-species" %in% plot_type) {
     if (all(is.na(other_nest_variables))) {
       stop("Must provide other_nest_variable named containing subclass and class when plot_type = 'map-species'")
@@ -146,9 +145,9 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                      project_short_title = project_short_title,
                                      climate = climate,
                                      design_target = design_target,latitude=latitude,
-                                     longitude=longitude, crs=crs,indicator=indicator)
+                                     longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon)
 
-      # browser()
+
 
       final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
       unique() |>
@@ -196,7 +195,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       readiness=readiness
     )
   }
-  #browser()
 
   return(as_tibble(final))
 }
