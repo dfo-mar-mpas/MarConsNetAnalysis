@@ -24,6 +24,7 @@ assess_indicator <- function(data, scoring, direction,
                              indicator,
                              control_polygon) {
 
+
   if (startsWith(scoring,"desired state:")){
     #browser()
 
