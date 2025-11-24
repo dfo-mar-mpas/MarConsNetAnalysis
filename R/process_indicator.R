@@ -146,7 +146,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                      climate = climate,
                                      design_target = design_target,latitude=latitude,
                                      longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon, regionID=regionID)
-
       final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
       unique() |>
       left_join(nesteddata, by = setNames("areaID", areaID))|>

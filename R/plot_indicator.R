@@ -20,9 +20,10 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
       par(mar = c(4, 4.5, 0.5, 1))
 
       if ('map-species' %in% plot_type[i]) {
-        if (!(length(data[[which(areas$NAME_E == id)]][[indicator_var_name]]) > 25)) {
-          plot_type <- "map"
-        }
+        #browser()
+        # if (!(length(data[[which(areas$NAME_E == id)]][[indicator_var_name]]) > 25)) {
+        #   plot_type <- "map"
+        # }
       }
       if("time-series" %in% plot_type[i]) {
 
