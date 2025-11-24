@@ -23,7 +23,8 @@ assess_indicator(
   longitude,
   crs,
   indicator,
-  control_polygon
+  control_polygon,
+  regionID
 )
 }
 \arguments{

@@ -145,9 +145,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                      project_short_title = project_short_title,
                                      climate = climate,
                                      design_target = design_target,latitude=latitude,
-                                     longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon)
-
-
+                                     longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon, regionID=regionID)
 
       final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
       unique() |>

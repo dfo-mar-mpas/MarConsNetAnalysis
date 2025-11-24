@@ -4,7 +4,7 @@
 #' @inherit process_indicator params data scoring direction areas year
 #'  indicator_var_name areaID other_nest_variables type units PPTID
 #'  project_short_title climate design_target latitude longitude crs
-#' indicator control_polygon
+#' indicator control_polygon regionID
 #'
 #' @returns
 #' @export
@@ -22,7 +22,8 @@ assess_indicator <- function(data, scoring, direction,
                              longitude,
                              crs,
                              indicator,
-                             control_polygon) {
+                             control_polygon,
+                             regionID) {
 
 
   if (startsWith(scoring,"desired state:")){
@@ -232,7 +233,7 @@ assess_indicator <- function(data, scoring, direction,
       }
 
     }
-
+#browser()
     nesteddata <- nesteddata |>
       dplyr::select(-model,-summaries,-coeffs,-slope_year,-p)
 
@@ -330,6 +331,10 @@ assess_indicator <- function(data, scoring, direction,
                                           status_statement),
                trend_statement = "There is no temporal dimension in this data.")
     } else {
+      if (attr(data, "sf_column") == "geometry") {
+        data[["geoms"]] <- data[["geometry"]]
+      }
+
       totaloccurrences <- data |>
         mutate(occurrences = case_when(
           st_geometry_type(geoms) == "POINT" ~ 1,
