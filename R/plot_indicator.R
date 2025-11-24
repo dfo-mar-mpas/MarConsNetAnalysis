@@ -155,10 +155,12 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             coord_sf(crs = st_crs(areas))
 
         } else {
+#browser()
+
 
           # Standard case (no control site logic)
           plot_list[[i]] <- ggplot() +
-            # geom_sf(data = areas[areas[[areaID]] == id,], fill = "white", color = "black") +
+             geom_sf(data = areas[areas[[areaID]] == id,], fill = "white", color = "black") +
 
             geom_sf(
               data = data,

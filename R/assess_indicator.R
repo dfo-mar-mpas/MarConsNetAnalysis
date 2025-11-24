@@ -27,7 +27,6 @@ assess_indicator <- function(data, scoring, direction,
 
 
   if (startsWith(scoring,"desired state:")){
-    #browser()
 
     if(!year %in% names(data)){
       stop("year column not found")
@@ -119,7 +118,6 @@ assess_indicator <- function(data, scoring, direction,
 
     status_statement <- list()
     trend_statement <- list()
-    #browser()
     for (i in seq_along(nesteddata$data)) {
       DATA <- nesteddata$data[[i]]
       if (!(is.null(DATA))) {
@@ -233,12 +231,13 @@ assess_indicator <- function(data, scoring, direction,
       }
 
     }
-#browser()
     nesteddata <- nesteddata |>
       dplyr::select(-model,-summaries,-coeffs,-slope_year,-p)
 
     nesteddata$status_statement <- unlist(status_statement)
     nesteddata$trend_statement <- unlist(trend_statement)
+
+    #browser()
   } else if (startsWith(scoring,"representation")){
     #areas <- areas[-which(areas$NAME_E == "Non_Conservation_Area"),]
 
@@ -487,8 +486,6 @@ assess_indicator <- function(data, scoring, direction,
     # join with areas
 
     buffers_sorted <- c("twenty_km", "forty_km", "sixty_km", "eighty_km")
-
-    # browser()
 
     data <- data |>
       st_join(dplyr::select(areas,{{areaID}})) |>
