@@ -34,7 +34,8 @@ process_indicator(
   indicator_rationale = NA,
   bin_rationale = NA,
   objectives = NA,
-  readiness = "Ready"
+  readiness = "Ready",
+  scale = "site"
 )
 }
 \arguments{
@@ -79,6 +80,8 @@ the objective from the objectives.xlsx. (See examples)}
 
 \item{readiness}{a character argument that is either 'Ready', 'Readily Available',
 'Not currently collected', 'Conceptual', or 'Unknown'.}
+
+\item{scale}{a character string of either 'site' or 'network'}
 
 \item{rationale}{Character. Rationale for including this indicator (why it
 matters for conservation objectives).}

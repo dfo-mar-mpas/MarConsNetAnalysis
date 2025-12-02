@@ -19,6 +19,7 @@
 #' @param units Character. Units of the indicator (e.g., "kg/ha", "% cover").
 #' @param type Character. Type of indicator (e.g., "biological", "habitat",
 #'   "climate").
+#' @param scale a character string of either 'site' or 'network'
 #' @param scoring Character. Method used to score the indicator. Options include:
 #'   \itemize{
 #'     \item `"desired trend"` – Uses regression to score based on increase,
@@ -98,7 +99,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                               latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA,
                               areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE,
                               control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA, objectives=NA,
-                              readiness="Ready"){
+                              readiness="Ready", scale='site'){
 
   if ("map-species" %in% plot_type) {
     if (all(is.na(other_nest_variables))) {
@@ -166,7 +167,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       # plot!
       mutate(plot = pmap(list(data,indicator,units,areaID), function(data, indicator, units,id) plot_indicator(data=data,indicator=indicator,units=units,id=id, plot_type=plot_type, year=year, indicator_var_name=indicator_var_name, scoring=scoring, areaID=!!areaID, areas=areas, bin_width=bin_width)
       ))  |>
-        mutate(readiness=readiness)
+        mutate(readiness=readiness) |>
+        mutate(scale=scale)
 
   } else {
     # NA data case
@@ -189,7 +191,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       design_target = design_target,
       trend_statement = "TBD",
       status_statement = "TBD",
-      readiness=readiness
+      readiness=readiness,
+      scale=scale
     )
   }
 

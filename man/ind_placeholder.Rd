@@ -10,7 +10,8 @@ ind_placeholder(
   areaName = "NAME_E",
   readiness = NA,
   source = NA,
-  objectives = NA
+  objectives = NA,
+  scale = "site"
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ Available', 'Not currently collected', 'Conceptual', or 'Unknown'.}
 \item{source}{indicates where data comes from}
 
 \item{objectives}{indicates the management objective an indicator informs}
+
+\item{site}{a character string of either 'site' or 'network'}
 }
 \value{
 data.frame

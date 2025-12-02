@@ -10,6 +10,7 @@
 #'
 #' @param source indicates where data comes from
 #' @param objectives indicates the management objective an indicator informs
+#' @param site a character string of either 'site' or 'network'
 #'
 #' @return data.frame
 #' @export
@@ -19,7 +20,7 @@
 #' # FIXME placeholder
 #' }
 ind_placeholder <- function(ind_name = "placeholder",
-                            areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA) {
+                            areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA, scale='site') {
   #browser()
 
   if (is.na(readiness)) {
@@ -52,7 +53,8 @@ ind_placeholder <- function(ind_name = "placeholder",
     objectives = paste0(objectives, collapse=" ;;; "),
     bin_rationale = "FIXME",
     plot = rep(list(NULL), n),    # list-column of NULL
-    readiness=readiness
+    readiness=readiness,
+    scale=scale
   )
 
   return(x)
