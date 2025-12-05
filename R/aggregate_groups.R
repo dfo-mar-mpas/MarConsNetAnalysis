@@ -26,22 +26,16 @@ aggregate_groups <- function(group_level,group_name,weights_ratio=1,weights_sum=
       mutate({{group_level}} := group_name) |>
       distinct(across(!any_of("plot")), .keep_all = TRUE)
   } else {
-    #browser()
-    for (i in seq_along(args)){
-      message(i)
-      args[[i]] <- args[[i]] |>
-        mutate(weight = weights_ratio[i])
-    }
+    arg_names <- as.character(substitute(list(...)))[-1]
 
+    args_weighted <- purrr::pmap(
+      list(df = args, wt = weights_ratio, nm = arg_names),
+      function(df, wt, nm) {
+        df |> mutate(weight = wt, target_name = nm)
+      }
+    )
 
-    # df <- bind_rows(args) |>
-    #   distinct() |>
-    #   group_by(areaID) |>
-    #   mutate({{group_level}} := group_name,
-    #          weight = weight/sum(weight)*weights_sum) |>
-    #   ungroup()
-
-    df <- bind_rows(args) |>
+    df <- bind_rows(args_weighted) |>
       distinct(across(!any_of("plot")), .keep_all = TRUE) |>
       group_by(areaID) |>
       mutate({{group_level}} := group_name,
