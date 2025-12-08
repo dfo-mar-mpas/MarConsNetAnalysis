@@ -250,7 +250,7 @@ assess_indicator <- function(data, scoring, direction,
 
     # identify the columns to nest
     nest_cols <- c(indicator_var_name,
-                   "geoms",
+                   attr(data, "sf_column"),
                    other_nest_variables)
 
     if (all(endsWith(as.character(st_geometry_type(data)),"POLYGON"))){
@@ -270,7 +270,7 @@ assess_indicator <- function(data, scoring, direction,
         dplyr::select(c("IDtemp",nest_cols[!is.na(nest_cols)])) |>
         filter(!is.na({{indicator_var_name}})) |>
         rowwise() |>
-        mutate(layerareakm2=st_area(geoms) |>
+        mutate(layerareakm2=st_area(.data[[attr(data, "sf_column")]]) |>
                  set_units("km^2") |>
                  as.numeric() |>
                  round(1),
@@ -414,6 +414,156 @@ assess_indicator <- function(data, scoring, direction,
         ungroup() |>
         dplyr::select(-{{regionID}})
     }
+
+  } else if (startsWith(scoring,"coverage")){
+
+    if (!inherits(data, "sf")) stop("data must be an sf object for 'representation' scoring")
+    if (!(indicator_var_name %in% names(data))) stop("indicator_var_name column not found in data")
+    if (st_crs(data) != st_crs(areas)) stop("data and areas must have the same CRS")
+    if (endsWith(scoring, "regional thresholds") & !(regionID %in% names(areas))) stop(paste0("Scoring methods that use 'regional thresholds' require a '",regionID,"' (set by the regionID argument) in your 'areas' argument"))
+
+
+
+    # identify the columns to nest
+    nest_cols <- c(indicator_var_name,
+                   attr(data, "sf_column"),
+                   other_nest_variables)
+
+
+
+
+    if ( endsWith(scoring,"landings") ) {
+      # landings representation type
+      landingsvar <- other_nest_variables[1]
+      message(paste("Using",landingsvar,"as the landings variable for coverage calculation."))
+      intersect <- st_intersection(data |>
+                                     mutate(originalarea = as.numeric(st_area(.data[[attr(data, "sf_column")]]))),
+                                   areas) |>
+        mutate(totallandingsadjusted = !!sym(landingsvar)/originalarea*as.numeric(st_area(.data[[attr(data, "sf_colum")]])),
+               areaID=!!sym(areaID))
+
+
+      site_prot_cp <- intersect |>
+        group_by(areaID,region,layername,plainname,min_target,max_target) |>
+        reframe(cp_landings := sum(totallandingsadjusted),
+                !!attr(intersect, "sf_column") := st_union(!!sym(attr(intersect, "sf_column"))),
+                cp_percent = cp_landings/ sum(data[[landingsvar]])*100) |>
+        mutate(
+          score = cume_dist(100-cp_percent)*100, #TODO is cume_dist the way to go here?
+          scale = "site"
+        ) |>
+        st_as_sf()
+
+      region_prot_cp <- site_prot_cp |>
+        group_by(region) |>
+        reframe(
+          areaID = unique(region),
+          region = unique(region),
+          layername = unique(layername),
+          plainname = unique(plainname),
+          min_target = unique(min_target),
+          max_target = unique(max_target),
+          cp_landings = sum(cp_landings),
+          cp_percent = sum(cp_percent),
+          score = case_when(100-cp_percent < min_target ~ (100-cp_percent)/min_target*100,
+                            TRUE ~ 100),
+          scale = "region",
+          !!attr(intersect, "sf_column") := st_union(!!sym(attr(intersect, "sf_column")))
+        )
+
+
+      nesteddata <- bind_rows(region_prot_cp,site_prot_cp) |>
+        mutate(
+          indicator = paste("Network design target:", filter,type,layername,sep=" - "),
+          indicator = indicator,
+          type = type,
+          units = units,
+          scoring = scoring,
+          PPTID =  PPTID,
+          project_short_title = project_short_title,
+          climate = climate,
+          design_target = design_target,
+          status_statement = paste0(areaID,
+                                    " covers ",
+                                    round(cp_landings),
+                                    " tonnes of ",
+                                    plainname,
+                                    " landings which is ",
+                                    round(cp_percent,2),
+                                    "% of the area of this feature while ",
+                                    unique(data$min_target),
+                                    " to ",
+                                    unique(data$max_target),
+                                    "% was targeted"),
+          trend_statement = "There is no temporal dimension in this data.")|>
+        nest(data = c(cp_landings, cp_percent, attr(intersect, "sf_column")))
+      # browser()
+
+    } else {
+
+      intersect <- select(areas,{{areaID}}) |>
+        st_make_valid() |>
+        st_intersection(st_geometry(data)) |>
+        st_make_valid() |>
+        full_join(st_drop_geometry(areas),
+                  by = areaID) |>
+        cross_join(st_drop_geometry(data))
+
+      # else normal coverage type
+      site_prot_cp <- intersect |>
+        as.data.frame() |>
+        dplyr::select(region,areaID={{areaID}},!!attr(intersect, "sf_column")) |>
+        st_as_sf() |>
+        mutate(
+          cp_area = as.numeric(st_area(.data[[attr(intersect, "sf_column")]])),
+          cp_percent = cp_area/ sum(as.numeric(st_area(data)))*100,
+          score = cume_dist(cp_percent)*100, #TODO is cume_dist the way to go here?
+          scale = "site"
+        )
+
+      region_prot_cp <- site_prot_cp |>
+        group_by(region) |>
+        reframe(
+          areaID = unique(region),
+          cp_area = sum(cp_area),
+          cp_percent = sum(cp_percent),
+          score = case_when(cp_percent < min_target ~ cp_percent/min_target*100,
+                            cp_percent > max_target ~ 100-(cp_percent-max_target)/(100-max_target)*100,
+                            TRUE ~ 100),
+          scale = "region",
+          !!attr(intersect, "sf_column") := st_union(!!sym(attr(intersect, "sf_column")))
+        )
+
+
+      nesteddata <- bind_rows(region_prot_cp,site_prot_cp) |>
+        mutate(
+          indicator = paste("Network design target:", filter,type,layername,sep=" - "),
+          indicator = indicator,
+          type = type,
+          units = units,
+          scoring = scoring,
+          PPTID =  PPTID,
+          project_short_title = project_short_title,
+          climate = climate,
+          design_target = design_target,
+          status_statement = paste0(areaID,
+                                    " covers ",
+                                    round(cp_area/1000000),
+                                    " km^2 of ",
+                                    plainname,
+                                    " which is ",
+                                    round(cp_percent,2),
+                                    "% of the area of this feature while ",
+                                    unique(data$min_target),
+                                    " to ",
+                                    unique(data$max_target),
+                                    "% was targeted"),
+          trend_statement = "There is no temporal dimension in this data.")|>
+        nest(data = c(cp_area, cp_percent, attr(intersect, "sf_column")))
+
+    }
+
+
 
   } else if (startsWith(scoring,"median")){
 

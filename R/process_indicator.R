@@ -24,7 +24,9 @@
 #'   \itemize{
 #'     \item `"desired trend"` – Uses regression to score based on increase,
 #'       decrease, or stability.
-#'     \item `"representation"` – Scores based on % overlap of feature within
+#'     \item `"representation"` – Scores based on number of features that
+#'     intersect with a protected area.
+#'     \item `"coverage"` – Scores based on % overlap of a feature within
 #'       protected areas.
 #'     \item `"median"` – Uses median value of raster or continuous data, rescaled
 #'       to 0–100.
@@ -136,7 +138,15 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     dataisna <- all(is.na(data))
   }
 
+  if (startsWith(scoring,"coverage")){
+
+    if (scale != "region-site") stop('scale must be set to "region-site" to use the "coverage" type scoring')
+
+  }
+
     if(!dataisna){
+
+      # browser()
 
       nesteddata <- assess_indicator(data=data, scoring=scoring, direction=direction,
                                      areas=areas, year=year, indicator_var_name=indicator_var_name,
@@ -147,9 +157,14 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                      climate = climate,
                                      design_target = design_target,latitude=latitude,
                                      longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon, regionID=regionID)
-      final <- dplyr::select(as.data.frame(areas),{{areaID}}) |>
+
+      #regional scores for "region-site" are calculated in assess_indicator(),
+      # so at this point scale can be sites to fill in the blanks
+      if(scale == "region-site") scale <- "site"
+
+      final <- dplyr::select(as.data.frame(areas),{{areaID}},{{regionID}}) |>
       unique() |>
-      left_join(nesteddata, by = setNames("areaID", areaID))|>
+      full_join(nesteddata, by = c(setNames("areaID", areaID),setNames("region", regionID)))|>
       rename(areaID = {{areaID}}) |>
       mutate(indicator = coalesce(indicator, !!indicator),
              type = coalesce(type, !!type),
@@ -167,8 +182,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       # plot!
       mutate(plot = pmap(list(data,indicator,units,areaID), function(data, indicator, units,id) plot_indicator(data=data,indicator=indicator,units=units,id=id, plot_type=plot_type, year=year, indicator_var_name=indicator_var_name, scoring=scoring, areaID=!!areaID, areas=areas, bin_width=bin_width)
       ))  |>
-        mutate(readiness=readiness) |>
-        mutate(scale=scale)
+        mutate(readiness=readiness,
+               scale=coalesce(scale, !!scale))
 
   } else {
     # NA data case
