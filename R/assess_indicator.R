@@ -459,14 +459,11 @@ assess_indicator <- function(data, scoring, direction,
         reframe(
           areaID = unique(region),
           region = unique(region),
-          layername = unique(layername),
-          plainname = unique(plainname),
-          min_target = unique(min_target),
-          max_target = unique(max_target),
           cp_landings = sum(cp_landings),
           cp_percent = sum(cp_percent),
-          score = case_when(100-cp_percent < min_target ~ (100-cp_percent)/min_target*100,
-                            TRUE ~ 100),
+          score = if_else(100-cp_percent < unique(data$min_target),
+                          (100-cp_percent)/unique(data$min_target)*100,
+                          100),
           scale = "region",
           !!attr(intersect, "sf_column") := st_union(!!sym(attr(intersect, "sf_column")))
         )
@@ -486,7 +483,7 @@ assess_indicator <- function(data, scoring, direction,
                                     " covers ",
                                     round(cp_landings),
                                     " tonnes of ",
-                                    plainname,
+                                    unique(data$plainname),
                                     " landings which is ",
                                     round(cp_percent,2),
                                     "% of the area of this feature while ",
@@ -520,15 +517,14 @@ assess_indicator <- function(data, scoring, direction,
           scale = "site"
         )
 
-
       region_prot_cp <- site_prot_cp |>
         group_by(region) |>
         reframe(
           areaID = unique(region),
           cp_area = sum(cp_area),
           cp_percent = sum(cp_percent),
-          score = case_when(cp_percent < min_target ~ cp_percent/min_target*100,
-                            cp_percent > max_target ~ 100-(cp_percent-max_target)/(100-max_target)*100,
+          score = case_when(cp_percent < data$min_target ~ cp_percent/data$min_target*100,
+                            cp_percent > data$max_target ~ 100-(cp_percent-data$max_target)/(100-data$max_target)*100,
                             TRUE ~ 100),
           scale = "region",
           !!attr(intersect, "sf_column") := st_union(!!sym(attr(intersect, "sf_column")))
