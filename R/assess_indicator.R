@@ -474,7 +474,6 @@ assess_indicator <- function(data, scoring, direction,
 
       nesteddata <- bind_rows(region_prot_cp,site_prot_cp) |>
         mutate(
-          indicator = paste("Network design target:", filter,type,layername,sep=" - "),
           indicator = indicator,
           type = type,
           units = units,
