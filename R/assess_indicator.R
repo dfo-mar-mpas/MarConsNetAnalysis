@@ -520,6 +520,7 @@ assess_indicator <- function(data, scoring, direction,
           scale = "site"
         )
 
+
       region_prot_cp <- site_prot_cp |>
         group_by(region) |>
         reframe(
@@ -536,7 +537,6 @@ assess_indicator <- function(data, scoring, direction,
 
       nesteddata <- bind_rows(region_prot_cp,site_prot_cp) |>
         mutate(
-          indicator = paste("Network design target:", filter,type,layername,sep=" - "),
           indicator = indicator,
           type = type,
           units = units,
