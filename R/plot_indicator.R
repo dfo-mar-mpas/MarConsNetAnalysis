@@ -97,90 +97,91 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
         }
 
-        if ( st_is_empty(aes_geom)) return(NULL)
-
-
-        if (any(grepl("control site", unique(scoring), ignore.case = TRUE))) {
-          coords <- st_coordinates(aes_geom)
-          d_coords <- cbind(data, coords)
-          plot_list[[i]] <- ggplot() +
-            geom_sf(
-              data = areas[areas[[areaID]] == id,],
-              fill = "white",
-              color = "black"
-            ) +
-
-            # Main spatial layer without contributing to shape legend
-            geom_sf(
-              data = data,
-              aes(
-                geometry = aes_geom,
-                fill = .data[[indicator_var_name]]
-              ),
-              shape = 21,
-              color = "black",
-              size = 2,
-              show.legend = FALSE  # Disable broken shape legend here
-            ) +
-
-            # Add a separate geom_point layer just for legend
-            geom_point(
-              data = d_coords,
-              aes(
-                x = X,
-                y = Y,
-                shape = as.factor(control),
-                fill = .data[[indicator_var_name]]
-              ),
-              color = "black",
-              size = 2
-            ) +
-
-            # Shape legend (works now because of geom_point)
-            scale_shape_manual(
-              values = c("FALSE" = 21, "TRUE" = 24),  # Circle = Inside, Triangle = Outside
-              name = "Site Type",
-              labels = c("FALSE" = "Inside", "TRUE" = "Outside")
-            ) +
-
-            theme_classic() +
-            labs(
-              fill = indicator_var_name,
-              title = id,
-              x=NULL,
-              y=NULL
-            ) +
-            theme(
-              plot.title = element_text(size = 10),
-              axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-            ) +
-            coord_sf(crs = st_crs(areas))
-
+        if ( st_is_empty(aes_geom) ) {
+          plot_list[[i]] <- NULL
         } else {
-#browser()
+          if (any(grepl("control site", unique(scoring), ignore.case = TRUE))) {
+            coords <- st_coordinates(aes_geom)
+            d_coords <- cbind(data, coords)
+            plot_list[[i]] <- ggplot() +
+              geom_sf(
+                data = areas[areas[[areaID]] == id,],
+                fill = "white",
+                color = "black"
+              ) +
+
+              # Main spatial layer without contributing to shape legend
+              geom_sf(
+                data = data,
+                aes(
+                  geometry = aes_geom,
+                  fill = .data[[indicator_var_name]]
+                ),
+                shape = 21,
+                color = "black",
+                size = 2,
+                show.legend = FALSE  # Disable broken shape legend here
+              ) +
+
+              # Add a separate geom_point layer just for legend
+              geom_point(
+                data = d_coords,
+                aes(
+                  x = X,
+                  y = Y,
+                  shape = as.factor(control),
+                  fill = .data[[indicator_var_name]]
+                ),
+                color = "black",
+                size = 2
+              ) +
+
+              # Shape legend (works now because of geom_point)
+              scale_shape_manual(
+                values = c("FALSE" = 21, "TRUE" = 24),  # Circle = Inside, Triangle = Outside
+                name = "Site Type",
+                labels = c("FALSE" = "Inside", "TRUE" = "Outside")
+              ) +
+
+              theme_classic() +
+              labs(
+                fill = indicator_var_name,
+                title = id,
+                x=NULL,
+                y=NULL
+              ) +
+              theme(
+                plot.title = element_text(size = 10),
+                axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+              ) +
+              coord_sf(crs = st_crs(areas))
+
+          } else {
+            #browser()
 
 
-          # Standard case (no control site logic)
-          plot_list[[i]] <- ggplot() +
-             geom_sf(data = areas[areas[[areaID]] == id,], fill = "white", color = "black") +
+            # Standard case (no control site logic)
+            plot_list[[i]] <- ggplot() +
+              geom_sf(data = areas[areas[[areaID]] == id,], fill = "white", color = "black") +
 
-            geom_sf(
-              data = data,
-              aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
-              shape = 21,
-              color = "black",
-              size = 2
-            ) +
-            theme_classic() +
-            labs(
-              fill = indicator_var_name,
-              title = id
-            ) +
-            theme(
-              plot.title = element_text(size = 10),
-              axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-            ) +
-            coord_sf(crs = st_crs(areas))
+              geom_sf(
+                data = data,
+                aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
+                shape = 21,
+                color = "black",
+                size = 2
+              ) +
+              theme_classic() +
+              labs(
+                fill = indicator_var_name,
+                title = id
+              ) +
+              theme(
+                plot.title = element_text(size = 10),
+                axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+              ) +
+              coord_sf(crs = st_crs(areas))
+          }
         }
       }
       if ("map-species" %in% plot_type[i]) {
@@ -238,12 +239,19 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
       }
     }
-    p <- try(patchwork::wrap_plots(plot_list, ncol = min(length(plot_type), 3)), silent=TRUE)
 
-    if (inherits(p, "try-error")) {
-      p <- try(patchwork::wrap_plots(plot_list[!vapply(plot_list, is.null, logical(1))], ncol = min(length(plot_type), 3)), silent=TRUE)
+
+    if(length(plot_list)==0){
+      return(p)
+    } else {
+      p <- try(patchwork::wrap_plots(plot_list, ncol = min(length(plot_type), 3)), silent=TRUE)
+
+      if (inherits(p, "try-error")) {
+        p <- try(patchwork::wrap_plots(plot_list[!vapply(plot_list, is.null, logical(1))], ncol = min(length(plot_type), 3)), silent=TRUE)
+      }
+      return(p)
     }
-    return(p)
+
 
 
   } else {
