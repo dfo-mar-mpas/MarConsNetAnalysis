@@ -87,7 +87,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
       }
       if("map" %in% plot_type[i]){
         if ((!("sf" %in% class(data)))) {
-          aes_geom <- data$geometry
+          aes_geom <- st_as_sf(data)[[attr(st_as_sf(data), "sf_column")]]
         } else {
           if ("geoms" %in% names(data)) {
             aes_geom <- data$geoms

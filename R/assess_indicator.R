@@ -459,6 +459,7 @@ assess_indicator <- function(data, scoring, direction,
         reframe(
           areaID = unique(region),
           region = unique(region),
+          !!sym(indicator_var_name) := unique(!!sym(indicator_var_name)),
           cp_landings = sum(cp_landings),
           cp_percent = sum(cp_percent),
           score = if_else(100-cp_percent < unique(data$min_target),
@@ -492,7 +493,7 @@ assess_indicator <- function(data, scoring, direction,
                                     unique(data$max_target),
                                     "% was targeted"),
           trend_statement = "There is no temporal dimension in this data.")|>
-        nest(data = c(cp_landings, cp_percent, attr(intersect, "sf_column")))
+        nest(data = c(cp_landings, cp_percent, attr(intersect, "sf_column"),{{indicator_var_name}}))
       # browser()
 
     } else {
@@ -508,7 +509,7 @@ assess_indicator <- function(data, scoring, direction,
       # else normal coverage type
       site_prot_cp <- intersect |>
         as.data.frame() |>
-        dplyr::select(region,areaID={{areaID}},!!attr(intersect, "sf_column")) |>
+        dplyr::select(region,areaID={{areaID}},{{indicator_var_name}},!!attr(intersect, "sf_column")) |>
         st_as_sf() |>
         mutate(
           cp_area = as.numeric(st_area(.data[[attr(intersect, "sf_column")]])),
@@ -521,6 +522,7 @@ assess_indicator <- function(data, scoring, direction,
         group_by(region) |>
         reframe(
           areaID = unique(region),
+          !!sym(indicator_var_name) := unique(!!sym(indicator_var_name)),
           cp_area = sum(cp_area),
           cp_percent = sum(cp_percent),
           score = case_when(cp_percent < data$min_target ~ cp_percent/data$min_target*100,
@@ -529,7 +531,6 @@ assess_indicator <- function(data, scoring, direction,
           scale = "region",
           !!attr(intersect, "sf_column") := st_union(!!sym(attr(intersect, "sf_column")))
         )
-
 
       nesteddata <- bind_rows(region_prot_cp,site_prot_cp) |>
         mutate(
@@ -554,7 +555,7 @@ assess_indicator <- function(data, scoring, direction,
                                     unique(data$max_target),
                                     "% was targeted"),
           trend_statement = "There is no temporal dimension in this data.")|>
-        nest(data = c(cp_area, cp_percent, attr(intersect, "sf_column")))
+        nest(data = c(cp_area, cp_percent, attr(intersect, "sf_column"),{{indicator_var_name}}))
 
     }
 
