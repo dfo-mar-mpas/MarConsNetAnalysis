@@ -97,7 +97,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
         }
 
-        if ( st_is_empty(aes_geom) ) {
+        if ( all(st_is_empty(aes_geom)) ) {
           plot_list[[i]] <- NULL
         } else {
           if (any(grepl("control site", unique(scoring), ignore.case = TRUE))) {
