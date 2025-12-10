@@ -97,6 +97,8 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
         }
 
+        if ( st_is_empty(aes_geom)) return(NULL)
+
 
         if (any(grepl("control site", unique(scoring), ignore.case = TRUE))) {
           coords <- st_coordinates(aes_geom)
