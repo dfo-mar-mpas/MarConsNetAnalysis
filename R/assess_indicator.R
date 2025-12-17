@@ -768,6 +768,7 @@ assess_indicator <- function(data, scoring, direction,
   }
 
   nesteddata$quality_statement <- NA
+  browser
   for (i in seq_along(nesteddata$data)) { # Note a sample means unique date and geomtry. If there are multiple depths in a single sample it counts as one sample
     message(i)
     quality_data <- nesteddata$data[[i]]
@@ -785,7 +786,7 @@ assess_indicator <- function(data, scoring, direction,
     } else if (any(grepl("POLYGON", class(quality_data[[GEOM]][1])))) {
       nesteddata$quality_statement[i] <- paste0(nesteddata$areaID[i], ": ", "There are no quality statements available for POLYGON type")
 
-    } else{
+    } else if ("year" %in% names(quality_data)){
       number_of_samples <- quality_data %>%
         distinct(year, .data[[GEOM]]) %>%
         summarise(n_samples = n())
@@ -796,6 +797,9 @@ assess_indicator <- function(data, scoring, direction,
       } else {
         nesteddata$quality_statement[i] <- paste0(nesteddata$areaID[i], ": ", number_of_samples, " samples taken (", min_year, "-", max_year, ")")
       }
+    } else {
+      nesteddata$quality_statement[i] <- paste0(nesteddata$areaID[i], ": ", nrow(quality_data))
+
     }
     } else {
       nesteddata$quality_statement[i] <- NA
