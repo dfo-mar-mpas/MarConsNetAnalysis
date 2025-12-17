@@ -775,6 +775,7 @@ assess_indicator <- function(data, scoring, direction,
     #browser()
 
     if (!(is.null(quality_data))) {
+      if (!(grepl("Network design", indicator))) {
     GEOM <- attr(quality_data, "sf_column")
 
     if (is.null(GEOM)) {
@@ -801,6 +802,9 @@ assess_indicator <- function(data, scoring, direction,
       nesteddata$quality_statement[i] <- paste0(nesteddata$areaID[i], ": ", nrow(quality_data))
 
     }
+      } else {
+        nesteddata$quality_statement[i] <- NA
+      }
     } else {
       nesteddata$quality_statement[i] <- NA
     }
