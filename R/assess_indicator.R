@@ -767,6 +767,42 @@ assess_indicator <- function(data, scoring, direction,
     stop("direction must be 'normal' or 'inverse'")
   }
 
+  nesteddata$quality_statement <- NA
+  for (i in seq_along(nesteddata$data)) { # Note a sample means unique date and geomtry. If there are multiple depths in a single sample it counts as one sample
+    message(i)
+    quality_data <- nesteddata$data[[i]]
+    #browser()
+
+    if (!(is.null(quality_data))) {
+    GEOM <- attr(quality_data, "sf_column")
+
+    if (is.null(GEOM)) {
+      GEOM <- names(quality_data)[which(grepl("geom", names(quality_data)))]
+    }
+
+    if (any(grepl("GEOMETRYCOLLECTION", class(quality_data[[GEOM]][1])))) {
+      nesteddata$quality_statement[i] <- paste0(nesteddata$areaID[i], ": ", "There are no quality statements available for GEOMETRYCOLLECTION type")
+    } else if (any(grepl("POLYGON", class(quality_data[[GEOM]][1])))) {
+      nesteddata$quality_statement[i] <- paste0(nesteddata$areaID[i], ": ", "There are no quality statements available for POLYGON type")
+
+    } else{
+      number_of_samples <- quality_data %>%
+        distinct(year, .data[[GEOM]]) %>%
+        summarise(n_samples = n())
+      min_year <- min(sort(as.numeric(unique(quality_data$year))))
+      max_year <- max(sort(as.numeric(unique(quality_data$year))))
+      if (min_year == max_year) {
+        nesteddata$quality_statement[i] <- paste0(nesteddata$areaID[i], ": ", number_of_samples, " samples taken (", min_year, ")")
+      } else {
+        nesteddata$quality_statement[i] <- paste0(nesteddata$areaID[i], ": ", number_of_samples, " samples taken (", min_year, "-", max_year, ")")
+      }
+    }
+    } else {
+      nesteddata$quality_statement[i] <- NA
+    }
+
+  }
+
   return(nesteddata)
 
 }

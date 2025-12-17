@@ -161,10 +161,10 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       #regional scores for "region-site" are calculated in assess_indicator(),
       # so at this point scale can be sites to fill in the blanks
       if(scale == "region-site") scale <- "site"
-
       final <- dplyr::select(as.data.frame(areas),{{areaID}},{{regionID}}) |>
       unique() |>
-      full_join(nesteddata, by = c(setNames("areaID", areaID),setNames("region", regionID)))|>
+      #full_join(nesteddata, by = c(setNames("areaID", areaID),setNames("region", regionID)))|>
+      full_join(nesteddata, by = c(setNames("areaID", areaID)))|>
       rename(areaID = {{areaID}}) |>
       mutate(indicator = coalesce(indicator, !!indicator),
              type = coalesce(type, !!type),
@@ -206,6 +206,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       design_target = design_target,
       trend_statement = "TBD",
       status_statement = "TBD",
+      quality_statement = "TBD",
       readiness=readiness,
       scale=scale
     )
