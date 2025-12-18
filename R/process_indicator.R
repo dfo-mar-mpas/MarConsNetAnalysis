@@ -212,6 +212,21 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     )
   }
 
+
+
+  desired_order <- c(
+    "areaID", "indicator", "type", "units", "scoring",
+    "PPTID", "project_short_title", "climate", "design_target", "data",
+    "score", "status_statement", "trend_statement","quality_statement", "source", "climate_expectation",
+    "indicator_rationale", "objectives", "bin_rationale", "plot", "readiness", "scale"
+  )
+
+  final <- final[ , desired_order]
+
+
+
+
+
   return(as_tibble(final))
 }
 
