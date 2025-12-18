@@ -768,7 +768,13 @@ assess_indicator <- function(data, scoring, direction,
   }
 
   nesteddata$quality_statement <- NA
-  browser
+
+
+  ## FIX PROBLEM IS MPAs is not the areas argument we don't have Non_Conservation_Area (e.g. ind_musquash_ph). It assigns it to a areaID of NA, which causes problems with save_plots
+
+  if (any(is.na(nesteddata$areaID))) {
+    nesteddata$areaID[which(is.na(nesteddata$areaID))] <- "Non_Conservation_Area"
+  }
   for (i in seq_along(nesteddata$data)) { # Note a sample means unique date and geomtry. If there are multiple depths in a single sample it counts as one sample
     message(i)
     quality_data <- nesteddata$data[[i]]
