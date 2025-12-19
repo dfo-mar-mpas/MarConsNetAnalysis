@@ -189,6 +189,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     # NA data case
     final <- data.frame(
       areaID = as.vector(unique(dplyr::select(as.data.frame(areas),{{areaID}}))[,1]),
+      region=areas$region,
       data,
       plot = NA,
       source=source,
