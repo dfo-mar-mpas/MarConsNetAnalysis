@@ -35,6 +35,7 @@ ind_placeholder <- function(ind_name = "placeholder",
 
   x <- tibble::tibble(
     areaID = areas[[areaName]],
+    region=areas$region,
     indicator = ind_name,
     type = NA_character_,
     units = NA_character_,
