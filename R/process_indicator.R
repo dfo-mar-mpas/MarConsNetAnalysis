@@ -185,6 +185,10 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
         mutate(readiness=readiness,
                scale=coalesce(scale, !!scale))
 
+      if (any(names(final) == "region.y")) {
+        names(final)[which(names(final) == "region.x")] <- 'region'
+      }
+
   } else {
     # NA data case
     final <- data.frame(
@@ -211,6 +215,10 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       readiness=readiness,
       scale=scale
     )
+
+    if (any(names(final) == "region.y")) {
+      names(final)[which(names(final) == "region.x")] <- 'region'
+    }
   }
 
 
