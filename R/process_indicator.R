@@ -14,8 +14,6 @@
 #' @param areaID Character. The name of the column in `areas` and `data` used to
 #'   match records to geographic areas.
 #' @param indicator Character. Indicator name or short description.
-#' @param rationale Character. Rationale for including this indicator (why it
-#'   matters for conservation objectives).
 #' @param units Character. Units of the indicator (e.g., "kg/ha", "% cover").
 #' @param type Character. Type of indicator (e.g., "biological", "habitat",
 #'   "climate").
@@ -37,17 +35,32 @@
 #'   values are better).
 #' @param climate_expectation Character. Expected effect of climate change on this
 #'   indicator (e.g., `"increase"`, `"decrease"`, `"stable"`).
-#' @param plot Logical. If `TRUE`, generates indicator-specific plots (time-series,
-#'   violin plots, maps, etc.).
-#'
 #' @param objectives A character string specifying which conservation or
 #'   management objectives the indicator informs. Please directly copy and paste
 #'   the objective from the objectives.xlsx. (See examples)
 #'
 #' @param readiness a character argument that is either 'Ready', 'Readily Available',
+#' @param indicator_var_name
+#' @param PPTID
+#' @param source
+#' @param project_short_title
+#' @param climate
+#' @param design_target
+#' @param crs
+#' @param latitude
+#' @param longitude
+#' @param year
+#' @param other_nest_variables
+#' @param regionID
+#' @param plot_type
+#' @param bin_width
+#' @param plot_lm
+#' @param plot_lm_se
+#' @param control_polygon
+#' @param indicator_rationale
+#' @param bin_rationale
+#' @param theme
 #' 'Not currently collected', 'Conceptual', or 'Unknown'.
-#' @param ... Additional arguments passed to internal functions.
-#'
 #' @return A data frame (tibble) with one row per area and indicator, containing:
 #'   \itemize{
 #'     \item \code{areaID}, \code{indicator}, \code{score}, \code{status},
@@ -101,7 +114,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                               latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA,
                               areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE,
                               control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA, objectives=NA,
-                              readiness="Ready", scale='site'){
+                              readiness="Ready", scale='site', theme = NA){
 
   if ("map-species" %in% plot_type) {
     if (all(is.na(other_nest_variables))) {
