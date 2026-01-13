@@ -59,8 +59,11 @@
 #' @param control_polygon
 #' @param indicator_rationale
 #' @param bin_rationale
-#' @param theme
-#' 'Not currently collected', 'Conceptual', or 'Unknown'.
+#' @param theme a character string of length 1 of either "Ocean Conditions",
+#' "Ocean Structure and Movement","Primary Production","Secondary Production",
+#' "Marine Mammals and Other Top Predators", "Trophic Structure and Function",
+#' "Benthic Environment", "Fish and Fishery Resources",
+#' or "Anthropogenic Pressure and Impacts"
 #' @return A data frame (tibble) with one row per area and indicator, containing:
 #'   \itemize{
 #'     \item \code{areaID}, \code{indicator}, \code{score}, \code{status},
@@ -93,8 +96,10 @@
 #'   scoring = "desired trend",
 #'   direction = "positive",
 #'   climate_expectation = "increase",
-#'   plot = TRUE,
-#'   objectives=c("Minimize aquaculture escapes", "Conserve 30% of Land, Waters, and Seas")
+#'   plot = 'map',
+#'   objectives=c("Minimize aquaculture escapes", "Conserve 30% of Land, Waters, and Seas"),
+#'   scale='site',
+#'   theme='Fish and Fishery Resources'
 #' )
 #' }
 #' @importFrom dplyr case_when select rename mutate
@@ -141,9 +146,28 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
   if(is.na(bin_rationale)) {
-
     stop("Must provide a bin_rationale argument")
   }
+  valid_themes <- c(
+    "Ocean Conditions",
+    "Ocean Structure and Movement",
+    "Primary Production",
+    "Secondary Production",
+    "Marine Mammals and Other Top Predators",
+    "Trophic Structure and Function",
+    "Benthic Environment",
+    "Fish and Fishery Resources",
+    "Anthropogenic Pressure and Impacts"
+  )
+
+  if (is.na(theme) || !theme %in% valid_themes) {
+    stop(paste0("Must provide a theme argument of either", paste0(valid_themes, collapse=", ")))
+
+  }
+  if (!(length(theme) == 1)) {
+    stop("Can only provide one theme.")
+  }
+
 
   if (inherits(data, "stars")) {
     dataisna <- all(is.na(unclass(data[[1]])))
@@ -196,7 +220,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       mutate(plot = pmap(list(data,indicator,units,areaID), function(data, indicator, units,id) plot_indicator(data=data,indicator=indicator,units=units,id=id, plot_type=plot_type, year=year, indicator_var_name=indicator_var_name, scoring=scoring, areaID=!!areaID, areas=areas, bin_width=bin_width)
       ))  |>
         mutate(readiness=readiness,
-               scale=coalesce(scale, !!scale))
+               scale=coalesce(scale, !!scale),
+               theme=theme)
 
       if (any(names(final) == "region.y")) {
         names(final)[which(names(final) == "region.x")] <- 'region'
@@ -226,7 +251,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       status_statement = "TBD",
       quality_statement = "TBD",
       readiness=readiness,
-      scale=scale
+      scale=scale,
+      theme=theme
     )
 
     if (any(names(final) == "region.y")) {
@@ -240,14 +266,10 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     "areaID", "region", "indicator", "type", "units", "scoring",
     "PPTID", "project_short_title", "climate", "design_target", "data",
     "score", "status_statement", "trend_statement","quality_statement", "source", "climate_expectation",
-    "indicator_rationale", "objectives", "bin_rationale", "plot", "readiness", "scale"
+    "indicator_rationale", "objectives", "bin_rationale", "plot", "readiness", "scale", "theme"
   )
 
   final <- final[ , desired_order]
-
-
-
-
 
   return(as_tibble(final))
 }

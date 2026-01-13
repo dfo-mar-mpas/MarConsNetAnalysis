@@ -20,7 +20,7 @@
 #' # FIXME placeholder
 #' }
 ind_placeholder <- function(ind_name = "placeholder",
-                            areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA, scale='site') {
+                            areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA, scale='site', theme=NA) {
   #browser()
 
   if (is.na(readiness)) {
@@ -56,7 +56,8 @@ ind_placeholder <- function(ind_name = "placeholder",
     bin_rationale = "FIXME",
     plot = rep(list(NULL), n),    # list-column of NULL
     readiness=readiness,
-    scale=scale
+    scale=scale,
+    theme=theme
   )
 
   return(x)
