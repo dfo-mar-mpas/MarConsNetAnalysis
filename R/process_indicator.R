@@ -1,23 +1,22 @@
-#' Process ecological or environmental indicator data
+#' Process, Score, and Plot an Ecological Indicator
 #'
-#' This function standardizes, scores, summarizes, and generates plots for
-#' ecological or environmental indicator datasets for use in monitoring,
-#' reporting, and visualization. It supports different data types (tabular,
-#' spatial, raster) and scoring methods (e.g., desired trend, representation,
-#' control-site comparison).
+#' Processes raw indicator data into a standardized, scored, and plot-ready
+#' indicator object suitable for site- and region-level reporting. This function
+#' validates metadata, applies scoring logic, nests data by area, generates plots,
+#' and returns a tidy tibble with indicator summaries and visualizations.
 #'
-#' @param data A data frame or `sf` object containing indicator data. Must include
-#'   at minimum columns for year, value, and an identifier for spatial location
-#'   (e.g., area ID, site, or coordinates).
-#' @param areas An `sf` polygon object defining the areas of interest (e.g.,
-#'   conservation areas, regions). Used for spatial joins and reporting.
-#' @param areaID Character. The name of the column in `areas` and `data` used to
-#'   match records to geographic areas.
-#' @param indicator Character. Indicator name or short description.
-#' @param units Character. Units of the indicator (e.g., "kg/ha", "% cover").
-#' @param type Character. Type of indicator (e.g., "biological", "habitat",
-#'   "climate").
-#' @param scale a character string of either 'site' or 'network'
+#' The function supports time-series, spatial, and species-mapping indicators,
+#' integrates climate and design-target logic, and enforces required metadata
+#' (e.g., rationale, theme, readiness).
+#'
+#' @param data A data frame or `stars` object containing indicator observations.
+#'   May be `NA` to create a placeholder indicator record.
+#' @param indicator_var_name Character. Name of the column in `data` containing
+#'   the indicator values.
+#' @param indicator Character. Human-readable indicator name.
+#' @param type Character. Instrument type used to collect the data
+#' (e.g. Ecosystem Trawl Survey).
+#' @param units Character. Units of measurement.
 #' @param scoring Character. Method used to score the indicator. Options include:
 #'   \itemize{
 #'     \item `"desired trend"` – Uses regression to score based on increase,
@@ -31,77 +30,58 @@
 #'     \item `"control site comparison"` – Compares trends inside vs. outside
 #'       managed areas.
 #'   }
-#' @param direction Character. If `"inverse"`, scores are reversed (e.g., lower
-#'   values are better).
-#' @param climate_expectation Character. Expected effect of climate change on this
-#'   indicator (e.g., `"increase"`, `"decrease"`, `"stable"`).
-#' @param objectives A character string specifying which conservation or
-#'   management objectives the indicator informs. Please directly copy and paste
-#'   the objective from the objectives.xlsx. (See examples)
-#'
-#' @param readiness a character argument that is either 'Ready', 'Readily Available',
-#' @param indicator_var_name
-#' @param PPTID
-#' @param source
-#' @param project_short_title
-#' @param climate
-#' @param design_target
-#' @param crs
-#' @param latitude
-#' @param longitude
-#' @param year
-#' @param other_nest_variables
-#' @param regionID
-#' @param plot_type
-#' @param bin_width
-#' @param plot_lm
-#' @param plot_lm_se
-#' @param control_polygon
-#' @param indicator_rationale
-#' @param bin_rationale
+#' @param direction Character. Direction of desired change for scoring.
+#'   Defaults to `"normal"`.
+#' @param PPTID Character or numeric. Unique indicator or project identifier in
+#' the project planning tool (if internal to DFO).
+#' @param source Character. Data source description.
+#' @param project_short_title Character. Short project title associated with
+#'   the project planning tool (if internal to DFO).
+#' @param climate Logical. Whether this is a climate-related indicator.
+#' @param design_target Logical. Whether the indicator has a design target.
+#' @param crs Integer. Coordinate reference system EPSG code. Defaults to 4326.
+#' @param latitude Character. Name of latitude column in dataset.
+#' @param longitude Character. Name of longitude column in dataset.
+#' @param year Character. Name of year column in dataset.
+#' @param other_nest_variables Character vector. Additional grouping variables
+#'   required for nesting (e.g., `"subclass"` for species maps).
+#' @param areas A spatial or tabular object defining assessment areas.
+#' @param areaID Character. Name of the area identifier column in `areas`.
+#' @param regionID Character. Name of the region identifier column in `areas`.
+#' @param plot_type Character. Plot type(s) to generate
+#'   (e.g., `"time-series"`, `"map-species"`).
+#' @param bin_width Numeric. Bin width used for plotting or scoring.
+#' @param plot_lm Logical. Whether to plot a linear trend.
+#' @param plot_lm_se Logical. Whether to plot confidence intervals for trends.
+#' @param control_polygon Optional spatial polygon used for control comparisons.
+#' @param climate_expectation Character. Expected climate response
+#'   (required if `climate = TRUE`).
+#' @param indicator_rationale Character. Scientific rationale for the indicator
+#'   (required).
+#' @param bin_rationale Character. Rationale for binning or thresholds (required).
+#' @param objectives Character vector. Conservation or management objectives
+#'   associated with the indicator.
+#' @param readiness Character. Indicator readiness category. Must be one of
+#'   `"Ready"`, `"Readily Available"`, `"Not currently collected"`,
+#'   `"Conceptual"`, or `"Unknown"`.
+#' @param scale Character. Assessment scale (e.g., `"site"`, `"region-site"`).
 #' @param theme a character string of length 1 of either "Ocean Conditions",
 #' "Ocean Structure and Movement","Primary Production","Secondary Production",
 #' "Marine Mammals and Other Top Predators", "Trophic Structure and Function",
 #' "Benthic Environment", "Fish and Fishery Resources",
 #' or "Anthropogenic Pressure and Impacts"
-#' @return A data frame (tibble) with one row per area and indicator, containing:
-#'   \itemize{
-#'     \item \code{areaID}, \code{indicator}, \code{score}, \code{status},
-#'       \code{trend}, \code{units}, \code{type}, \code{rationale}
-#'     \item Plain-language \code{status_statement} and \code{trend_statement}
-#'     \item If `plot = TRUE`, a list-column of ggplot objects
-#'   }
+#' @param SME subject matter expert for the data/ indicator (e.g. John Doe)
 #'
 #' @details
-#' The function performs the following steps:
-#' \enumerate{
-#'   \item Validates inputs and joins data with `areas`.
-#'   \item Nests data by area and indicator.
-#'   \item Applies the specified `scoring` method.
-#'   \item Generates plain-language narrative statements about status and trend.
-#'   \item Optionally produces plots for visualization.
-#' }
+#' The function performs extensive validation of metadata and arguments.
+#' Climate indicators require a `climate_expectation`. Species mapping plots
+#' require `other_nest_variables` including `"subclass"`.
 #'
-#' @examples
-#' \dontrun{
-#' # Example with a data frame of biomass values
-#' results <- process_indicator(
-#'   data = biomass_df,
-#'   areas = mpa_polygons,
-#'   areaID = "site_id",
-#'   indicator = "Biomass",
-#'   rationale = "Biomass reflects ecosystem productivity",
-#'   units = "kg/ha",
-#'   type = "biological",
-#'   scoring = "desired trend",
-#'   direction = "positive",
-#'   climate_expectation = "increase",
-#'   plot = 'map',
-#'   objectives=c("Minimize aquaculture escapes", "Conserve 30% of Land, Waters, and Seas"),
-#'   scale='site',
-#'   theme='Fish and Fishery Resources'
-#' )
-#' }
+#' When valid data are provided, indicator values are assessed using
+#' `assess_indicator()`, joined to the provided `areas`, and plotted using
+#' `plot_indicator()`. When all data are `NA`, a placeholder indicator record
+#' is returned with status fields set to `"TBD"`.
+#'
 #' @importFrom dplyr case_when select rename mutate
 #' @importFrom purrr map map_dbl
 #' @importFrom sf st_as_sf st_join st_transform st_difference
@@ -112,14 +92,74 @@
 #' @importFrom units set_units
 #' @importFrom tibble as_tibble
 #' @importFrom patchwork wrap_plots
+#'
+#'
+#' @examples
+#' \dontrun{
+#' # Example indicator data
+#' indicator_data <- data.frame(
+#'   year = rep(2015:2020, times = 2),
+#'   latitude = runif(12, 44, 46),
+#'   longitude = runif(12, -62, -60),
+#'   value = rnorm(12, mean = 10, sd = 2),
+#'   area = rep(c("Site A", "Site B"), each = 6)
+#' )
+#'
+#' # Example areas table
+#' areas <- data.frame(
+#'   NAME_E = c("Site A", "Site B"),
+#'   region = c("Region 1", "Region 1")
+#' )
+#'
+#' # Process a time-series indicator
+#' result <- process_indicator(
+#'   data = indicator_data,
+#'   indicator_var_name = "value",
+#'   indicator = "Mean Bottom Temperature",
+#'   type = "Physical",
+#'   units = "°C",
+#'   scoring = "trend",
+#'   direction = "increasing",
+#'   PPTID = "PPT-001",
+#'   source = "Example Monitoring Program",
+#'   project_short_title = "Demo Project",
+#'   climate = TRUE,
+#'   climate_expectation = "Expected to increase under climate change",
+#'   indicator_rationale = "Temperature influences species distribution and ecosystem function.",
+#'   bin_rationale = "Bins reflect ecologically meaningful thresholds.",
+#'   objectives = c("Track warming trends", "Support climate reporting"),
+#'   areas = areas,
+#'   areaID = "NAME_E",
+#'   regionID = "region",
+#'   plot_type = "time-series",
+#'   readiness = "Ready",
+#'   scale = "site",
+#'   theme = "Ocean Conditions"
+#' )
+#'
+#' result
+#' }
+#'
+#' @return A tibble with one row per area containing:
+#' \itemize{
+#'   \item indicator metadata (name, type, units, theme, readiness)
+#'   \item scoring outputs (score, trend, status, quality statements)
+#'   \item nested data and plots
+#' }
+#'
+#' @seealso
+#' \code{\link{assess_indicator}},
+#' \code{\link{plot_indicator}}
+#'
 #' @export
+
 
 process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, direction = "normal",
                               PPTID = NA, source=NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326,
                               latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA,
                               areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE,
                               control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA, objectives=NA,
-                              readiness="Ready", scale='site', theme = NA){
+                              readiness="Ready", scale='site', theme = NA, SME=NA){
 
   if ("map-species" %in% plot_type) {
     if (all(is.na(other_nest_variables))) {
@@ -134,6 +174,10 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     if(is.na(climate_expectation)) {
       stop("Must provide a climate_expectation argument for climate indicators.")
     }
+  }
+
+  if (is.na(SME)) {
+    stop("Must include a SME (Subject Matter Expert) argument")
   }
 
   if (!(readiness %in% c('Ready', 'Readily Available','Not currently collected','Conceptual', 'Unknown'))) {
@@ -166,6 +210,10 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
   }
   if (!(length(theme) == 1)) {
     stop("Can only provide one theme.")
+  }
+
+  if (is.na(type)) {
+    stop("Must include a type argument")
   }
 
 
@@ -221,7 +269,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       ))  |>
         mutate(readiness=readiness,
                scale=coalesce(scale, !!scale),
-               theme=theme)
+               theme=theme,
+               SME=SME)
 
       if (any(names(final) == "region.y")) {
         names(final)[which(names(final) == "region.x")] <- 'region'
@@ -252,7 +301,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       quality_statement = "TBD",
       readiness=readiness,
       scale=scale,
-      theme=theme
+      theme=theme,
+      SME=SME
     )
 
     if (any(names(final) == "region.y")) {
@@ -266,7 +316,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     "areaID", "region", "indicator", "type", "units", "scoring",
     "PPTID", "project_short_title", "climate", "design_target", "data",
     "score", "status_statement", "trend_statement","quality_statement", "source", "climate_expectation",
-    "indicator_rationale", "objectives", "bin_rationale", "plot", "readiness", "scale", "theme"
+    "indicator_rationale", "objectives", "bin_rationale", "plot", "readiness", "scale", "theme", "SME"
   )
 
   final <- final[ , desired_order]

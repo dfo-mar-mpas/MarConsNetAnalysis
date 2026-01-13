@@ -11,6 +11,12 @@
 #' @param source indicates where data comes from
 #' @param objectives indicates the management objective an indicator informs
 #' @param site a character string of either 'site' or 'network'
+#' @param theme a character string of length 1 of either "Ocean Conditions",
+#' "Ocean Structure and Movement","Primary Production","Secondary Production",
+#' "Marine Mammals and Other Top Predators", "Trophic Structure and Function",
+#' "Benthic Environment", "Fish and Fishery Resources",
+#' or "Anthropogenic Pressure and Impacts"
+#' @param SME subject matter expert for the data/ indicator (e.g. John Doe)
 #'
 #' @return data.frame
 #' @export
@@ -20,7 +26,7 @@
 #' # FIXME placeholder
 #' }
 ind_placeholder <- function(ind_name = "placeholder",
-                            areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA, scale='site', theme=NA) {
+                            areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA, scale='site', theme=NA, SME=NA) {
   #browser()
 
   if (is.na(readiness)) {
@@ -57,7 +63,8 @@ ind_placeholder <- function(ind_name = "placeholder",
     plot = rep(list(NULL), n),    # list-column of NULL
     readiness=readiness,
     scale=scale,
-    theme=theme
+    theme=theme,
+    SME=SME
   )
 
   return(x)
