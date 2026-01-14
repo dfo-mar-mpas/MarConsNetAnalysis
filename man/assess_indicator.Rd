@@ -28,15 +28,16 @@ assess_indicator(
 )
 }
 \arguments{
-\item{data}{A data frame or \code{sf} object containing indicator data. Must include
-at minimum columns for year, value, and an identifier for spatial location
-(e.g., area ID, site, or coordinates).}
+\item{data}{A data frame or \code{stars} object containing indicator observations.
+May be \code{NA} to create a placeholder indicator record.}
 
 \item{scoring}{Character. Method used to score the indicator. Options include:
 \itemize{
 \item \code{"desired trend"} – Uses regression to score based on increase,
 decrease, or stability.
-\item \code{"representation"} – Scores based on \% overlap of feature within
+\item \code{"representation"} – Scores based on number of features that
+intersect with a protected area.
+\item \code{"coverage"} – Scores based on \% overlap of a feature within
 protected areas.
 \item \code{"median"} – Uses median value of raster or continuous data, rescaled
 to 0–100.
@@ -44,21 +45,47 @@ to 0–100.
 managed areas.
 }}
 
-\item{direction}{Character. If \code{"inverse"}, scores are reversed (e.g., lower
-values are better).}
+\item{direction}{Character. Direction of desired change for scoring.
+Defaults to \code{"normal"}.}
 
-\item{areas}{An \code{sf} polygon object defining the areas of interest (e.g.,
-conservation areas, regions). Used for spatial joins and reporting.}
+\item{areas}{A spatial or tabular object defining assessment areas.}
 
-\item{areaID}{Character. The name of the column in \code{areas} and \code{data} used to
-match records to geographic areas.}
+\item{year}{Character. Name of year column in dataset.}
 
-\item{type}{Character. Type of indicator (e.g., "biological", "habitat",
-"climate").}
+\item{indicator_var_name}{Character. Name of the column in \code{data} containing
+the indicator values.}
 
-\item{units}{Character. Units of the indicator (e.g., "kg/ha", "\% cover").}
+\item{areaID}{Character. Name of the area identifier column in \code{areas}.}
 
-\item{indicator}{Character. Indicator name or short description.}
+\item{other_nest_variables}{Character vector. Additional grouping variables
+required for nesting (e.g., \code{"subclass"} for species maps).}
+
+\item{type}{Character. Instrument type used to collect the data
+(e.g. Ecosystem Trawl Survey).}
+
+\item{units}{Character. Units of measurement.}
+
+\item{PPTID}{Character or numeric. Unique indicator or project identifier in
+the project planning tool (if internal to DFO).}
+
+\item{project_short_title}{Character. Short project title associated with
+the project planning tool (if internal to DFO).}
+
+\item{climate}{Logical. Whether this is a climate-related indicator.}
+
+\item{design_target}{Logical. Whether the indicator has a design target.}
+
+\item{latitude}{Character. Name of latitude column in dataset.}
+
+\item{longitude}{Character. Name of longitude column in dataset.}
+
+\item{crs}{Integer. Coordinate reference system EPSG code. Defaults to 4326.}
+
+\item{indicator}{Character. Human-readable indicator name.}
+
+\item{control_polygon}{Optional spatial polygon used for control comparisons.}
+
+\item{regionID}{Character. Name of the region identifier column in \code{areas}.}
 }
 \description{
 Title

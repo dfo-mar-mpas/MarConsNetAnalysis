@@ -11,7 +11,9 @@ ind_placeholder(
   readiness = NA,
   source = NA,
   objectives = NA,
-  scale = "site"
+  scale = "site",
+  theme = NA,
+  SME = NA
 )
 }
 \arguments{
@@ -29,6 +31,14 @@ Available', 'Not currently collected', 'Conceptual', or 'Unknown'.}
 \item{source}{indicates where data comes from}
 
 \item{objectives}{indicates the management objective an indicator informs}
+
+\item{theme}{a character string of length 1 of either "Ocean Conditions",
+"Ocean Structure and Movement","Primary Production","Secondary Production",
+"Marine Mammals and Other Top Predators", "Trophic Structure and Function",
+"Benthic Environment", "Fish and Fishery Resources",
+or "Anthropogenic Pressure and Impacts"}
+
+\item{SME}{subject matter expert for the data/ indicator (e.g. John Doe)}
 
 \item{site}{a character string of either 'site' or 'network'}
 }

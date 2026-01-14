@@ -21,17 +21,27 @@ plot_indicator(
 \arguments{
 \item{data}{data processed in \code{assess_indicator()}}
 
-\item{indicator}{Character. Indicator name or short description.}
+\item{indicator}{Character. Human-readable indicator name.}
 
-\item{units}{Character. Units of the indicator (e.g., "kg/ha", "\% cover").}
+\item{units}{Character. Units of measurement.}
 
 \item{id}{Equivalent to \code{areaID} in \code{\link[=process_indicator]{process_indicator()}}}
+
+\item{plot_type}{Character. Plot type(s) to generate
+(e.g., \code{"time-series"}, \code{"map-species"}).}
+
+\item{year}{Character. Name of year column in dataset.}
+
+\item{indicator_var_name}{Character. Name of the column in \code{data} containing
+the indicator values.}
 
 \item{scoring}{Character. Method used to score the indicator. Options include:
 \itemize{
 \item \code{"desired trend"} – Uses regression to score based on increase,
 decrease, or stability.
-\item \code{"representation"} – Scores based on \% overlap of feature within
+\item \code{"representation"} – Scores based on number of features that
+intersect with a protected area.
+\item \code{"coverage"} – Scores based on \% overlap of a feature within
 protected areas.
 \item \code{"median"} – Uses median value of raster or continuous data, rescaled
 to 0–100.
@@ -39,11 +49,11 @@ to 0–100.
 managed areas.
 }}
 
-\item{areaID}{Character. The name of the column in \code{areas} and \code{data} used to
-match records to geographic areas.}
+\item{areaID}{Character. Name of the area identifier column in \code{areas}.}
 
-\item{areas}{An \code{sf} polygon object defining the areas of interest (e.g.,
-conservation areas, regions). Used for spatial joins and reporting.}
+\item{areas}{A spatial or tabular object defining assessment areas.}
+
+\item{bin_width}{Numeric. Bin width used for plotting or scoring.}
 }
 \value{
 a plot

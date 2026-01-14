@@ -2,7 +2,7 @@
 % Please edit documentation in R/process_indicator.R
 \name{process_indicator}
 \alias{process_indicator}
-\title{Process ecological or environmental indicator data}
+\title{Process, Score, and Plot an Ecological Indicator}
 \usage{
 process_indicator(
   data,
@@ -35,26 +35,32 @@ process_indicator(
   bin_rationale = NA,
   objectives = NA,
   readiness = "Ready",
-  scale = "site"
+  scale = "site",
+  theme = NA,
+  SME = NA
 )
 }
 \arguments{
-\item{data}{A data frame or \code{sf} object containing indicator data. Must include
-at minimum columns for year, value, and an identifier for spatial location
-(e.g., area ID, site, or coordinates).}
+\item{data}{A data frame or \code{stars} object containing indicator observations.
+May be \code{NA} to create a placeholder indicator record.}
 
-\item{indicator}{Character. Indicator name or short description.}
+\item{indicator_var_name}{Character. Name of the column in \code{data} containing
+the indicator values.}
 
-\item{type}{Character. Type of indicator (e.g., "biological", "habitat",
-"climate").}
+\item{indicator}{Character. Human-readable indicator name.}
 
-\item{units}{Character. Units of the indicator (e.g., "kg/ha", "\% cover").}
+\item{type}{Character. Instrument type used to collect the data
+(e.g. Ecosystem Trawl Survey).}
+
+\item{units}{Character. Units of measurement.}
 
 \item{scoring}{Character. Method used to score the indicator. Options include:
 \itemize{
 \item \code{"desired trend"} – Uses regression to score based on increase,
 decrease, or stability.
-\item \code{"representation"} – Scores based on \% overlap of feature within
+\item \code{"representation"} – Scores based on number of features that
+intersect with a protected area.
+\item \code{"coverage"} – Scores based on \% overlap of a feature within
 protected areas.
 \item \code{"median"} – Uses median value of raster or continuous data, rescaled
 to 0–100.
@@ -62,77 +68,150 @@ to 0–100.
 managed areas.
 }}
 
-\item{direction}{Character. If \code{"inverse"}, scores are reversed (e.g., lower
-values are better).}
+\item{direction}{Character. Direction of desired change for scoring.
+Defaults to \code{"normal"}.}
 
-\item{areas}{An \code{sf} polygon object defining the areas of interest (e.g.,
-conservation areas, regions). Used for spatial joins and reporting.}
+\item{PPTID}{Character or numeric. Unique indicator or project identifier in
+the project planning tool (if internal to DFO).}
 
-\item{areaID}{Character. The name of the column in \code{areas} and \code{data} used to
-match records to geographic areas.}
+\item{source}{Character. Data source description.}
 
-\item{climate_expectation}{Character. Expected effect of climate change on this
-indicator (e.g., \code{"increase"}, \code{"decrease"}, \code{"stable"}).}
+\item{project_short_title}{Character. Short project title associated with
+the project planning tool (if internal to DFO).}
 
-\item{objectives}{A character string specifying which conservation or
-management objectives the indicator informs. Please directly copy and paste
-the objective from the objectives.xlsx. (See examples)}
+\item{climate}{Logical. Whether this is a climate-related indicator.}
 
-\item{readiness}{a character argument that is either 'Ready', 'Readily Available',
-'Not currently collected', 'Conceptual', or 'Unknown'.}
+\item{design_target}{Logical. Whether the indicator has a design target.}
 
-\item{scale}{a character string of either 'site' or 'network'}
+\item{crs}{Integer. Coordinate reference system EPSG code. Defaults to 4326.}
 
-\item{rationale}{Character. Rationale for including this indicator (why it
-matters for conservation objectives).}
+\item{latitude}{Character. Name of latitude column in dataset.}
 
-\item{plot}{Logical. If \code{TRUE}, generates indicator-specific plots (time-series,
-violin plots, maps, etc.).}
+\item{longitude}{Character. Name of longitude column in dataset.}
 
-\item{...}{Additional arguments passed to internal functions.}
+\item{year}{Character. Name of year column in dataset.}
+
+\item{other_nest_variables}{Character vector. Additional grouping variables
+required for nesting (e.g., \code{"subclass"} for species maps).}
+
+\item{areas}{A spatial or tabular object defining assessment areas.}
+
+\item{areaID}{Character. Name of the area identifier column in \code{areas}.}
+
+\item{regionID}{Character. Name of the region identifier column in \code{areas}.}
+
+\item{plot_type}{Character. Plot type(s) to generate
+(e.g., \code{"time-series"}, \code{"map-species"}).}
+
+\item{bin_width}{Numeric. Bin width used for plotting or scoring.}
+
+\item{plot_lm}{Logical. Whether to plot a linear trend.}
+
+\item{plot_lm_se}{Logical. Whether to plot confidence intervals for trends.}
+
+\item{control_polygon}{Optional spatial polygon used for control comparisons.}
+
+\item{climate_expectation}{Character. Expected climate response
+(required if \code{climate = TRUE}).}
+
+\item{indicator_rationale}{Character. Scientific rationale for the indicator
+(required).}
+
+\item{bin_rationale}{Character. Rationale for binning or thresholds (required).}
+
+\item{objectives}{Character vector. Conservation or management objectives
+associated with the indicator.}
+
+\item{readiness}{Character. Indicator readiness category. Must be one of
+\code{"Ready"}, \code{"Readily Available"}, \code{"Not currently collected"},
+\code{"Conceptual"}, or \code{"Unknown"}.}
+
+\item{scale}{Character. Assessment scale (e.g., \code{"site"}, \code{"region-site"}).}
+
+\item{theme}{a character string of length 1 of either "Ocean Conditions",
+"Ocean Structure and Movement","Primary Production","Secondary Production",
+"Marine Mammals and Other Top Predators", "Trophic Structure and Function",
+"Benthic Environment", "Fish and Fishery Resources",
+or "Anthropogenic Pressure and Impacts"}
+
+\item{SME}{subject matter expert for the data/ indicator (e.g. John Doe)}
 }
 \value{
-A data frame (tibble) with one row per area and indicator, containing:
+A tibble with one row per area containing:
 \itemize{
-\item \code{areaID}, \code{indicator}, \code{score}, \code{status},
-\code{trend}, \code{units}, \code{type}, \code{rationale}
-\item Plain-language \code{status_statement} and \code{trend_statement}
-\item If \code{plot = TRUE}, a list-column of ggplot objects
+\item indicator metadata (name, type, units, theme, readiness)
+\item scoring outputs (score, trend, status, quality statements)
+\item nested data and plots
 }
 }
 \description{
-This function standardizes, scores, summarizes, and generates plots for
-ecological or environmental indicator datasets for use in monitoring,
-reporting, and visualization. It supports different data types (tabular,
-spatial, raster) and scoring methods (e.g., desired trend, representation,
-control-site comparison).
+Processes raw indicator data into a standardized, scored, and plot-ready
+indicator object suitable for site- and region-level reporting. This function
+validates metadata, applies scoring logic, nests data by area, generates plots,
+and returns a tidy tibble with indicator summaries and visualizations.
 }
 \details{
-The function performs the following steps:
-\enumerate{
-\item Validates inputs and joins data with \code{areas}.
-\item Nests data by area and indicator.
-\item Applies the specified \code{scoring} method.
-\item Generates plain-language narrative statements about status and trend.
-\item Optionally produces plots for visualization.
-}
+The function supports time-series, spatial, and species-mapping indicators,
+integrates climate and design-target logic, and enforces required metadata
+(e.g., rationale, theme, readiness).
+
+The function performs extensive validation of metadata and arguments.
+Climate indicators require a \code{climate_expectation}. Species mapping plots
+require \code{other_nest_variables} including \code{"subclass"}.
+
+When valid data are provided, indicator values are assessed using
+\code{assess_indicator()}, joined to the provided \code{areas}, and plotted using
+\code{plot_indicator()}. When all data are \code{NA}, a placeholder indicator record
+is returned with status fields set to \code{"TBD"}.
 }
 \examples{
 \dontrun{
-# Example with a data frame of biomass values
-results <- process_indicator(
-  data = biomass_df,
-  areas = mpa_polygons,
-  areaID = "site_id",
-  indicator = "Biomass",
-  rationale = "Biomass reflects ecosystem productivity",
-  units = "kg/ha",
-  type = "biological",
-  scoring = "desired trend",
-  direction = "positive",
-  climate_expectation = "increase",
-  plot = TRUE,
-  objectives=c("Minimize aquaculture escapes", "Conserve 30\% of Land, Waters, and Seas")
+# Example indicator data
+indicator_data <- data.frame(
+  year = rep(2015:2020, times = 2),
+  latitude = runif(12, 44, 46),
+  longitude = runif(12, -62, -60),
+  value = rnorm(12, mean = 10, sd = 2),
+  area = rep(c("Site A", "Site B"), each = 6)
 )
+
+# Example areas table
+areas <- data.frame(
+  NAME_E = c("Site A", "Site B"),
+  region = c("Region 1", "Region 1")
+)
+
+# Process a time-series indicator
+result <- process_indicator(
+  data = indicator_data,
+  indicator_var_name = "value",
+  indicator = "Mean Bottom Temperature",
+  type = "Physical",
+  units = "°C",
+  scoring = "trend",
+  direction = "increasing",
+  PPTID = "PPT-001",
+  source = "Example Monitoring Program",
+  project_short_title = "Demo Project",
+  climate = TRUE,
+  climate_expectation = "Expected to increase under climate change",
+  indicator_rationale = "Temperature influences species distribution and ecosystem function.",
+  bin_rationale = "Bins reflect ecologically meaningful thresholds.",
+  objectives = c("Track warming trends", "Support climate reporting"),
+  areas = areas,
+  areaID = "NAME_E",
+  regionID = "region",
+  plot_type = "time-series",
+  readiness = "Ready",
+  scale = "site",
+  theme = "Ocean Conditions"
+)
+
+result
 }
+
+}
+\seealso{
+\code{\link{assess_indicator}},
+\code{\link{plot_indicator}}
 }

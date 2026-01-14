@@ -320,7 +320,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
   )
 
   final <- final[ , desired_order]
-
-  return(as_tibble(final))
+  return(inherit_from_dependencies(as_tibble(final)), n = 2, attribute = FALSE)
 }
 
