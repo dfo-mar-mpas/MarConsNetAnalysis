@@ -188,6 +188,10 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     stop("Must provide a indicator_rationale argument")
   }
 
+  if(is.na(project_short_title)) {
+    stop("Must provide a project_short_title argument")
+  }
+
 
   if(is.na(bin_rationale)) {
     stop("Must provide a bin_rationale argument")
