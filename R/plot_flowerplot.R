@@ -106,8 +106,10 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
            bg=dplyr::if_else(is.nan(score),"#EDEDED","white"))
   data$score[which(is.nan(data$score))] <- NA
 
+  # browser()
+
   grouped_df <- calc_group_score(df = rawdata,
-                                 grouping_var = "grouping",
+                                 grouping_var = c("labels","grouping"),
                                  score_var = "score",
                                  weight_var = "weight") |>
     mutate(y=max_score+scalerange*.5,
@@ -117,6 +119,55 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                          angle-180,
                          angle)
     )
+
+  wrap_label <- function(text) {
+    # Convert to character if it's a factor
+    text <- as.character(text)
+
+    words <- strsplit(text, " ")[[1]]
+    n_words <- length(words)
+
+    # If only 1 word, no wrapping needed
+    if (n_words == 1) {
+      return(text)
+    }
+
+    # If 2 words, always put on separate lines
+    if (n_words == 2) {
+      return(paste(words, collapse = "\n"))
+    }
+
+    # Identify small words (<=4 chars)
+    word_lengths <- nchar(words)
+    is_small <- word_lengths <= 4
+
+    # Special case: if first word is small, treat it as long
+    if (is_small[1]) {
+      is_small[1] <- FALSE
+    }
+
+    # Strategy: Long words stand alone; small words cluster together
+    lines <- character()
+    i <- 1
+
+    while (i <= n_words) {
+      if (!is_small[i]) {
+        # Long word - put it on its own line
+        lines <- c(lines, words[i])
+        i <- i + 1
+      } else {
+        # Small word - gather consecutive small words
+        small_cluster <- character()
+        while (i <= n_words && is_small[i]) {
+          small_cluster <- c(small_cluster, words[i])
+          i <- i + 1
+        }
+        lines <- c(lines, paste(small_cluster, collapse = " "))
+      }
+    }
+
+    return(paste(lines, collapse = "\n"))
+  }
 
   p <- ggplot(data=data,aes(width = weight))+
     geom_crossbar(aes(x = pos, y = max_score-scalerange*1.5, ymax = max_score-scalerange*1.5, ymin = min_score,fill=calc_letter_grade(weighted.mean(score,weight,na.rm = TRUE))),color="transparent")+
@@ -147,7 +198,7 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                        x=min_score,
                        y=max_score-scalerange*1.5,
                        size=8)+
-    ggplot2::geom_text(aes(label=gsub(" ","\n",labels),
+    ggplot2::geom_text(aes(label=sapply(labels, wrap_label),
                            x=pos,
                            y=max_score+scalerange*.2),
                        size=2)+
