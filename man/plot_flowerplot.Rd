@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_flowerplot.R
 \name{plot_flowerplot}
 \alias{plot_flowerplot}
-\title{Plot a flowerplot}
+\title{Create a weighted indicator flower plot}
 \usage{
 plot_flowerplot(
   df,
@@ -18,56 +18,76 @@ plot_flowerplot(
 )
 }
 \arguments{
-\item{df}{data.frame with indicator scores, grouping, labels, and relative weight}
+\item{df}{A data frame containing indicator scores and weights. Must
+include columns referenced by \code{grouping}, \code{labels},
+\code{score}, \code{weight}, and optionally \code{area_name}.}
 
-\item{grouping}{character string for the name of the grouping column in \code{df}}
+\item{grouping}{Character string giving the column name used to group indicators
+(e.g. indicator category or theme).}
 
-\item{labels}{character string for the name of the labels column in \code{df}}
+\item{labels}{Character string giving the column name used as indicator labels.}
 
-\item{score}{character string for the name of the score column in \code{df}}
+\item{score}{Character string giving the column name containing numeric
+indicator scores.}
 
-\item{weight}{character string for the name of the weight column in \code{df}}
+\item{weight}{Character string giving the column name containing indicator
+weights. Weights are normalized internally to sum to 1.}
 
-\item{title}{Defaults to the unique value of the \code{area_name} column of the \code{df}, but can take any character value. Alternatively, use \code{FALSE} to avoid having a title.}
+\item{title}{Plot title. Defaults to the unique value of
+\code{df[["area_name"]]}. Set to \code{FALSE} to suppress the
+title.}
 
-\item{max_score}{numeric value for the maximum possible value of the scale (i.e. petal length). Default is 100}
+\item{max_score}{Numeric maximum value of the scoring scale.}
 
-\item{min_score}{numeric value for the minimum possible value of the scale (i.e. petal length). Default is 0}
+\item{min_score}{Numeric minimum value of the scoring scale.}
 
-\item{bintextsize}{numeric value for the size of the text in the bins. Default is 3}
+\item{bintextsize}{Numeric text size used for group labels in the outer ring.}
 
-\item{zeroline}{logical value to add a zero line to the plot. Default is \code{FALSE}}
+\item{zeroline}{Logical; if \code{TRUE}, adds a horizontal reference line at
+zero.}
 }
 \value{
-plot
+A \code{ggplot} object representing the flower plot.
 }
 \description{
-Plot a flowerplot
+Generates a radial "flower plot" visualization summarizing
+indicator scores using weighted segments and letter-grade
+classification. Individual indicators are displayed as petals,
+grouped into higher-level categories, with both indicator-level
+and group-level scores encoded by colour and radial extent.
+}
+\details{
+This plot is designed to communicate overall status and
+composition of indicators within a site, network, or region.
+
+Indicator-level scores are aggregated using weighted means and
+converted to letter grades via \code{calc_letter_grade()}.
+Group-level scores are computed by aggregating across indicators
+within each \code{grouping} category.
+
+The flower plot uses polar coordinates where:
+\itemize{
+\item Petal width represents indicator weight.
+\item Radial height represents indicator score.
+\item Colour represents letter-grade classification.
+}
+
+Indicator labels are automatically wrapped for readability,
+and missing scores are visually muted.
 }
 \examples{
-
-indicatorbins <- data.frame(grouping=rep(c("Biodiversity",
-                                           "Habitat",
-                                           "Productivity"),
-                                         times=c(3,5,3)),
-                            labels=c("Genetic Diversity",
-                                     "Species Diversity",
-                                     "Functional Diversity",
-
-                                     "Environmental Representativity",
-                                     "Key Fish Habitat",
-                                     "Connectivity",
-                                     "Uniqueness",
-                                     "Threats to Habitat",
-
-                                     "Biomass Metrics",
-                                     "Structure and Function",
-                                     "Threats to Productivity"),
-                            score=runif(11,55,100),
-                            weight=1,
-                            area_name = "Random Example MPA")
-
-plot_flowerplot(indicatorbins)
-
+\dontrun{
+# Create a flower plot summarizing indicator status
+plot_flowerplot(
+  df = indicator_scores,
+  grouping = "theme",
+  labels = "indicator_name",
+  score = "score",
+  weight = "weight",
+  title = "Example MPA",
+  max_score = 100,
+  min_score = 0
+)
+}
 
 }

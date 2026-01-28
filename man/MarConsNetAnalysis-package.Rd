@@ -4,11 +4,13 @@
 \name{MarConsNetAnalysis-package}
 \alias{MarConsNetAnalysis}
 \alias{MarConsNetAnalysis-package}
-\title{A Package for Analyzing MPA Data}
+\title{MarConsNetAnalysis: Indicator Assessment and Visualization for Marine Conservation Networks}
 \description{
-The \code{MarConsNetAnalysis} package is intended to analyze the
-real data  that was located and transformed using the
-\code{MarConsNetData} package.
+The \strong{MarConsNetAnalysis} package provides a comprehensive framework for \strong{assessing
+marine conservation network indicators}, supporting reproducible workflows
+for site-level, network-level, and regional monitoring programs. It enables
+scoring, visualization, and reporting of ecological, biological, and
+management indicators using standardized methods.
 }
 \seealso{
 Useful links:

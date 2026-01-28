@@ -2,7 +2,7 @@
 % Please edit documentation in R/aggregate_groups.R
 \name{aggregate_groups}
 \alias{aggregate_groups}
-\title{aggregate indicator values into bins or objectives}
+\title{Aggregate multiple groups into a single group}
 \usage{
 aggregate_groups(
   group_level,
@@ -24,10 +24,20 @@ aggregate_groups(
 \item{...}{group components (e.g. the indicator data.frames in the case of bins)}
 }
 \description{
-aggregate indicator values into bins or objectives
+Combines multiple data frames or tibbles representing different components
+into a single group-level data frame, applying optional weighting for
+aggregation.
+}
+\details{
+If the input data frames already contain a \code{weight} column, the function
+simply combines them, adds the group-level column, and removes duplicate
+rows (keeping \code{plot} columns intact). Otherwise, it assigns weights
+according to \code{weights_ratio}, normalizes them to sum to \code{weights_sum}, and
+tracks the original component name in a \code{target_name} column.
 }
 \examples{
-\dontrun{
-# FIXME placeholder
-}
+df1 <- tibble::tibble(areaID = c("A", "B"), score = c(80, 90))
+df2 <- tibble::tibble(areaID = c("A", "B"), score = c(70, 95))
+aggregate_groups("group", "CombinedGroup", weights_ratio = c(0.6, 0.4), df1, df2)
+
 }

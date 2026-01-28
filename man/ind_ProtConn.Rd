@@ -2,7 +2,7 @@
 % Please edit documentation in R/ind_ProtConn.R
 \name{ind_ProtConn}
 \alias{ind_ProtConn}
-\title{ProtConn}
+\title{Calculate the Protected Area Connectivity Index (ProtConn)}
 \usage{
 ind_ProtConn(
   distkm,
@@ -30,10 +30,38 @@ ind_ProtConn(
 \item{returns}{string describing what the function should return. By default, "PC", the function returns the ProtConn value. To return a data frame with the edge list of the network use "EL".}
 }
 \value{
-numeric
+If \code{returns = "PC"}, a numeric value representing the
+Protected Area Connectivity index (percentage) for the bioregion.
+If \code{returns = "EL"}, a data frame with columns:
+\describe{
+\item{\code{to}}{Target area name.}
+\item{\code{to_area}}{Target area size.}
+\item{\code{from}}{Source area name.}
+\item{\code{from_area}}{Source area size.}
+\item{\code{pstar}}{Maximum path probability connecting the two areas.}
+\item{\code{p}}{Direct dispersal probability from the distance kernel.}
+\item{\code{product}}{Weighted contribution to global connectivity.}
+}
 }
 \description{
-ProtConn
+Computes the connectivity of protected areas based on distances,
+dispersal kernels, and area sizes. The function uses a graph-based
+approach to estimate the probability of movement between protected
+areas, producing either a global connectivity index (PC) or an
+edge-level table of pairwise connection probabilities (EL).
+}
+\details{
+The function calculates a distance-based dispersal probability for
+each pair of areas using an exponential kernel:
+\deqn{p = 1 - \exp(-\log(2) \cdot dist / dkm)}
+Probabilities below \code{probcutoff} are treated as zero.
+
+The probability matrix is converted into an \pkg{igraph} object, and
+all simple paths up to \code{stepcutoff} steps are considered to
+compute the maximum connection probability (\code{pstar}) for each
+area pair. Edge-level products are weighted by the source and target
+area sizes to compute the global connectivity index:
+\deqn{PC = 100 \cdot \frac{\sqrt{\sum(product)}}{\sum(area(bioregion))}}
 }
 \examples{
 \dontrun{
@@ -44,4 +72,5 @@ areas <- data_CPCAD_areas(bioregion,zones=FALSE) |>
 distkm <- calc_in_sea_distance(cellsize=100000,bioregion,areas)
 PC <- ind_ProtConn(distkm,dkm=100, area=areas)
 }
+
 }

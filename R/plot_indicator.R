@@ -1,4 +1,11 @@
-#' Plot Indicator
+#' Generate indicator plots for visualization and reporting
+#'
+#' Creates one or more plots for a given indicator based on the
+#' specified plot types. Supported visualizations include
+#' time series, boxplots, violin plots, spatial maps, and
+#' community composition plots. When multiple plot types are
+#' requested, plots are combined into a single layout using
+#' \pkg{patchwork}.
 #'
 #' @inheritParams process_indicator
 #' @param data data processed in `assess_indicator()`

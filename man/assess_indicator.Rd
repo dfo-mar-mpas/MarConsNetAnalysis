@@ -2,7 +2,7 @@
 % Please edit documentation in R/assess_indicator.R
 \name{assess_indicator}
 \alias{assess_indicator}
-\title{Title}
+\title{Perform indicator scoring and assessment}
 \usage{
 assess_indicator(
   data,
@@ -27,66 +27,22 @@ assess_indicator(
   regionID
 )
 }
-\arguments{
-\item{data}{A data frame or \code{stars} object containing indicator observations.
-May be \code{NA} to create a placeholder indicator record.}
-
-\item{scoring}{Character. Method used to score the indicator. Options include:
-\itemize{
-\item \code{"desired trend"} – Uses regression to score based on increase,
-decrease, or stability.
-\item \code{"representation"} – Scores based on number of features that
-intersect with a protected area.
-\item \code{"coverage"} – Scores based on \% overlap of a feature within
-protected areas.
-\item \code{"median"} – Uses median value of raster or continuous data, rescaled
-to 0–100.
-\item \code{"control site comparison"} – Compares trends inside vs. outside
-managed areas.
-}}
-
-\item{direction}{Character. Direction of desired change for scoring.
-Defaults to \code{"normal"}.}
-
-\item{areas}{A spatial or tabular object defining assessment areas.}
-
-\item{year}{Character. Name of year column in dataset.}
-
-\item{indicator_var_name}{Character. Name of the column in \code{data} containing
-the indicator values.}
-
-\item{areaID}{Character. Name of the area identifier column in \code{areas}.}
-
-\item{other_nest_variables}{Character vector. Additional grouping variables
-required for nesting (e.g., \code{"subclass"} for species maps).}
-
-\item{type}{Character. Instrument type used to collect the data
-(e.g. Ecosystem Trawl Survey).}
-
-\item{units}{Character. Units of measurement.}
-
-\item{PPTID}{Character or numeric. Unique indicator or project identifier in
-the project planning tool (if internal to DFO).}
-
-\item{project_short_title}{Character. Short project title associated with
-the project planning tool (if internal to DFO).}
-
-\item{climate}{Logical. Whether this is a climate-related indicator.}
-
-\item{design_target}{Logical. Whether the indicator has a design target.}
-
-\item{latitude}{Character. Name of latitude column in dataset.}
-
-\item{longitude}{Character. Name of longitude column in dataset.}
-
-\item{crs}{Integer. Coordinate reference system EPSG code. Defaults to 4326.}
-
-\item{indicator}{Character. Human-readable indicator name.}
-
-\item{control_polygon}{Optional spatial polygon used for control comparisons.}
-
-\item{regionID}{Character. Name of the region identifier column in \code{areas}.}
-}
 \description{
-Title
+Calculates indicator scores and associated status and trend summaries
+for a given indicator dataset, based on a specified scoring method.
+}
+\details{
+This function supports multiple indicator scoring frameworks used in
+the MarConsNet analysis workflow, including:
+\itemize{
+\item \strong{trend‑based scoring} (linear regression over time),
+\item \strong{representation} (proportion of area or occurrences within MPAs),
+\item \strong{coverage} (coverage of features relative to conservation targets),
+\item \strong{median} (median value relative to maximum),
+\item \strong{control site comparisons} (difference inside vs outside MPAs).
+}
+
+The function returns a tibble with one row per area, including
+numeric scores (0–100), data summaries, and human‑readable
+status and trend statements.
 }

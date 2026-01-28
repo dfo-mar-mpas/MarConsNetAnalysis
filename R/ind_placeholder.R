@@ -1,4 +1,10 @@
-#' Create example FAKE data
+#' Create a placeholder indicator data frame
+#'
+#' Generates a standardized placeholder data frame for an indicator,
+#' suitable for initializing indicator structures when data are not
+#' yet available. This allows the MarConsNet framework to maintain
+#' consistent columns and metadata across sites or areas, even for
+#' indicators that are not yet collected or conceptual.
 #'
 #' @param ind_name An indicator name
 #' @param areas A data frame containing MPA names in both English and French as
@@ -23,7 +29,13 @@
 #'
 #' @examples
 #' \dontrun{
-#' # FIXME placeholder
+#' placeholder <- ind_placeholder(
+#'   ind_name = "Habitat Quality",
+#'   areas = MPAs,
+#'   readiness = "Conceptual",
+#'   objectives = c("Maintain biodiversity", "Protect habitat"),
+#'   scale = "site"
+#' )
 #' }
 ind_placeholder <- function(ind_name = "placeholder",
                             areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA, scale='site', theme=NA, SME=NA) {

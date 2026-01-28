@@ -2,7 +2,7 @@
 % Please edit documentation in R/calc_group_score.R
 \name{calc_group_score}
 \alias{calc_group_score}
-\title{Calculate group scores}
+\title{Calculate group scores recursively}
 \usage{
 calc_group_score(
   df,
@@ -12,42 +12,55 @@ calc_group_score(
 )
 }
 \arguments{
-\item{grouping_var}{character string for the name of the grouping column in \code{df}. Use \code{NULL} (default) to calculate the overall score.}
+\item{df}{data.frame containing the data}
+
+\item{grouping_var}{character vector for the name(s) of the grouping column(s) in \code{df}.
+Use \code{NULL} (default) to calculate the overall score. When multiple grouping variables
+are provided, the function recursively calculates scores from finest to coarsest granularity,
+with each level using the weighted scores from the previous level.}
 
 \item{score_var}{character string for the name of the score column in \code{df}}
 
 \item{weight_var}{character string for the name of the weight column in \code{df}}
 }
 \value{
-data.frame with group scores
+data.frame with group scores at all levels of hierarchy
 }
 \description{
-Calculate group scores
+Calculate group scores recursively
 }
 \examples{
-df <- data.frame(objective=rep(c("Biodiversity",
+df <- data.frame(region = rep(c("Atlantic", "Pacific"), each = 6),
+                 objective=rep(c("Biodiversity",
                                  "Habitat",
                                  "Productivity"),
-                               times=c(3,5,3)),
+                               times=4),
                  bins=c("Genetic Diversity",
                         "Species Diversity",
-                        "Functional Diversity",
-
                         "Environmental Representativity",
                         "Key Fish Habitat",
+                        "Biomass Metrics",
+                        "Structure and Function",
+                        "Functional Diversity",
                         "Connectivity",
                         "Uniqueness",
                         "Threats to Habitat",
+                        "Threats to Productivity",
+                        "Genetic Diversity"),
+                 score=runif(12,45,100),
+                 weight=1)
 
-                        "Biomass Metrics",
-                        "Structure and Function",
-                        "Threats to Productivity"),
-                 score=runif(11,45,100),
-                 weight=1,
-                 area_name = "Random Example MPA")
 # overall score
 overall <- calc_group_score(df)
 
-# group score
+# single group score
 group <- calc_group_score(df, grouping_var = "objective")
+
+# 2-level hierarchy (bins -> objective)
+# objective scores are weighted means of bin scores
+two_level <- calc_group_score(df, grouping_var = c("bins", "objective"))
+
+# 3-level hierarchy (bins -> objective -> region)
+# objective scores from bins, region scores from objectives
+three_level <- calc_group_score(df, grouping_var = c("bins", "objective", "region"))
 }

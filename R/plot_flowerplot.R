@@ -1,89 +1,94 @@
-#' Plot a flowerplot
+#' Create a weighted indicator flower plot
 #'
-#' @param df data.frame with indicator scores, grouping, labels, and relative weight
-#' @param grouping character string for the name of the grouping column in `df`
-#' @param labels character string for the name of the labels column in `df`
-#' @param score character string for the name of the score column in `df`
-#' @param max_score numeric value for the maximum possible value of the scale (i.e. petal length). Default is 100
-#' @param min_score numeric value for the minimum possible value of the scale (i.e. petal length). Default is 0
-#' @param weight character string for the name of the weight column in `df`
-#' @param title Defaults to the unique value of the `area_name` column of the `df`, but can take any character value. Alternatively, use `FALSE` to avoid having a title.
-#' @param bintextsize numeric value for the size of the text in the bins. Default is 3
-#' @param zeroline logical value to add a zero line to the plot. Default is `FALSE`
+#' Generates a radial "flower plot" visualization summarizing
+#' indicator scores using weighted segments and letter-grade
+#' classification. Individual indicators are displayed as petals,
+#' grouped into higher-level categories, with both indicator-level
+#' and group-level scores encoded by colour and radial extent.
 #'
-#' @return plot
+#' This plot is designed to communicate overall status and
+#' composition of indicators within a site, network, or region.
+#'
+#' @param df
+#' A data frame containing indicator scores and weights. Must
+#' include columns referenced by \code{grouping}, \code{labels},
+#' \code{score}, \code{weight}, and optionally \code{area_name}.
+#'
+#' @param grouping
+#' Character string giving the column name used to group indicators
+#' (e.g. indicator category or theme).
+#'
+#' @param labels
+#' Character string giving the column name used as indicator labels.
+#'
+#' @param score
+#' Character string giving the column name containing numeric
+#' indicator scores.
+#'
+#' @param weight
+#' Character string giving the column name containing indicator
+#' weights. Weights are normalized internally to sum to 1.
+#'
+#' @param title
+#' Plot title. Defaults to the unique value of
+#' \code{df[["area_name"]]}. Set to \code{FALSE} to suppress the
+#' title.
+#'
+#' @param max_score
+#' Numeric maximum value of the scoring scale.
+#'
+#' @param min_score
+#' Numeric minimum value of the scoring scale.
+#'
+#' @param bintextsize
+#' Numeric text size used for group labels in the outer ring.
+#'
+#' @param zeroline
+#' Logical; if \code{TRUE}, adds a horizontal reference line at
+#' zero.
+#'
+#' @details
+#' Indicator-level scores are aggregated using weighted means and
+#' converted to letter grades via \code{calc_letter_grade()}.
+#' Group-level scores are computed by aggregating across indicators
+#' within each \code{grouping} category.
+#'
+#' The flower plot uses polar coordinates where:
+#' \itemize{
+#'   \item Petal width represents indicator weight.
+#'   \item Radial height represents indicator score.
+#'   \item Colour represents letter-grade classification.
+#' }
+#'
+#' Indicator labels are automatically wrapped for readability,
+#' and missing scores are visually muted.
+#'
+#' @return
+#' A \code{ggplot} object representing the flower plot.
+#' @importFrom ggplot2 ggplot aes geom_crossbar geom_errorbar
+#'   geom_text coord_polar scale_x_continuous scale_y_continuous
+#'   scale_fill_manual scale_color_manual labs theme
+#' @importFrom dplyr arrange mutate if_else
 #' @importFrom RColorBrewer brewer.pal
-#' @importFrom dplyr if_else n
-#' @importFrom ggplot2 ggplot geom_bar ylim theme_void coord_flip guides scale_x_continuous scale_fill_manual scale_color_manual labs theme element_text element_blank element_line element_rect geom_text geom_hline geom_crossbar
-#' @export
 #'
 #' @examples
+#' \dontrun{
+#' # Create a flower plot summarizing indicator status
+#' plot_flowerplot(
+#'   df = indicator_scores,
+#'   grouping = "theme",
+#'   labels = "indicator_name",
+#'   score = "score",
+#'   weight = "weight",
+#'   title = "Example MPA",
+#'   max_score = 100,
+#'   min_score = 0
+#' )
+#' }
 #'
-#' indicatorbins <- data.frame(grouping=rep(c("Biodiversity",
-#'                                            "Habitat",
-#'                                            "Productivity"),
-#'                                          times=c(3,5,3)),
-#'                             labels=c("Genetic Diversity",
-#'                                      "Species Diversity",
-#'                                      "Functional Diversity",
-#'
-#'                                      "Environmental Representativity",
-#'                                      "Key Fish Habitat",
-#'                                      "Connectivity",
-#'                                      "Uniqueness",
-#'                                      "Threats to Habitat",
-#'
-#'                                      "Biomass Metrics",
-#'                                      "Structure and Function",
-#'                                      "Threats to Productivity"),
-#'                             score=runif(11,55,100),
-#'                             weight=1,
-#'                             area_name = "Random Example MPA")
-#'
-#' plot_flowerplot(indicatorbins)
-#'
-#'
+#' @export
 plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weight="weight",title=unique(df[["area_name"]]),max_score = 100,min_score = 0,bintextsize=3,zeroline=FALSE){
   scalerange <- max_score-min_score
-
-   #SEE ISSUE 47 in MarConsNetApp. Do not delete, we may revisit this.
-   #  calc_letter_grade <- function(percent){
-   #    cutoffs=c(min_score, seq(max_score-scalerange*.4, max_score, by = 10/3/100*scalerange))
-   #    grades=c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
-   #    cut(percent,cutoffs,grades)
-   #  }
-   #
-   #
-   #
-   #  grades <- c("F", paste0(toupper(rep(letters[4:1], each = 3)), rep(c("-","","+"),4)))
-   #  flowerPalette <- colorRampPalette(RColorBrewer::brewer.pal(11,"RdBu"))(length(grades))
-   #
-   #
-   # # # Define stoplight color scheme
-   #  flowerPalette <- c(
-   #    "F" = "#FF0000",    # Bright Red
-   #    "D-" = "#FF3300",   # Slightly lighter red
-   #    "D" = "#FF6600",    # Red-Orange
-   #    "D+" = "#FF9900",   # Orange
-   #    "C-" = "#FFCC00",   # Yellow-Orange
-   #    "C" = "#FFFF00",    # Yellow
-   #    "C+" = "#CCFF33",   # Yellow-Green
-   #    "B-" = "#99FF66",   # Light Green
-   #    "B" = "#66FF66",    # Medium Green
-   #    "B+" = "#33CC33",   # Bright Green
-   #    "A-" = "#009900",   # Dark Green
-   #    "A" = "#006600",    # Very Dark Green
-   #    "A+" = "#003300"    # Almost Black-Green
-   #  )
-
-
-  # Note, I had to change calc_letter_grade because previously in the analysis
-  # function we assign A=5,B=4,C=3,D=2,F=1 (we then multiple by 20 adjust the
-  # scale to be 1-100.). Because the previous calc_letter_grade was fluid, it meant
-  # that a value of say, 20, may not always be a F (it could be F-, or something),
-  # I therefore adjusted this to hard code in the values we previously set so the
-  # grades didn't change.
-
 
   grades <- c("A", "B", "C", "D", "F")
   flowerPalette <- rev(colorRampPalette(brewer.pal(5,"RdYlBu"))(length(grades)))

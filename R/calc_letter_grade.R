@@ -1,15 +1,25 @@
-#' Calculate letter grades
+#' Convert numeric scores to letter grades
 #'
-#' @param scores vector of numeric scores to be converted to letter grades
+#' Translates numeric scores (0–100) into letter grades using standard
+#' intervals: F (0–20), D (20–40), C (40–60), B (60–80), and A (80–100).
+#' Scores outside 0–100 are treated as NA. NA or NaN scores are returned as "NA".
 #'
-#' @return vector of letter grades
-#' @export
+#' @param scores
+#' Numeric vector of scores to convert to letter grades. Scores are
+#' internally floored to integers before grading.
+#'
+#' @return
+#' Character vector of the same length as \code{scores}, containing
+#' letter grades: "A", "B", "C", "D", "F", or "NA".
+#'
+#' @details
+#' The grading scale is inclusive of the lower bound and exclusive of the
+#' upper bound for all intervals except for F (0–20) and A (80–100), which
+#' include both endpoints.
 #'
 #' @examples
-#'
-#' scores <- c(10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
-#'
-#' calc_letter_grade(scores)
+#' calc_letter_grade(c(95, 73, 55, 38, 15, NA, NaN))
+#' # Returns: "A" "B" "C" "D" "F" "NA" "NA"
 #'
 calc_letter_grade <- function(scores) {
   sapply(floor(scores), function(score) {

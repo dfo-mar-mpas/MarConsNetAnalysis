@@ -2,25 +2,50 @@
 % Please edit documentation in R/tar_paths.R
 \name{tar_paths}
 \alias{tar_paths}
-\title{Convenience that helps generate relevant paths to run the 'targets' pipeline}
+\title{Resolve file paths for MarConsNet targets configurations}
 \usage{
 tar_paths(path = "onedrive")
 }
 \arguments{
-\item{path}{character string for the path to return. Defaults to "onedrive"
-which will return the shared onedrive target store (i.e. the data). Both "pkg"
-or "inst" will return the path to the "_targets.R" file (i.e. the instructions)
-in the installed package directory or the inst directory in your local git repo
-respectively.}
+\item{path}{Character string specifying which path to return. Must be one
+of:
+\describe{
+\item{\code{"onedrive"}}{Path to the OneDrive-synchronized
+\code{app_targets} directory.}
+\item{\code{"inst"}}{Path to the local \code{_targets.R} file
+within an \code{inst/} directory.}
+\item{\code{"pkg"}}{Path to the installed package copy of
+\code{_targets.R}.}
+}}
 }
 \value{
-character string
+A character string giving the resolved file or directory path.
 }
 \description{
-Convenience that helps generate relevant paths to run the 'targets' pipeline
+Returns validated file system paths used for accessing
+MarConsNet \pkg{targets} resources, depending on the requested
+execution context.
+}
+\details{
+When \code{path = "onedrive"}, the function checks for the
+existence of the \code{MarConsNetTargets/app_targets} directory
+under the \code{OneDriveCommercial} environment variable.
+
+When \code{path = "inst"}, the function returns the path to a
+local \code{inst/_targets.R} file, typically used during
+package development.
+
+When \code{path = "pkg"}, the function resolves the location of
+\code{_targets.R} within the installed \pkg{civi} package.
+
+If the requested path does not exist, or if \code{path} is not
+recognized, the function stops with an informative error
+message.
 }
 \examples{
-
-onedrive_store <- tar_paths()
+\dontrun{
+# Get the OneDrive targets store path
+tar_paths("onedrive")
+}
 
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/ind_placeholder.R
 \name{ind_placeholder}
 \alias{ind_placeholder}
-\title{Create example FAKE data}
+\title{Create a placeholder indicator data frame}
 \usage{
 ind_placeholder(
   ind_name = "placeholder",
@@ -46,10 +46,20 @@ or "Anthropogenic Pressure and Impacts"}
 data.frame
 }
 \description{
-Create example FAKE data
+Generates a standardized placeholder data frame for an indicator,
+suitable for initializing indicator structures when data are not
+yet available. This allows the MarConsNet framework to maintain
+consistent columns and metadata across sites or areas, even for
+indicators that are not yet collected or conceptual.
 }
 \examples{
 \dontrun{
-# FIXME placeholder
+placeholder <- ind_placeholder(
+  ind_name = "Habitat Quality",
+  areas = MPAs,
+  readiness = "Conceptual",
+  objectives = c("Maintain biodiversity", "Protect habitat"),
+  scale = "site"
+)
 }
 }

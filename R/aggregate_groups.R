@@ -1,17 +1,27 @@
-#' aggregate indicator values into bins or objectives
+#' Aggregate multiple groups into a single group
+#'
+#' Combines multiple data frames or tibbles representing different components
+#' into a single group-level data frame, applying optional weighting for
+#' aggregation.
 #'
 #' @param group_level Character string for the name of the group level (e.g. "bin" or "objective")
 #' @param group_name Character string for the name of the group (e.g. "Biomass Metrics" or "Biodiversity")
 #' @param weights_ratio numeric vector for the relative weight of each group component (e.g. the ratio of weights between indicator)
 #' @param weights_sum numeric value for the sum of the weights of each group (e.g. the sum of the indicator weights in the bin)
 #' @param ... group components (e.g. the indicator data.frames in the case of bins)
-#'
-#' @export
+#' @details
+#' If the input data frames already contain a `weight` column, the function
+#' simply combines them, adds the group-level column, and removes duplicate
+#' rows (keeping `plot` columns intact). Otherwise, it assigns weights
+#' according to `weights_ratio`, normalizes them to sum to `weights_sum`, and
+#' tracks the original component name in a `target_name` column.
 #'
 #' @examples
-#' \dontrun{
-#' # FIXME placeholder
-#' }
+#' df1 <- tibble::tibble(areaID = c("A", "B"), score = c(80, 90))
+#' df2 <- tibble::tibble(areaID = c("A", "B"), score = c(70, 95))
+#' aggregate_groups("group", "CombinedGroup", weights_ratio = c(0.6, 0.4), df1, df2)
+#'
+#' @export
 aggregate_groups <- function(group_level,group_name,weights_ratio=1,weights_sum=1,...){
   args <- list(...)
 

@@ -1,13 +1,19 @@
-#' Title
+#' Perform indicator scoring and assessment
 #'
-#' @inheritParams process_indicator
-#' @inherit process_indicator params data scoring direction areas year
-#'  indicator_var_name areaID other_nest_variables type units PPTID
-#'  project_short_title climate design_target latitude longitude crs
-#' indicator control_polygon regionID
+#' Calculates indicator scores and associated status and trend summaries
+#' for a given indicator dataset, based on a specified scoring method.
 #'
-#' @returns
-#' @export
+#' This function supports multiple indicator scoring frameworks used in
+#' the MarConsNet analysis workflow, including:
+#' * **trend‑based scoring** (linear regression over time),
+#' * **representation** (proportion of area or occurrences within MPAs),
+#' * **coverage** (coverage of features relative to conservation targets),
+#' * **median** (median value relative to maximum),
+#' * **control site comparisons** (difference inside vs outside MPAs).
+#'
+#' The function returns a tibble with one row per area, including
+#' numeric scores (0–100), data summaries, and human‑readable
+#' status and trend statements.
 #'
 #' @examples
 assess_indicator <- function(data, scoring, direction,
