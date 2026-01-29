@@ -21,6 +21,7 @@
 #' calc_letter_grade(c(95, 73, 55, 38, 15, NA, NaN))
 #' # Returns: "A" "B" "C" "D" "F" "NA" "NA"
 #'
+#'@export
 calc_letter_grade <- function(scores) {
   sapply(floor(scores), function(score) {
     if (!(is.na(score)) && !(is.nan(score))) {
