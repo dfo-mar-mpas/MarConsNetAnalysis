@@ -14,7 +14,8 @@ plot_flowerplot(
   max_score = 100,
   min_score = 0,
   bintextsize = 3,
-  zeroline = FALSE
+  zeroline = FALSE,
+  showNumbers = FALSE
 )
 }
 \arguments{
@@ -45,6 +46,8 @@ title.}
 
 \item{zeroline}{Logical; if \code{TRUE}, adds a horizontal reference line at
 zero.}
+
+\item{showNumbers}{a Boolean indicating if the numbers of indicators}
 }
 \value{
 A \code{ggplot} object representing the flower plot.

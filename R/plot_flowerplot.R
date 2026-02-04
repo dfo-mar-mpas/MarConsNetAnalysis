@@ -43,6 +43,9 @@
 #' @param bintextsize
 #' Numeric text size used for group labels in the outer ring.
 #'
+#' @param showNumbers a Boolean indicating if the numbers of indicators
+# should be shown in the pedals of the plot
+#'
 #' @param zeroline
 #' Logical; if \code{TRUE}, adds a horizontal reference line at
 #' zero.
@@ -87,7 +90,7 @@
 #' }
 #'
 #' @export
-plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weight="weight",title=unique(df[["area_name"]]),max_score = 100,min_score = 0,bintextsize=3,zeroline=FALSE){
+plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score",weight="weight",title=unique(df[["area_name"]]),max_score = 100,min_score = 0,bintextsize=3,zeroline=FALSE, showNumbers=FALSE){
   scalerange <- max_score-min_score
 
   grades <- c("A", "B", "C", "D", "F")
@@ -111,7 +114,17 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
            bg=dplyr::if_else(is.nan(score),"#EDEDED","white"))
   data$score[which(is.nan(data$score))] <- NA
 
-  # browser()
+  # Getting number of indicators
+
+  n_counts <- aggregate(score ~ labels,
+                        data = rawdata,
+                        FUN = function(x) sum(!is.na(x)))
+
+  names(n_counts)[names(n_counts) == "score"] <- "n_of_indicators"
+
+  # Merge into data
+  data <- merge(data, n_counts, by = "labels", all.x = TRUE)
+  # END
 
   grouped_df <- calc_group_score(df = rawdata,
                                  grouping_var = c("labels","grouping"),
@@ -124,7 +137,6 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                          angle-180,
                          angle)
     )
-
   wrap_label <- function(text) {
     # Convert to character if it's a factor
     text <- as.character(text)
@@ -215,6 +227,19 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
                            y=y,
                            angle=angle),
                        size=bintextsize)
+
+  if(showNumbers){ # JAIM
+    data_valid <- data[!is.na(data$score), ]
+    p <- p + geom_text(
+      data = data_valid,
+      aes(x = pos,
+          y = score / 2,           # middle of petal
+          label = n_of_indicators),# 🔴 show the number of indicators
+      color = "red",
+      size = 3
+    )
+  }
+
   if(zeroline){
     p <- p + ggplot2::geom_hline(yintercept = 0,linetype="dotted")
 
