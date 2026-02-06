@@ -71,6 +71,8 @@
 #' "Benthic Environment", "Fish and Fishery Resources",
 #' or "Anthropogenic Pressure and Impacts"
 #' @param SME subject matter expert for the data/ indicator (e.g. John Doe)
+#' @param indicator_assumptions indicator assumptions
+#' @param indicator_caveats indicator caveats
 #'
 #' @details
 #' The function performs extensive validation of metadata and arguments.
@@ -159,7 +161,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                               latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA,
                               areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE,
                               control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA, objectives=NA,
-                              readiness="Ready", scale='site', theme = NA, SME=NA){
+                              readiness="Ready", scale='site', theme = NA, SME=NA, indicator_assumptions=NA, indicator_caveats=NA){
+
 
   if ("map-species" %in% plot_type) {
     if (all(is.na(other_nest_variables))) {
@@ -314,16 +317,49 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     }
   }
 
+  ## Adding assumptions and caveats
+  ## DATA assumptions:
 
+x <- inherit_from_dependencies(as_tibble(final), n = 2, attribute = TRUE)
+
+if (all(attr(x, 'assumptions') == "")) {
+  data_assumptions <- paste0(attr(nesteddata, 'assumptions'), collapse="; ") # PULLING FROM DATA SOURCE that is fed into process_indicator
+} else {
+  # Running in a target
+  data_assumptions <- paste0(unique(x$assumptions), collapse=';')
+}
+
+if (all(attr(x, 'caveats') == "")) {
+  data_caveats <- paste0(attr(nesteddata, 'assumptions'), collapse="; ")
+} else {
+  # Running in a target
+  data_caveats <- paste0(unique(x$caveats), collapse=';')
+}
+
+# Combining data and indicator assumptions / caveats
+
+if (!(is.na(indicator_assumptions))) {
+  data_assumptions <- paste0(data_assumptions, " Indicator assumptions: ", indicator_assumptions)
+}
+
+if (!(is.na(indicator_caveats))) {
+  data_caveats <- paste0(data_caveats, "Indicator caveats: ", indicator_caveats)
+}
+
+final$assumptions <- data_assumptions
+final$caveats <- data_caveats
 
   desired_order <- c(
     "areaID", "region", "indicator", "type", "units", "scoring",
     "PPTID", "project_short_title", "climate", "design_target", "data",
     "score", "status_statement", "trend_statement","quality_statement", "source", "climate_expectation",
-    "indicator_rationale", "objectives", "bin_rationale", "plot", "readiness", "scale", "theme", "SME"
+    "indicator_rationale", "objectives", "bin_rationale", "plot", "readiness", "scale", "theme", "SME", 'assumptions', 'caveats'
   )
 
   final <- final[ , desired_order]
-  return(inherit_from_dependencies(as_tibble(final)), n = 2, attribute = FALSE)
+
+  #browser()
+
+  return(as_tibble(final))
 }
 

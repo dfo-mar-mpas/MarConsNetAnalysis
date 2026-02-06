@@ -40,6 +40,7 @@
 #' attr(df, "assumptions")
 #' attr(df, "caveats")
 add_assumptions <- function(df, assumptions = NULL, caveats = NULL) {
+  #browser()
   attr(df, "assumptions") <- c(attr(df, "assumptions"), assumptions)
   attr(df, "caveats") <- c(attr(df, "caveats"), caveats)
   df

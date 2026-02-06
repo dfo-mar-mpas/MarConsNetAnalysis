@@ -13,7 +13,9 @@ ind_placeholder(
   objectives = NA,
   scale = "site",
   theme = NA,
-  SME = NA
+  SME = NA,
+  assumptions = NA,
+  caveats = NA
 )
 }
 \arguments{
@@ -39,6 +41,10 @@ Available', 'Not currently collected', 'Conceptual', or 'Unknown'.}
 or "Anthropogenic Pressure and Impacts"}
 
 \item{SME}{subject matter expert for the data/ indicator (e.g. John Doe)}
+
+\item{assumptions}{data assumptions}
+
+\item{caveats}{data caveats}
 
 \item{site}{a character string of either 'site' or 'network'}
 }

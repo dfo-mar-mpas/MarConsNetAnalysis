@@ -2,6 +2,7 @@
 
 export(add_assumptions)
 export(aggregate_groups)
+export(assess_indicator)
 export(calc_group_score)
 export(calc_in_sea_distance)
 export(calc_letter_grade)

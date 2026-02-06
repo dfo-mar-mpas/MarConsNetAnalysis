@@ -50,9 +50,11 @@
 #' profit_data2$assumptions
 #'
 inherit_from_dependencies <- function(df, n = 1, attribute = TRUE) {
+
   dep_names <- ls(envir = parent.frame(n))
   all_assumptions <- character(0)
   all_caveats <- character(0)
+
   for (dep_name in dep_names) {
     dep_obj <- get(dep_name, envir = parent.frame(n))
     if (inherits(dep_obj, "data.frame")) {
@@ -67,14 +69,15 @@ inherit_from_dependencies <- function(df, n = 1, attribute = TRUE) {
 
     }
   }
+
   if (attribute) {
     # Set as attributes
     attr(df, "assumptions") <- paste(unique(all_assumptions), collapse = ";")
     attr(df, "caveats") <- paste(unique(all_caveats), collapse = ";")
-    df
+    return(df)
   } else {
     # Return df with attributes
-    df |>
+     df |>
       mutate(assumptions = paste(unique(all_assumptions), collapse = ";"),
              caveats = paste(unique(all_caveats), collapse = ";"))
   }

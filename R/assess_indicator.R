@@ -16,6 +16,7 @@
 #' status and trend statements.
 #'
 #' @examples
+#' @export
 assess_indicator <- function(data, scoring, direction,
                              areas, year, indicator_var_name,
                              areaID, other_nest_variables,
@@ -30,6 +31,10 @@ assess_indicator <- function(data, scoring, direction,
                              indicator,
                              control_polygon,
                              regionID) {
+
+  assumptions_storage <- attr(data, 'assumptions')
+  caveats_storage <- attr(data, 'caveats')
+
 
 
   if (startsWith(scoring,"desired state:")){
@@ -822,6 +827,9 @@ assess_indicator <- function(data, scoring, direction,
     }
 
   }
+  attr(nesteddata, "assumptions") <- assumptions_storage
+  attr(nesteddata, "caveats") <- caveats_storage
+
 
   return(nesteddata)
 

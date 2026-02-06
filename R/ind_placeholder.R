@@ -23,6 +23,8 @@
 #' "Benthic Environment", "Fish and Fishery Resources",
 #' or "Anthropogenic Pressure and Impacts"
 #' @param SME subject matter expert for the data/ indicator (e.g. John Doe)
+#' @param assumptions data assumptions
+#' @param caveats data caveats
 #'
 #' @return data.frame
 #' @export
@@ -38,7 +40,7 @@
 #' )
 #' }
 ind_placeholder <- function(ind_name = "placeholder",
-                            areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA, scale='site', theme=NA, SME=NA) {
+                            areas, areaName = "NAME_E", readiness=NA, source=NA, objectives=NA, scale='site', theme=NA, SME=NA, assumptions=NA, caveats=NA) {
   #browser()
 
   if (is.na(readiness)) {

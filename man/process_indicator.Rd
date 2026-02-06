@@ -37,7 +37,9 @@ process_indicator(
   readiness = "Ready",
   scale = "site",
   theme = NA,
-  SME = NA
+  SME = NA,
+  indicator_assumptions = NA,
+  indicator_caveats = NA
 )
 }
 \arguments{
@@ -135,6 +137,10 @@ associated with the indicator.}
 or "Anthropogenic Pressure and Impacts"}
 
 \item{SME}{subject matter expert for the data/ indicator (e.g. John Doe)}
+
+\item{indicator_assumptions}{indicator assumptions}
+
+\item{indicator_caveats}{indicator caveats}
 }
 \value{
 A tibble with one row per area containing:
