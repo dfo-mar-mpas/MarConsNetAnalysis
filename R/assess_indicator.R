@@ -35,8 +35,6 @@ assess_indicator <- function(data, scoring, direction,
   assumptions_storage <- attr(data, 'assumptions')
   caveats_storage <- attr(data, 'caveats')
 
-
-
   if (startsWith(scoring,"desired state:")){
 
     if(!year %in% names(data)){
@@ -665,7 +663,11 @@ assess_indicator <- function(data, scoring, direction,
 
           max_years_in_smaller < 5
         }),
-        max_buffer_used = buffers_sorted[max(buffer_order[needs_this_buffer],na.rm=TRUE)]
+        max_buffer_used = ifelse(
+          any(needs_this_buffer),
+          buffers_sorted[max(buffer_order[needs_this_buffer], na.rm = TRUE)],
+          NA_character_  # 🔴 default if no buffer needed
+        )
       ) |>
       ungroup() |>
       mutate(
@@ -789,7 +791,6 @@ assess_indicator <- function(data, scoring, direction,
   for (i in seq_along(nesteddata$data)) { # Note a sample means unique date and geomtry. If there are multiple depths in a single sample it counts as one sample
     message(i)
     quality_data <- nesteddata$data[[i]]
-    #browser()
 
     if (!(is.null(quality_data))) {
       if (!(grepl("Network design", indicator))) {

@@ -237,9 +237,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
   }
 
     if(!dataisna){
-
-      # browser()
-
       nesteddata <- assess_indicator(data=data, scoring=scoring, direction=direction,
                                      areas=areas, year=year, indicator_var_name=indicator_var_name,
                                      areaID= areaID, other_nest_variables=other_nest_variables,
@@ -249,6 +246,27 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                      climate = climate,
                                      design_target = design_target,latitude=latitude,
                                      longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon, regionID=regionID)
+
+
+
+
+      # TEST
+      # Creating outside data frame if there is data and control_polygon is not NA
+      if (!(all(is.na(control_polygon)))) {
+        control_nesteddata <- assess_indicator(data=data, scoring=scoring, direction=direction,
+                                       areas=control_polygon[control_polygon$buffer_distance == 'forty_km',], year=year, indicator_var_name=indicator_var_name,
+                                       areaID= areaID, other_nest_variables=other_nest_variables,
+                                       type=type,units = units,
+                                       PPTID =  PPTID,
+                                       project_short_title = project_short_title,
+                                       climate = climate,
+                                       design_target = design_target,latitude=latitude,
+                                       longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon, regionID=regionID)
+
+      }
+
+      # END TEST
+
 
       #regional scores for "region-site" are calculated in assess_indicator(),
       # so at this point scale can be sites to fill in the blanks
@@ -279,9 +297,63 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                theme=theme,
                SME=SME)
 
+      # Adding outside data/score
+      if (!(all(is.na(control_polygon)))) {
+        # Pre-allocate
+        final$adjacent_score <- NA_real_
+        final$adjacent_data  <- vector("list", nrow(final))
+        for (j in seq_len(nrow(control_nesteddata))) {
+
+          # Find rows in final that match this areaID
+          idx <- which(final$areaID == control_nesteddata$areaID[j])
+
+          if (length(idx) > 0) {
+            final$adjacent_score[idx] <- control_nesteddata$score[j]
+            final$adjacent_data[idx]  <- control_nesteddata$data[j]
+          }
+        }
+      } else {
+        final$adjacent_data <- NA
+        final$adjacent_score <- NA
+      }
+
       if (any(names(final) == "region.y")) {
         names(final)[which(names(final) == "region.x")] <- 'region'
       }
+
+
+      ## Adding assumptions and caveats
+      ## DATA assumptions:
+
+      x <- inherit_from_dependencies(as_tibble(final), n = 2, attribute = TRUE)
+
+      if (all(attr(x, 'assumptions') == "")) {
+        data_assumptions <- paste0(attr(nesteddata, 'assumptions'), collapse="; ") # PULLING FROM DATA SOURCE that is fed into process_indicator
+      } else {
+        # Running in a target
+        data_assumptions <- paste0(unique(x$assumptions), collapse=';')
+      }
+
+      if (all(attr(x, 'caveats') == "")) {
+        data_caveats <- paste0(attr(nesteddata, 'assumptions'), collapse="; ")
+      } else {
+        # Running in a target
+        data_caveats <- paste0(unique(x$caveats), collapse=';')
+      }
+
+      # Combining data and indicator assumptions / caveats
+
+      if (!(is.na(indicator_assumptions))) {
+        data_assumptions <- paste0(data_assumptions, " Indicator assumptions: ", indicator_assumptions)
+      }
+
+      if (!(is.na(indicator_caveats))) {
+        data_caveats <- paste0(data_caveats, "Indicator caveats: ", indicator_caveats)
+      }
+
+      final$assumptions <- data_assumptions
+      final$caveats <- data_caveats
+
 
   } else {
     # NA data case
@@ -309,7 +381,9 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       readiness=readiness,
       scale=scale,
       theme=theme,
-      SME=SME
+      SME=SME,
+      adjacent_data = NA,
+      adjacent_score=NA
     )
 
     if (any(names(final) == "region.y")) {
@@ -317,48 +391,14 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     }
   }
 
-  ## Adding assumptions and caveats
-  ## DATA assumptions:
-
-x <- inherit_from_dependencies(as_tibble(final), n = 2, attribute = TRUE)
-
-if (all(attr(x, 'assumptions') == "")) {
-  data_assumptions <- paste0(attr(nesteddata, 'assumptions'), collapse="; ") # PULLING FROM DATA SOURCE that is fed into process_indicator
-} else {
-  # Running in a target
-  data_assumptions <- paste0(unique(x$assumptions), collapse=';')
-}
-
-if (all(attr(x, 'caveats') == "")) {
-  data_caveats <- paste0(attr(nesteddata, 'assumptions'), collapse="; ")
-} else {
-  # Running in a target
-  data_caveats <- paste0(unique(x$caveats), collapse=';')
-}
-
-# Combining data and indicator assumptions / caveats
-
-if (!(is.na(indicator_assumptions))) {
-  data_assumptions <- paste0(data_assumptions, " Indicator assumptions: ", indicator_assumptions)
-}
-
-if (!(is.na(indicator_caveats))) {
-  data_caveats <- paste0(data_caveats, "Indicator caveats: ", indicator_caveats)
-}
-
-final$assumptions <- data_assumptions
-final$caveats <- data_caveats
-
   desired_order <- c(
     "areaID", "region", "indicator", "type", "units", "scoring",
     "PPTID", "project_short_title", "climate", "design_target", "data",
     "score", "status_statement", "trend_statement","quality_statement", "source", "climate_expectation",
-    "indicator_rationale", "objectives", "bin_rationale", "plot", "readiness", "scale", "theme", "SME", 'assumptions', 'caveats'
+    "indicator_rationale", "objectives", "bin_rationale", "plot", "readiness", "scale", "theme", "SME", 'assumptions', 'caveats', 'adjacent_data', 'adjacent_score'
   )
 
   final <- final[ , desired_order]
-
-  #browser()
 
   return(as_tibble(final))
 }
