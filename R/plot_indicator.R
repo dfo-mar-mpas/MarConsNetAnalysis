@@ -9,14 +9,14 @@
 #'
 #' @inheritParams process_indicator
 #' @param data data processed in `assess_indicator()`
-#' @inherit process_indicator params indicator units plot_type year indicator_var_name scoring areaID areas bin_width
+#' @inherit process_indicator params indicator units plot_type year indicator_var_name scoring areaID areas bin_width control_polygon
 #' @param id Equivalent to `areaID` in [process_indicator()]
 #'
 #' @returns a plot
 #' @export
 #'
 #' @examples
-plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_var_name, scoring, areaID, areas, bin_width){
+plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_var_name, scoring, areaID, areas, bin_width, control_polygon, control_nesteddata){
   p <- NULL
 
   if(!is.null(data)){
@@ -104,12 +104,14 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
         }
 
-        if ( all(st_is_empty(aes_geom)) ) {
+        if (all(st_is_empty(aes_geom))) {
           plot_list[[i]] <- NULL
         } else {
           if (any(grepl("control site", unique(scoring), ignore.case = TRUE))) {
             coords <- st_coordinates(aes_geom)
             d_coords <- cbind(data, coords)
+
+
             plot_list[[i]] <- ggplot() +
               geom_sf(
                 data = areas[areas[[areaID]] == id,],
@@ -164,14 +166,42 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
               coord_sf(crs = st_crs(areas))
 
           } else {
-            #browser()
 
 
-            # Standard case (no control site logic)
-            plot_list[[i]] <- ggplot() +
-              geom_sf(data = areas[areas[[areaID]] == id,], fill = "white", color = "black") +
+              d <- ggplot() +
+              geom_sf(data = areas[areas[[areaID]] == id,], fill = "white", color = "black")
 
-              geom_sf(
+             if (!(all(is.na(control_polygon)))) {
+                ctrl_40 <- control_polygon[
+                  control_polygon$buffer_distance == "forty_km" &
+                    control_polygon$NAME_E == areas[areas[[areaID]] == id,]$NAME_E,
+                ]
+
+                # 🔴 keep only control points inside the polygon
+                ctrl_points <-control_nesteddata$data[control_nesteddata$areaID == areas[areas[[areaID]] == id,]$NAME_E][[1]]
+
+                ctrl_points <- sf::st_as_sf(ctrl_points)
+
+
+                # 🔴 plot the control points (red)
+                d <- d +   geom_sf(
+                  data = ctrl_40,
+                  aes(color = "Outside comparison")
+                ) +
+                  scale_color_manual(
+                    name = NULL,
+                    values = c("Outside comparison" = "red")
+                  ) +
+                  geom_sf(
+                  data = ctrl_points,
+                  color = "red",
+                  size = 2,
+                  shape = 21
+                )
+
+
+              }
+              d <- d+ geom_sf(
                 data = data,
                 aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
                 shape = 21,
@@ -179,15 +209,13 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 size = 2
               ) +
               theme_classic() +
-              labs(
-                fill = indicator_var_name,
-                title = id
-              ) +
               theme(
                 plot.title = element_text(size = 10),
                 axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
               ) +
               coord_sf(crs = st_crs(areas))
+
+              plot_list[[i]] <- d
           }
         }
       }

@@ -263,6 +263,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                        design_target = design_target,latitude=latitude,
                                        longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon, regionID=regionID)
 
+      } else {
+        control_nesteddata <- NA
       }
 
       # END TEST
@@ -290,7 +292,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
              climate = coalesce(climate, !!climate),
              design_target = coalesce(design_target, !!design_target)) |>
       # plot!
-      mutate(plot = pmap(list(data,indicator,units,areaID), function(data, indicator, units,id) plot_indicator(data=data,indicator=indicator,units=units,id=id, plot_type=plot_type, year=year, indicator_var_name=indicator_var_name, scoring=scoring, areaID=!!areaID, areas=areas, bin_width=bin_width)
+      mutate(plot = pmap(list(data,indicator,units,areaID), function(data, indicator, units,id) plot_indicator(data=data,indicator=indicator,units=units,id=id, plot_type=plot_type, year=year, indicator_var_name=indicator_var_name, scoring=scoring, areaID=!!areaID, areas=areas, bin_width=bin_width, control_polygon=control_polygon, control_nesteddata=control_nesteddata)
       ))  |>
         mutate(readiness=readiness,
                scale=coalesce(scale, !!scale),
