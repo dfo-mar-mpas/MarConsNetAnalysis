@@ -92,6 +92,15 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
       }
       if("map" %in% plot_type[i]){
+
+        idx <- areas[[areaID]] == id
+
+        # trigger browser if no match (length 0 or all FALSE)
+        if (length(idx) == 0 || !any(idx)) {
+          # Non_Conservation_Area
+          next
+        }
+
         if ((!("sf" %in% class(data)))) {
           aes_geom <- st_as_sf(data)[[attr(st_as_sf(data), "sf_column")]]
         } else {
@@ -109,7 +118,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           if (any(grepl("control site", unique(scoring), ignore.case = TRUE))) {
             coords <- st_coordinates(aes_geom)
             d_coords <- cbind(data, coords)
-
 
             plot_list[[i]] <- ggplot() +
               geom_sf(
