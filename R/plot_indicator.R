@@ -166,8 +166,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
               coord_sf(crs = st_crs(areas))
 
           } else {
-
-
               d <- ggplot() +
               geom_sf(data = areas[areas[[areaID]] == id,], fill = "white", color = "black")
 
@@ -178,6 +176,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 ]
 
                 # 🔴 keep only control points inside the polygon
+                if (any(control_nesteddata$areaID %in% areas$NAME_E[areas[[areaID]] == id])) {
                 ctrl_points <-control_nesteddata$data[control_nesteddata$areaID == areas[areas[[areaID]] == id,]$NAME_E][[1]]
 
                 ctrl_points <- sf::st_as_sf(ctrl_points)
@@ -198,6 +197,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                   size = 2,
                   shape = 21
                 )
+                }
 
 
               }
