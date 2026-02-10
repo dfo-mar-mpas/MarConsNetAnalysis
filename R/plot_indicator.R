@@ -27,7 +27,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
       par(mar = c(4, 4.5, 0.5, 1))
 
       if ('map-species' %in% plot_type[i]) {
-        #browser()
         # if (!(length(data[[which(areas$NAME_E == id)]][[indicator_var_name]]) > 25)) {
         #   plot_type <- "map"
         # }
@@ -177,6 +176,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
                 # 🔴 keep only control points inside the polygon
                 if (any(control_nesteddata$areaID %in% areas$NAME_E[areas[[areaID]] == id])) {
+                  if (!(is.null(control_nesteddata$data[control_nesteddata$areaID == areas[areas[[areaID]] == id,]$NAME_E][[1]]))) {
                 ctrl_points <-control_nesteddata$data[control_nesteddata$areaID == areas[areas[[areaID]] == id,]$NAME_E][[1]]
 
                 ctrl_points <- sf::st_as_sf(ctrl_points)
@@ -197,6 +197,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                   size = 2,
                   shape = 21
                 )
+                }
                 }
 
 
