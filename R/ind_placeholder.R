@@ -74,7 +74,6 @@ ind_placeholder <- function(ind_name = "placeholder",
     indicator_rationale = "FIXME",
     objectives = paste0(objectives, collapse=" ;;; "),
     bin_rationale = "FIXME",
-    plot = rep(list(NULL), n),    # list-column of NULL
     readiness=readiness,
     scale=scale,
     theme=theme,
