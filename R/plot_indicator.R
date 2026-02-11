@@ -31,30 +31,82 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
         #   plot_type <- "map"
         # }
       }
+
       if("time-series" %in% plot_type[i]) {
 
-        plot_list[[i]] <-  ggplot(data,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
-          geom_point()+
-          geom_line()+
-          theme_classic()+
+        est_year <- MPAs$date_of_establishment[MPAs$NAME_E == id]
+
+        year_range <- range(data[[year]], na.rm = TRUE)
+
+        plot_list[[i]] <-  ggplot(data, aes(x = .data[[year]], y = .data[[indicator_var_name]])) +
+          geom_point() +
+          geom_line() +
+          {
+            if (length(est_year) > 0 &&
+                !is.na(est_year) &&
+                est_year >= year_range[1] &&
+                est_year <= year_range[2]) {
+
+              geom_vline(xintercept = est_year,
+                         colour = "red",
+                         linewidth = 1)
+            }
+          } +
+          theme_classic() +
           ylab(paste0(indicator, " (", units, ")"))
+
+        browser()
+
       }
       if("time-series-no-line" %in% plot_type[i]) {
-        plot_list[[i]] <-  ggplot(data,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
-          geom_point()+
-          theme_classic()+
+        est_year <- MPAs$date_of_establishment[MPAs$NAME_E == id]
+        year_range <- range(data[[year]], na.rm = TRUE)
+
+        plot_list[[i]] <- ggplot(data, aes(x = .data[[year]], y = .data[[indicator_var_name]])) +
+          geom_point() +
+          {
+            if (length(est_year) > 0 &&
+                !is.na(est_year) &&
+                est_year >= year_range[1] &&
+                est_year <= year_range[2]) {
+
+              geom_vline(xintercept = est_year,
+                         colour = "red",
+                         linewidth = 1)
+            }
+          } +
+          theme_classic() +
           ylab(paste0(indicator, " (", units, ")"))
+
       }
       if("boxplot" %in% plot_type[i]) {
         # Create decade grouping
         data$decade_group <- floor(data[[year]] / bin_width) * bin_width
 
         # Plot with position_dodge to control width
-        plot_list[[i]] <- ggplot(data, aes(x = decade_group + bin_width/2, y=.data[[indicator_var_name]], group = decade_group)) +
-          geom_boxplot(width = bin_width*0.9) +
-          scale_x_continuous(name = year,
-                             breaks = unique(data$decade_group),
-                             minor_breaks = NULL) +
+        est_year <- MPAs$date_of_establishment[MPAs$NAME_E == id]
+        year_range <- range(data[[year]], na.rm = TRUE)
+
+        plot_list[[i]] <- ggplot(data, aes(x = decade_group + bin_width/2,
+                         y = .data[[indicator_var_name]],
+                         group = decade_group)) +
+          geom_boxplot(width = bin_width * 0.9) +
+          {
+            if (length(est_year) > 0 &&
+                !is.na(est_year) &&
+                est_year >= year_range[1] &&
+                est_year <= year_range[2]) {
+
+              geom_vline(xintercept = est_year,
+                         colour = "red",
+                         linewidth = 1)
+            }
+          } +
+          scale_x_continuous(
+            name = year,
+            breaks = unique(data$decade_group),
+            minor_breaks = NULL
+          ) +
           theme_classic()
 
 
@@ -80,13 +132,33 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
         } else {
 
           # Plot with position_dodge to control width
-          plot_list[[i]] <- ggplot(data, aes(x = decade_group + bin_width/2, y = .data[[indicator_var_name]], group = decade_group)) +
+          est_year <- MPAs$date_of_establishment[MPAs$NAME_E == id]
+
+          year_range <- range(data[[year]], na.rm = TRUE)
+
+          plot_list[[i]] <- ggplot(data, aes(x = decade_group + bin_width/2,
+                           y = .data[[indicator_var_name]],
+                           group = decade_group)) +
             geom_violin(width = bin_width * 0.9) +
-            scale_x_continuous(name = year,
-                               breaks = unique(data$decade_group),
-                               minor_breaks = NULL) +
+            {
+              if (length(est_year) > 0 &&
+                  !is.na(est_year) &&
+                  est_year >= year_range[1] &&
+                  est_year <= year_range[2]) {
+
+                geom_vline(xintercept = est_year,
+                           colour = "red",
+                           linewidth = 1)
+              }
+            } +
+            scale_x_continuous(
+              name = year,
+              breaks = unique(data$decade_group),
+              minor_breaks = NULL
+            ) +
             theme_classic() +
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
         }
 
 
