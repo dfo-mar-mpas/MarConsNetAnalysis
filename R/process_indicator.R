@@ -162,6 +162,10 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                               areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE,
                               control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA, objectives=NA,
                               readiness="Ready", scale='site', theme = NA, SME=NA, indicator_assumptions=NA, indicator_caveats=NA){
+  if (!(is.na(type))) {
+  if (!(type %in% c('in situ', 'model', 'expert opinion', 'remote sensing')))
+  stop('type must be either model, expert opinion, in situ, or remote sensing')
+  }
 
 
   if ("map-species" %in% plot_type) {
