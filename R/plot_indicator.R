@@ -34,49 +34,161 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
       if("time-series" %in% plot_type[i]) {
 
-        est_year <- MPAs$date_of_establishment[MPAs$NAME_E == id]
+          est_year <- MPAs$date_of_establishment[MPAs$NAME_E == id]
 
-        year_range <- range(data[[year]], na.rm = TRUE)
+          # ---- Prepare inside data ----
+          inside_data <- data
+          inside_data$location <- "MPA"
+          inside_data$period <- ifelse(
+            inside_data[[year]] < est_year,
+            "Before",
+            "After"
+          )
 
-        plot_list[[i]] <-  ggplot(data, aes(x = .data[[year]], y = .data[[indicator_var_name]])) +
-          geom_point() +
-          geom_line() +
-          {
-            if (length(est_year) > 0 &&
-                !is.na(est_year) &&
-                est_year >= year_range[1] &&
-                est_year <= year_range[2]) {
+          # ---- Prepare control data (if exists) ----
+          control_data <- NULL
 
-              geom_vline(xintercept = est_year,
-                         colour = "red",
-                         linewidth = 1)
+          if (!(all(is.na(control_polygon)))) {
+            control_row <- control_nesteddata[control_nesteddata$areaID == id, ]
+            if (nrow(control_row) > 0) {
+              control_data <- control_row$data[[1]]
+              control_data$location <- "Control"
+              control_data$period <- ifelse(
+                control_data[[year]] < est_year,
+                "Before",
+                "After"
+              )
             }
-          } +
-          theme_classic() +
-          ylab(paste0(indicator, " (", units, ")"))
+          }
 
-        browser()
+          # Combine
+          combined_data <- rbind(
+            inside_data,
+            if (!is.null(control_data)) control_data
+          )
 
-      }
-      if("time-series-no-line" %in% plot_type[i]) {
-        est_year <- MPAs$date_of_establishment[MPAs$NAME_E == id]
-        year_range <- range(data[[year]], na.rm = TRUE)
+          # ---- Compute global axis limits ----
+          x_range <- range(combined_data[[year]], na.rm = TRUE)
+          y_range <- range(combined_data[[indicator_var_name]], na.rm = TRUE)
 
-        plot_list[[i]] <- ggplot(data, aes(x = .data[[year]], y = .data[[indicator_var_name]])) +
-          geom_point() +
-          {
-            if (length(est_year) > 0 &&
-                !is.na(est_year) &&
-                est_year >= year_range[1] &&
-                est_year <= year_range[2]) {
+          # ---- Create all 4 combinations explicitly ----
+          combined_data$location <- factor(combined_data$location,
+                                           levels = c("MPA", "Control"))
+          combined_data$period <- factor(combined_data$period,
+                                         levels = c("Before", "After"))
 
-              geom_vline(xintercept = est_year,
-                         colour = "red",
-                         linewidth = 1)
+          # ---- Base plot ----
+          p <- ggplot(combined_data,
+                      aes(x = .data[[year]],
+                          y = .data[[indicator_var_name]])) +
+            geom_point() +
+            geom_vline(xintercept = est_year,
+                       colour = "red",
+                       linewidth = 1) +
+            facet_grid(period ~ location) +
+            coord_cartesian(xlim = x_range,
+                            ylim = y_range) +
+            ylab(paste0(indicator, " (", units, ")"))
+
+          # ---- Add regressions + R² per panel ----
+          panel_info <- split(combined_data,
+                              list(combined_data$location,
+                                   combined_data$period),
+                              drop = FALSE)
+
+          #browser()
+
+          for (df in panel_info) {
+
+            # Make sure df is a data frame with rows
+            if (is.null(df) || !is.data.frame(df) || nrow(df) < 2) {
+
+              # Create a dummy data frame for facet-awareness
+              max_global_x <- max(combined_data[[year]], na.rm = TRUE)
+              max_global_y <- max(combined_data[[indicator_var_name]], na.rm = TRUE)
+
+              # Add facet-specific "Insufficient data" text
+              p <- p +
+                geom_text(
+                  data = data.frame(
+                    location = if (!is.null(df$location)) df$location[1] else "MPA",   # facet
+                    period   = if (!is.null(df$period)) df$period[1] else "Before",     # facet
+                    x = max_global_x,
+                    y = max_global_y
+                  ),
+                  aes(label = "Insufficient data"),
+                  inherit.aes = FALSE,   # very important!
+                  hjust = 1,
+                  vjust = 1,
+                  size = 4
+                )
+
+            } else {
+
+              # Fit linear model using base R
+              model <- lm(as.formula(paste0(indicator_var_name, " ~ ", year)), data = df)
+              coefs <- coef(model)
+              intercept <- coefs[1]
+              slope <- coefs[2]
+              r2 <- summary(model)$r.squared
+
+              # Determine the x-range for this panel
+              x_min <- min(df[[year]], na.rm = TRUE)
+              x_max <- max(df[[year]], na.rm = TRUE)
+              y_max <- max(df[[indicator_var_name]], na.rm = TRUE)
+
+              # Build a small data frame with endpoints for this panel
+              label_text <- paste0("R² = ", round(r2, 2))
+
+              r2_df <- data.frame(
+                location = df$location[1],
+                period   = df$period[1],
+                x = min(combined_data[[year]], na.rm = TRUE)
+,
+                y = max(combined_data[[indicator_var_name]], na.rm = TRUE)
+,
+                label = label_text
+              )
+
+              r2_layer <- geom_text(
+                data = r2_df,
+                aes(x = x, y = y, label = label),
+                inherit.aes = FALSE,
+                hjust = 0,
+                vjust = 1,
+                size = 3
+              )
+
+              p <- p + r2_layer
+
+              # Build a small data frame with endpoints for this panel
+              line_df <- data.frame(
+                x = x_min,
+                xend = x_max,
+                y = intercept + slope * x_min,
+                yend = intercept + slope * x_max,
+                location = df$location[1],
+                period   = df$period[1]
+              )
+
+              # Add the regression line as a segment (respects facets)
+              p <- p +
+                geom_segment(
+                  data = line_df,
+                  aes(x = x, xend = xend, y = y, yend = yend),
+                  linewidth = 1
+                )
+
+
+
             }
-          } +
-          theme_classic() +
-          ylab(paste0(indicator, " (", units, ")"))
+          }
+
+          #browser()
+
+
+          plot_list[[i]] <- p
+
 
       }
       if("boxplot" %in% plot_type[i]) {
