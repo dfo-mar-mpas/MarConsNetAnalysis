@@ -257,8 +257,22 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       # TEST
       # Creating outside data frame if there is data and control_polygon is not NA
       if (!(all(is.na(control_polygon)))) {
+        control_polygon_out <- control_polygon %>%
+          filter(buffer_distance %in% c("twenty_km", "forty_km")) %>%
+          group_by(NAME_E, NAME_F, region) %>%
+          summarise(
+            buffer_distance = "forty_km",
+            geoms = st_union(geoms),
+            .groups = "drop"
+          )
+
+        # leaflet() %>%
+        #   addProviderTiles(providers$CartoDB.Positron) %>%
+        #   addPolygons(data = MPAs[44,], color = "blue") %>%
+        #   addPolygons(data = control_polygon_out[44,], color = "red")
+
         control_nesteddata <- assess_indicator(data=data, scoring=scoring, direction=direction,
-                                       areas=control_polygon[control_polygon$buffer_distance == 'forty_km',], year=year, indicator_var_name=indicator_var_name,
+                                       areas=control_polygon_out, year=year, indicator_var_name=indicator_var_name,
                                        areaID= areaID, other_nest_variables=other_nest_variables,
                                        type=type,units = units,
                                        PPTID =  PPTID,
@@ -269,6 +283,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
       } else {
         control_nesteddata <- NA
+        control_polygon_out <- NA
       }
 
       # END TEST
@@ -296,7 +311,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
              climate = coalesce(climate, !!climate),
              design_target = coalesce(design_target, !!design_target)) |>
       # plot!
-      mutate(plot = pmap(list(data,indicator,units,areaID), function(data, indicator, units,id) plot_indicator(data=data,indicator=indicator,units=units,id=id, plot_type=plot_type, year=year, indicator_var_name=indicator_var_name, scoring=scoring, areaID=!!areaID, areas=areas, bin_width=bin_width, control_polygon=control_polygon, control_nesteddata=control_nesteddata)
+      mutate(plot = pmap(list(data,indicator,units,areaID), function(data, indicator, units,id) plot_indicator(data=data,indicator=indicator,units=units,id=id, plot_type=plot_type, year=year, indicator_var_name=indicator_var_name, scoring=scoring, areaID=!!areaID, areas=areas, bin_width=bin_width, control_polygon=control_polygon, control_nesteddata=control_nesteddata, control_polygon_out=control_polygon_out)
       ))  |>
         mutate(readiness=readiness,
                scale=coalesce(scale, !!scale),

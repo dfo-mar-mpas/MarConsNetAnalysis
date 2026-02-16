@@ -16,7 +16,7 @@
 #' @export
 #'
 #' @examples
-plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_var_name, scoring, areaID, areas, bin_width, control_polygon, control_nesteddata){
+plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_var_name, scoring, areaID, areas, bin_width, control_polygon, control_nesteddata,control_polygon_out){
   p <- NULL
 
   if(!is.null(data)){
@@ -96,7 +96,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                                    combined_data$period),
                               drop = FALSE)
 
-          #browser()
 
           for (df in panel_info) {
 
@@ -170,7 +169,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 location = df$location[1],
                 period   = df$period[1]
               )
-
               # Add the regression line as a segment (respects facets)
               p <- p +
                 geom_segment(
@@ -178,18 +176,9 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                   aes(x = x, xend = xend, y = y, yend = yend),
                   linewidth = 1
                 )
-
-
-
             }
           }
-
-          #browser()
-
-
           plot_list[[i]] <- p
-
-
       }
       if("boxplot" %in% plot_type[i]) {
         # Create decade grouping
@@ -360,10 +349,10 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
               d <- ggplot() +
               geom_sf(data = areas[areas[[areaID]] == id,], fill = "white", color = "black")
 
-             if (!(all(is.na(control_polygon)))) {
-                ctrl_40 <- control_polygon[
-                  control_polygon$buffer_distance == "forty_km" &
-                    control_polygon$NAME_E == areas[areas[[areaID]] == id,]$NAME_E,
+             if (!(all(is.na(control_polygon)))) { # JAIM
+                ctrl_40 <- control_polygon_out[
+                  control_polygon_out$buffer_distance == "forty_km" &
+                    control_polygon_out$NAME_E == areas[areas[[areaID]] == id,]$NAME_E,
                 ]
 
                 # 🔴 keep only control points inside the polygon
