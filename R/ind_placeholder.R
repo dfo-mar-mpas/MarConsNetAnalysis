@@ -79,7 +79,9 @@ ind_placeholder <- function(ind_name = "placeholder",
     theme=theme,
     SME=SME,
     adjacent_data=NA,
-    adjacent_score=NA
+    adjacent_score=NA,
+    data_year_of_publication=NA,
+    last_year_of_data_collection=NA
   )
 
   return(x)

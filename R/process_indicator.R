@@ -73,6 +73,7 @@
 #' @param SME subject matter expert for the data/ indicator (e.g. John Doe)
 #' @param indicator_assumptions indicator assumptions
 #' @param indicator_caveats indicator caveats
+#' @param data_year_of_publication the year the data was published
 #'
 #' @details
 #' The function performs extensive validation of metadata and arguments.
@@ -158,10 +159,22 @@
 
 process_indicator <- function(data, indicator_var_name = NA, indicator, type = NA, units = NA, scoring = NA, direction = "normal",
                               PPTID = NA, source=NA, project_short_title = NA, climate = FALSE, design_target = FALSE, crs = 4326,
-                              latitude = "latitude", longitude = "longitude", year = "year", other_nest_variables = NA, areas = NA,
+                              latitude = "latitude", longitude = "longitude", year = "year_of_data_collection", other_nest_variables = NA, areas = NA,
                               areaID = "NAME_E", regionID = "region", plot_type = "time-series",bin_width = 5, plot_lm = TRUE, plot_lm_se = TRUE,
                               control_polygon=NA, climate_expectation=NA,indicator_rationale=NA,bin_rationale=NA, objectives=NA,
-                              readiness="Ready", scale='site', theme = NA, SME=NA, indicator_assumptions=NA, indicator_caveats=NA){
+                              readiness="Ready", scale='site', theme = NA, SME=NA, indicator_assumptions=NA, indicator_caveats=NA, data_year_of_publication=NA){
+
+  if (!('year_of_data_collection' %in% names(data))) {
+    # First check if year_of_data_collection is in the data source, if not check for year_of_publication
+    if (!('year_of_publication' %in% names(data))) {
+      # Then if not, check for the argument in process_indicator
+      if (is.na(data_year_of_publication)) {
+        stop("Must have year_of_data_collection and/or year_of_publication column in your data frame OR a data_year_of_publication argument in process_indicator")
+      }
+    }
+  }
+
+
   if (!(is.na(type))) {
   if (!(type %in% c('in situ', 'model', 'expert opinion', 'remote sensing')))
   stop('type must be either model, expert opinion, in situ, or remote sensing')
@@ -250,8 +263,32 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
                                      climate = climate,
                                      design_target = design_target,latitude=latitude,
                                      longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon, regionID=regionID)
-
-
+      LAST_SAMPLE_YEAR <- NULL
+      if (year %in% names(nesteddata$data[[1]])) {
+        for (i in seq_along(areas[[areaID]])) {
+          if (areas[[areaID]][i] %in% nesteddata$areaID) {
+            keeping <- which(nesteddata$areaID == areas[[areaID]][i])
+          LAST_SAMPLE_YEAR[i] <- max(as.numeric(nesteddata$data[[keeping]][[year]]), na.rm=TRUE)
+          } else {
+            LAST_SAMPLE_YEAR[i] <- NA
+          }
+        }
+      } else {
+        LAST_SAMPLE_YEAR <- rep(NA, length(areas[[areaID]]))
+      }
+      if ('year_of_publication' %in% names(nesteddata$data[[1]])) {
+        PUB_DATE <- NULL
+        for (i in seq_along(areas[[areaID]])) {
+          if (areas[[areaID]][i] %in% nesteddata$areaID) {
+            keeping <- which(nesteddata$areaID == areas[[areaID]][i])
+            PUB_DATE[i] <- max(as.numeric(nesteddata$data[[keeping]][['year_of_publication']]), na.rm=TRUE)
+          } else {
+            PUB_DATE[i] <- data_year_of_publication
+          }
+        }
+      } else {
+        PUB_DATE <- rep(data_year_of_publication, length(areas[[areaID]]))
+      }
 
 
       # TEST
@@ -374,6 +411,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
       final$assumptions <- data_assumptions
       final$caveats <- data_caveats
+      final$data_year_of_publication <- PUB_DATE
+      final$last_year_of_data_collection <- LAST_SAMPLE_YEAR
 
 
   } else {
@@ -404,7 +443,9 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       theme=theme,
       SME=SME,
       adjacent_data = NA,
-      adjacent_score=NA
+      adjacent_score=NA,
+      data_year_of_publication=data_year_of_publication,
+      last_year_of_data_collection = NA
     )
 
     if (any(names(final) == "region.y")) {
@@ -416,7 +457,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     "areaID", "region", "indicator", "type", "units", "scoring",
     "PPTID", "project_short_title", "climate", "design_target", "data",
     "score", "status_statement", "trend_statement","quality_statement", "source", "climate_expectation",
-    "indicator_rationale", "objectives", "bin_rationale", "plot", "readiness", "scale", "theme", "SME", 'assumptions', 'caveats', 'adjacent_data', 'adjacent_score'
+    "indicator_rationale", "objectives", "bin_rationale", "plot", "readiness", "scale", "theme", "SME", 'assumptions', 'caveats', 'adjacent_data', 'adjacent_score',
+    'data_year_of_publication', 'last_year_of_data_collection'
   )
 
   final <- final[ , desired_order]
