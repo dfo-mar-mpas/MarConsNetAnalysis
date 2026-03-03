@@ -252,7 +252,6 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     if (scale != "region-site") stop('scale must be set to "region-site" to use the "coverage" type scoring')
 
   }
-
     if(!dataisna){
       nesteddata <- assess_indicator(data=data, scoring=scoring, direction=direction,
                                      areas=areas, year=year, indicator_var_name=indicator_var_name,

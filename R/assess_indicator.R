@@ -37,7 +37,7 @@ assess_indicator <- function(data, scoring, direction,
 
   score_note <- "No year_of_data_collection column available. Score based on full dataset."
 
-  if (startsWith(scoring,"desired state:")){
+  if (startsWith(scoring,"desired state")){
 
     if(!year %in% names(data)){
       stop("year column not found")
@@ -73,12 +73,10 @@ assess_indicator <- function(data, scoring, direction,
                    attr(data, "sf_column"),
                    other_nest_variables)
 
-    #browser()
 
     if (any(is.na(data$areaID))) {
       data$areaID[which(is.na(data$areaID))] <- 'Non_Conservation_Area'
     }
-
 
     nesteddata <- data.frame(data,
                              indicator = indicator,
@@ -133,6 +131,8 @@ assess_indicator <- function(data, scoring, direction,
       if (!(nesteddata$areaID[i] == "Non_Conservation_Area")) {
 
       if("year_of_data_collection" %in% names(DATA)) {
+
+        if (!(grepl("since establishment", nesteddata$scoring[i]))) {
         DATA_post <- DATA[
           !is.na(DATA$year_of_data_collection) &
             DATA$year_of_data_collection >= estab_date, ]
@@ -143,6 +143,10 @@ assess_indicator <- function(data, scoring, direction,
         } else {
           DATA_use <- DATA
           score_note[i] <- "Not enough post-establishment data; score based on full dataset."
+        }
+        } else {
+          DATA_use <- DATA
+          score_note[i] <- 'Score based on all data.'
         }
 
       } else {
