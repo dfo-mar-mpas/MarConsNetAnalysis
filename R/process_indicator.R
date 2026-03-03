@@ -308,6 +308,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
         #   addPolygons(data = MPAs[44,], color = "blue") %>%
         #   addPolygons(data = control_polygon_out[44,], color = "red")
 
+        #browser()
+
         control_nesteddata <- assess_indicator(data=data, scoring=scoring, direction=direction,
                                        areas=control_polygon_out, year=year, indicator_var_name=indicator_var_name,
                                        areaID= areaID, other_nest_variables=other_nest_variables,
@@ -329,6 +331,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       #regional scores for "region-site" are calculated in assess_indicator(),
       # so at this point scale can be sites to fill in the blanks
       if(scale == "region-site") scale <- "site"
+      #browser()
       final <- dplyr::select(as.data.frame(areas),{{areaID}},{{regionID}}) |>
       unique() |>
       #full_join(nesteddata, by = c(setNames("areaID", areaID),setNames("region", regionID)))|>
@@ -413,8 +416,13 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       final$caveats <- data_caveats
       final$data_year_of_publication <- PUB_DATE
       final$last_year_of_data_collection <- LAST_SAMPLE_YEAR
-
-
+      final$score_note <- NA
+      for (i in seq_along(final$areaID)) {
+        keep <- which(nesteddata$areaID == final$areaID[i])
+        if (!(length(keep) == 0)) {
+          final$score_note[i] <- nesteddata$score_note[keep]
+        }
+      }
   } else {
     # NA data case
     final <- data.frame(
@@ -445,7 +453,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       adjacent_data = NA,
       adjacent_score=NA,
       data_year_of_publication=data_year_of_publication,
-      last_year_of_data_collection = NA
+      last_year_of_data_collection = NA,
+      score_note = NA
     )
 
     if (any(names(final) == "region.y")) {
@@ -458,7 +467,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     "PPTID", "project_short_title", "climate", "design_target", "data",
     "score", "status_statement", "trend_statement","quality_statement", "source", "climate_expectation",
     "indicator_rationale", "objectives", "bin_rationale", "plot", "readiness", "scale", "theme", "SME", 'assumptions', 'caveats', 'adjacent_data', 'adjacent_score',
-    'data_year_of_publication', 'last_year_of_data_collection'
+    'data_year_of_publication', 'last_year_of_data_collection', 'score_note'
   )
 
   final <- final[ , desired_order]

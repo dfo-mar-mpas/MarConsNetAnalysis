@@ -81,7 +81,8 @@ ind_placeholder <- function(ind_name = "placeholder",
     adjacent_data=NA,
     adjacent_score=NA,
     data_year_of_publication=NA,
-    last_year_of_data_collection=NA
+    last_year_of_data_collection=NA,
+    score_note <- NA
   )
 
   return(x)

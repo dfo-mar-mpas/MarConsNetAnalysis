@@ -35,6 +35,8 @@ assess_indicator <- function(data, scoring, direction,
   assumptions_storage <- attr(data, 'assumptions')
   caveats_storage <- attr(data, 'caveats')
 
+  score_note <- "No year_of_data_collection column available. Score based on full dataset."
+
   if (startsWith(scoring,"desired state:")){
 
     if(!year %in% names(data)){
@@ -71,6 +73,12 @@ assess_indicator <- function(data, scoring, direction,
                    attr(data, "sf_column"),
                    other_nest_variables)
 
+    #browser()
+
+    if (any(is.na(data$areaID))) {
+      data$areaID[which(is.na(data$areaID))] <- 'Non_Conservation_Area'
+    }
+
 
     nesteddata <- data.frame(data,
                              indicator = indicator,
@@ -83,170 +91,199 @@ assess_indicator <- function(data, scoring, direction,
                              design_target = design_target) |>
       nest(data = nest_cols[!is.na(nest_cols)])
 
+    ## Score, trend, and status statement
+#browser()
+    # Preallocate storage
+    n <- nrow(nesteddata)
 
+    models <- vector("list", n)
+    summaries <- vector("list", n)
+    coeffs <- vector("list", n)
 
+    slope_year <- numeric(n)
+    p <- numeric(n)
+    score <- numeric(n)
 
+    status_statement <- vector("list", n)
+    trend_statement <- vector("list", n)
+    score_note <- character(n)
 
-    # score the data
-    nesteddata <- nesteddata |>
-      mutate(model = map(data, ~lm(as.formula(paste0(indicator_var_name,"~",year)), data = .x)),
-             summaries = map(model,summary),
-             coeffs = map(summaries,coefficients),
-             slope_year = map_dbl(coeffs,~{
-               # Check if coeffs has at least 2 rows
-               if(nrow(.x) >= 2) {
-                 return(.x[2,1])
-               } else {
-                 # Return NA or some other default value
-                 return(NA_real_)
-               }}),
-             p = map_dbl(summaries, ~{
-               # Check if coefficients has at least 2 rows
-               if(is.null(.x$coefficients) || nrow(.x$coefficients) < 2) {
-                 return(NA_real_)
-               } else {
-                 return(.x$coefficients[2,4])
-               }
-             }),
-             score = case_when(
-               endsWith(scoring, "increase") & p < 0.05 & slope_year > 0 ~ 100,
-               endsWith(scoring, "increase") & p < 0.05 & slope_year < 0 ~ 0,
-               endsWith(scoring, "increase") & p >= 0.05 ~ 50,
+    for(i in seq_len(n)) {
 
-               endsWith(scoring, "decrease") & p < 0.05 & slope_year < 0 ~ 100,
-               endsWith(scoring, "decrease") & p < 0.05 & slope_year > 0 ~ 0,
-               endsWith(scoring, "decrease") & p >= 0.05 ~ 50,
+      message("nested i = ", i)
 
-               endsWith(scoring, "stable") & p < 0.05 ~ 0,
-               endsWith(scoring, "stable") & p >= 0.05 ~ 100,
-               .default = NA
-             ),
-      )
-
-    # TEST
-
-    status_statement <- list()
-    trend_statement <- list()
-    for (i in seq_along(nesteddata$data)) {
       DATA <- nesteddata$data[[i]]
-      if (!(is.null(DATA))) {
-        DATA_5_YEARS <- nesteddata$data[[i]][which(nesteddata$data[[i]]$year %in% tail(sort(as.numeric(
-          unique(DATA$year)
-        )), 5)),]
 
-        # STATUS
+      if(is.null(DATA) || nrow(DATA) == 0) {
+        status_statement[[i]] <- "No data available."
+        trend_statement[[i]] <- "No data available."
+        score_note[i] <- "No data available."
+        next
+      }
 
-        status_statement[[i]] <- paste0(
-          "The most recent year, ", tail(sort(as.numeric(DATA$year)), 1),
-          ", shows a mean of ", round(mean(DATA[[indicator_var_name]], na.rm = TRUE), 2),
-          if (!is.na(units)) paste0(" (", units, ")") else "",
-          " (sd = ", round(sd(DATA[[indicator_var_name]], na.rm = TRUE), 2), "). ",
-          "The most recent 5 years of sampling (", paste0(tail(sort(as.numeric(unique(DATA$year))), 5), collapse = ","),
-          ") showed a mean of ", round(mean(DATA_5_YEARS[[indicator_var_name]], na.rm = TRUE), 2),
-          if (!is.na(units)) paste0(" (", units, ")") else "",
-          " (sd = ", round(sd(DATA_5_YEARS[[indicator_var_name]], na.rm = TRUE), 2), ")"
-        )
+      # -----------------------------
+      # GET ESTABLISHMENT DATE
+      # -----------------------------
+      estab_date <- MPAs$date_of_establishment[MPAs[[areaID]] == unique(nesteddata$areaID[i])]
 
+      # -----------------------------
+      # SELECT DATA FOR TREND + SCORE
+      # -----------------------------
 
-        # TREND
+      if (!(nesteddata$areaID[i] == "Non_Conservation_Area")) {
 
-        if (length(unique(data$year[which(!(is.na(data[[indicator_var_name]])))])) > 1) {
-          data_5_year <- data[which(data$year %in% tail(sort(as.numeric(data$year)),5)),]
-          if (length(unique(data_5_year$year)) > 1) { # Can perform linear regression on 5 year
-            nesteddata_5_year <- data.frame(data_5_year,
-                                            indicator = indicator,
-                                            type = type,
-                                            units = units,
-                                            scoring = scoring,
-                                            PPTID =  PPTID,
-                                            project_short_title = project_short_title,
-                                            climate = climate,
-                                            design_target = design_target) |>
-              nest(data = nest_cols[!is.na(nest_cols)])
+      if("year_of_data_collection" %in% names(DATA)) {
+        DATA_post <- DATA[
+          !is.na(DATA$year_of_data_collection) &
+            DATA$year_of_data_collection >= estab_date, ]
 
-            # score the data
-            nesteddata_5_year <- nesteddata_5_year |>
-              mutate(model = map(data, ~lm(as.formula(paste0(indicator_var_name,"~",year)), data = .x)),
-                     summaries = map(model,summary),
-                     coeffs = map(summaries,coefficients),
-                     slope_year = map_dbl(coeffs,~{
-                       # Check if coeffs has at least 2 rows
-                       if(nrow(.x) >= 2) {
-                         return(.x[2,1])
-                       } else {
-                         # Return NA or some other default value
-                         return(NA_real_)
-                       }}),
-                     p = map_dbl(summaries, ~{
-                       # Check if coefficients has at least 2 rows
-                       if(is.null(.x$coefficients) || nrow(.x$coefficients) < 2) {
-                         return(NA_real_)
-                       } else {
-                         return(.x$coefficients[2,4])
-                       }
-                     }),
-                     score = case_when(
-                       endsWith(scoring, "increase") & p < 0.05 & slope_year > 0 ~ 100,
-                       endsWith(scoring, "increase") & p < 0.05 & slope_year < 0 ~ 0,
-                       endsWith(scoring, "increase") & p >= 0.05 ~ 50,
-
-                       endsWith(scoring, "decrease") & p < 0.05 & slope_year < 0 ~ 100,
-                       endsWith(scoring, "decrease") & p < 0.05 & slope_year > 0 ~ 0,
-                       endsWith(scoring, "decrease") & p >= 0.05 ~ 50,
-
-                       endsWith(scoring, "stable") & p < 0.05 ~ 0,
-                       endsWith(scoring, "stable") & p >= 0.05 ~ 100,
-                       .default = NA
-                     ),
-              )
-
-
-
-            trend_direction_5_years <- ifelse(unname(nesteddata_5_year$model[[i]][1]$coefficients[2]) > 0, "increase", "decrease")
-            five_year_trend_value <- unname(nesteddata_5_year$model[[i]][1]$coefficients[2])
-          } # more than 1 year condition
-          current_trend_direction <- ifelse(unname(nesteddata$model[[i]][1]$coefficients[2]) > 0, "increase", "decrease")
-          current_trend_value <- unname(nesteddata$model[[i]][1]$coefficients[2])
-
-
-
-          if (length(unique(data_5_year$year)) > 1) { # Condition what type of statement to print out.
-            trend_statement[[i]] <- paste0(
-              "A linear regression has shown a ", current_trend_direction, " of ", round(current_trend_value, 2),
-              if (!is.na(units) && units != "") paste0(" (", units, ")") else "",
-              ", over ", length(unique(DATA$year)), " years (pval = ", round(nesteddata$p[i], 2), "). The linear trend for the last 5 years sampled (",
-              paste0(tail(sort(unique(DATA$year)), 5), collapse = ","),
-              "), showed a ", trend_direction_5_years, " of ", round(five_year_trend_value, 2), " ", indicator_var_name,
-              if (!is.na(units) && units != "") paste0(" (", units, ")") else "",
-              " (pval = ", round(nesteddata_5_year$p[i], 2), ")"
-            )
-
-          }  else {
-            trend_statement[[i]] <- paste0(
-              "A linear regression has shown a ", current_trend_direction, " of ", round(current_trend_value, 2),
-              if (!is.na(units) && units != "") paste0(" (", units, ")") else "",
-              ", over ", length(unique(DATA$year)), " years (pval = ", round(nesteddata$p[i], 2), "). ",
-              "There is only one year of data sampled in the last 5 years, and therefore a linear regression is not possible"
-            )
-
-          }# condition (statement)
+        if(nrow(DATA_post) >= 1) {
+          DATA_use <- DATA_post
+          score_note[i] <- "Score only based on data post establishment."
         } else {
-          trend_statement[[i]] <- "There is only one year of data, and therefore a linear regression is not possible"
-
-        } # condition here
+          DATA_use <- DATA
+          score_note[i] <- "Not enough post-establishment data; score based on full dataset."
+        }
 
       } else {
-        status_statement[[i]] <- "TBD"
+        DATA_use <- DATA
+        score_note[i] <- "No year_of_data_collection column available. Score based on full dataset."
+      }
+      } else {
+        DATA_use <- DATA
+        score_note[i] <- 'Score based on all data (no establishment date for Non Conservation Areas).'
+      }
+
+      # -----------------------------
+      # MODEL FOR TREND + SCORE
+      # -----------------------------
+      if(length(unique(DATA_use[[year]][!is.na(DATA_use[[indicator_var_name]])])) > 1) {
+
+        model_i <- lm(
+          as.formula(paste0(indicator_var_name, "~", year)),
+          data = DATA_use
+        )
+
+        models[[i]] <- model_i
+        summaries[[i]] <- summary(model_i)
+        coeffs[[i]] <- coefficients(summary(model_i))
+
+        slope_year[i] <- coeffs[[i]][2,1]
+        p[i] <- coeffs[[i]][2,4]
+
+      } else {
+        slope_year[i] <- NA_real_
+        p[i] <- NA_real_
+      }
+
+      # -----------------------------
+      # SCORE (BASE R)
+      # -----------------------------
+      sc <- nesteddata$scoring[i]
+
+      if(endsWith(sc, "increase")) {
+        if(!is.na(p[i]) && p[i] < 0.05 && slope_year[i] > 0) score[i] <- 100
+        else if(!is.na(p[i]) && p[i] < 0.05 && slope_year[i] < 0) score[i] <- 0
+        else score[i] <- 50
+      }
+
+      if(endsWith(sc, "decrease")) {
+        if(!is.na(p[i]) && p[i] < 0.05 && slope_year[i] < 0) score[i] <- 100
+        else if(!is.na(p[i]) && p[i] < 0.05 && slope_year[i] > 0) score[i] <- 0
+        else score[i] <- 50
+      }
+
+      if(endsWith(sc, "stable")) {
+        if(!is.na(p[i]) && p[i] < 0.05) score[i] <- 0 else score[i] <- 100
+      }
+
+      # -----------------------------
+      # STATUS (FULL DATA)
+      # -----------------------------
+      yrs <- sort(unique(as.numeric(DATA[[year]])))
+      last_year <- tail(yrs, 1)
+
+      DATA_5_YEARS <- DATA[DATA[[year]] %in% tail(yrs, 5), ]
+
+      status_statement[[i]] <- paste0(
+        "The most recent year, ", last_year,
+        ", shows a mean of ", round(mean(DATA[[indicator_var_name]], na.rm = TRUE), 2),
+        if(!is.na(units) && units != "") paste0(" (", units, ")") else "",
+        " (sd = ", round(sd(DATA[[indicator_var_name]], na.rm = TRUE), 2), "). ",
+        "The most recent 5 years (", paste(tail(yrs, 5), collapse = ","),
+        ") showed a mean of ", round(mean(DATA_5_YEARS[[indicator_var_name]], na.rm = TRUE), 2),
+        if(!is.na(units) && units != "") paste0(" (", units, ")") else "",
+        " (sd = ", round(sd(DATA_5_YEARS[[indicator_var_name]], na.rm = TRUE), 2), "). "
+      )
+
+      # -----------------------------
+      # TREND (DATA_USE ONLY)
+      # -----------------------------
+      yrs_use <- sort(unique(as.numeric(DATA_use[[year]])))
+
+      if(length(yrs_use) > 1 && !is.na(slope_year[i])) {
+
+        trend_dir <- ifelse(slope_year[i] > 0, "increase", "decrease")
+
+        DATA_use_5 <- DATA_use[DATA_use[[year]] %in% tail(yrs_use, 5), ]
+
+        if(length(unique(DATA_use_5[[year]])) > 1) {
+
+          model5 <- lm(
+            as.formula(paste0(indicator_var_name, "~", year)),
+            data = DATA_use_5
+          )
+
+          slope5 <- coef(model5)[2]
+          p5 <- summary(model5)$coefficients[2,4]
+          trend5 <- ifelse(slope5 > 0, "increase", "decrease")
+
+          trend_statement[[i]] <- paste0(
+            "Linear regression shows a ", trend_dir, " of ",
+            round(slope_year[i], 2),
+            if(!is.na(units) && units != "") paste0(" (", units, ")") else "",
+            " over ", length(yrs_use), " years (p = ", round(p[i], 3), "). ",
+            "Over the last 5 years (", paste(tail(yrs_use, 5), collapse=","),
+            ") the trend shows a ", trend5, " of ",
+            round(slope5, 2),
+            if(!is.na(units) && units != "") paste0(" (", units, ")") else "",
+            " (p = ", round(p5, 3), ")."
+          )
+
+        } else {
+          trend_statement[[i]] <- paste0(
+            "Linear regression shows a ", trend_dir, " of ",
+            round(slope_year[i], 2),
+            " over ", length(yrs_use), " years (p = ", round(p[i], 3), "). ",
+            "Insufficient data for 5-year trend."
+          )
+        }
+
+      } else {
+        trend_statement[[i]] <- "Insufficient data for trend analysis."
       }
 
     }
+
+    # -----------------------------
+    # ASSIGN BACK TO NESTEDDATA
+    # -----------------------------
+    nesteddata$model <- models
+    nesteddata$summaries <- summaries
+    nesteddata$coeffs <- coeffs
+    nesteddata$slope_year <- slope_year
+    nesteddata$p <- p
+    nesteddata$score <- score
+    nesteddata$status_statement <- status_statement
+    nesteddata$trend_statement <- trend_statement
+    nesteddata$score_note <- score_note
+
     nesteddata <- nesteddata |>
       dplyr::select(-model,-summaries,-coeffs,-slope_year,-p)
 
     nesteddata$status_statement <- unlist(status_statement)
     nesteddata$trend_statement <- unlist(trend_statement)
 
-    #browser()
   } else if (startsWith(scoring,"representation")){
     #areas <- areas[-which(areas$NAME_E == "Non_Conservation_Area"),]
 
@@ -503,7 +540,6 @@ assess_indicator <- function(data, scoring, direction,
                                     "% was targeted"),
           trend_statement = "There is no temporal dimension in this data.")|>
         nest(data = c(cp_landings, cp_percent, attr(intersect, "sf_column"),{{indicator_var_name}}))
-      # browser()
 
     } else {
 
