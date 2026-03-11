@@ -176,8 +176,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
 
 
   if (!(is.na(type))) {
-  if (!(type %in% c('in situ', 'model', 'expert opinion', 'remote sensing')))
-  stop('type must be either model, expert opinion, in situ, or remote sensing')
+    if (!(type %in% c('in situ', 'model', 'expert opinion', 'remote sensing')))
+      stop('type must be either model, expert opinion, in situ, or remote sensing')
   }
 
 
@@ -185,8 +185,8 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     if (all(is.na(other_nest_variables))) {
       stop("Must provide other_nest_variable named containing subclass and class when plot_type = 'map-species'")
     } else if (!('subclass' %in% other_nest_variables)) {
-        stop("Must provide other_nest_variable named containing subclass and class when plot_type = 'map-species'")
-      }
+      stop("Must provide other_nest_variable named containing subclass and class when plot_type = 'map-species'")
+    }
 
   }
 
@@ -252,86 +252,86 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     if (scale != "region-site") stop('scale must be set to "region-site" to use the "coverage" type scoring')
 
   }
-    if(!dataisna){
-      nesteddata <- assess_indicator(data=data, scoring=scoring, direction=direction,
-                                     areas=areas, year=year, indicator_var_name=indicator_var_name,
-                                     areaID= areaID, other_nest_variables=other_nest_variables,
-                                     type=type,units = units,
-                                     PPTID =  PPTID,
-                                     project_short_title = project_short_title,
-                                     climate = climate,
-                                     design_target = design_target,latitude=latitude,
-                                     longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon, regionID=regionID)
-      LAST_SAMPLE_YEAR <- NULL
-      if (year %in% names(nesteddata$data[[1]])) {
-        for (i in seq_along(areas[[areaID]])) {
-          if (areas[[areaID]][i] %in% nesteddata$areaID) {
-            keeping <- which(nesteddata$areaID == areas[[areaID]][i])
+  if(!dataisna){
+    nesteddata <- assess_indicator(data=data, scoring=scoring, direction=direction,
+                                   areas=areas, year=year, indicator_var_name=indicator_var_name,
+                                   areaID= areaID, other_nest_variables=other_nest_variables,
+                                   type=type,units = units,
+                                   PPTID =  PPTID,
+                                   project_short_title = project_short_title,
+                                   climate = climate,
+                                   design_target = design_target,latitude=latitude,
+                                   longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon, regionID=regionID)
+    LAST_SAMPLE_YEAR <- NULL
+    if (year %in% names(nesteddata$data[[1]])) {
+      for (i in seq_along(areas[[areaID]])) {
+        if (areas[[areaID]][i] %in% nesteddata$areaID) {
+          keeping <- which(nesteddata$areaID == areas[[areaID]][i])
           LAST_SAMPLE_YEAR[i] <- max(as.numeric(nesteddata$data[[keeping]][[year]]), na.rm=TRUE)
-          } else {
-            LAST_SAMPLE_YEAR[i] <- NA
-          }
+        } else {
+          LAST_SAMPLE_YEAR[i] <- NA
         }
-      } else {
-        LAST_SAMPLE_YEAR <- rep(NA, length(areas[[areaID]]))
       }
-      if ('year_of_publication' %in% names(nesteddata$data[[1]])) {
-        PUB_DATE <- NULL
-        for (i in seq_along(areas[[areaID]])) {
-          if (areas[[areaID]][i] %in% nesteddata$areaID) {
-            keeping <- which(nesteddata$areaID == areas[[areaID]][i])
-            PUB_DATE[i] <- max(as.numeric(nesteddata$data[[keeping]][['year_of_publication']]), na.rm=TRUE)
-          } else {
-            PUB_DATE[i] <- data_year_of_publication
-          }
+    } else {
+      LAST_SAMPLE_YEAR <- NA
+    }
+    if ('year_of_publication' %in% names(nesteddata$data[[1]])) {
+      PUB_DATE <- NULL
+      for (i in seq_along(areas[[areaID]])) {
+        if (areas[[areaID]][i] %in% nesteddata$areaID) {
+          keeping <- which(nesteddata$areaID == areas[[areaID]][i])
+          PUB_DATE[i] <- max(as.numeric(nesteddata$data[[keeping]][['year_of_publication']]), na.rm=TRUE)
+        } else {
+          PUB_DATE[i] <- data_year_of_publication
         }
-      } else {
-        PUB_DATE <- rep(data_year_of_publication, length(areas[[areaID]]))
       }
+    } else {
+      PUB_DATE <- data_year_of_publication
+    }
 
 
-      # TEST
-      # Creating outside data frame if there is data and control_polygon is not NA
-      if (!(all(is.na(control_polygon)))) {
-        control_polygon_out <- control_polygon %>%
-          filter(buffer_distance %in% c("twenty_km", "forty_km")) %>%
-          group_by(NAME_E, NAME_F, region) %>%
-          summarise(
-            buffer_distance = "forty_km",
-            geoms = st_union(geoms),
-            .groups = "drop"
-          )
+    # TEST
+    # Creating outside data frame if there is data and control_polygon is not NA
+    if (!(all(is.na(control_polygon)))) {
+      control_polygon_out <- control_polygon %>%
+        filter(buffer_distance %in% c("twenty_km", "forty_km")) %>%
+        group_by(NAME_E, NAME_F, region) %>%
+        summarise(
+          buffer_distance = "forty_km",
+          geoms = st_union(geoms),
+          .groups = "drop"
+        )
 
-        # leaflet() %>%
-        #   addProviderTiles(providers$CartoDB.Positron) %>%
-        #   addPolygons(data = MPAs[44,], color = "blue") %>%
-        #   addPolygons(data = control_polygon_out[44,], color = "red")
+      # leaflet() %>%
+      #   addProviderTiles(providers$CartoDB.Positron) %>%
+      #   addPolygons(data = MPAs[44,], color = "blue") %>%
+      #   addPolygons(data = control_polygon_out[44,], color = "red")
 
-        #browser()
-
-        control_nesteddata <- assess_indicator(data=data, scoring=scoring, direction=direction,
-                                       areas=control_polygon_out, year=year, indicator_var_name=indicator_var_name,
-                                       areaID= areaID, other_nest_variables=other_nest_variables,
-                                       type=type,units = units,
-                                       PPTID =  PPTID,
-                                       project_short_title = project_short_title,
-                                       climate = climate,
-                                       design_target = design_target,latitude=latitude,
-                                       longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon, regionID=regionID)
-
-      } else {
-        control_nesteddata <- NA
-        control_polygon_out <- NA
-      }
-
-      # END TEST
-
-
-      #regional scores for "region-site" are calculated in assess_indicator(),
-      # so at this point scale can be sites to fill in the blanks
-      if(scale == "region-site") scale <- "site"
       #browser()
-      final <- dplyr::select(as.data.frame(areas),{{areaID}},{{regionID}}) |>
+
+      control_nesteddata <- assess_indicator(data=data, scoring=scoring, direction=direction,
+                                             areas=control_polygon_out, year=year, indicator_var_name=indicator_var_name,
+                                             areaID= areaID, other_nest_variables=other_nest_variables,
+                                             type=type,units = units,
+                                             PPTID =  PPTID,
+                                             project_short_title = project_short_title,
+                                             climate = climate,
+                                             design_target = design_target,latitude=latitude,
+                                             longitude=longitude, crs=crs,indicator=indicator, control_polygon=control_polygon, regionID=regionID)
+
+    } else {
+      control_nesteddata <- NA
+      control_polygon_out <- NA
+    }
+
+    # END TEST
+
+
+    #regional scores for "region-site" are calculated in assess_indicator(),
+    # so at this point scale can be sites to fill in the blanks
+    if(scale == "region-site") scale <- "site"
+    #browser()
+    final <- dplyr::select(as.data.frame(areas),{{areaID}},{{regionID}}) |>
       unique() |>
       #full_join(nesteddata, by = c(setNames("areaID", areaID),setNames("region", regionID)))|>
       full_join(nesteddata, by = c(setNames("areaID", areaID)))|>
@@ -352,76 +352,78 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
       # plot!
       mutate(plot = pmap(list(data,indicator,units,areaID), function(data, indicator, units,id) plot_indicator(data=data,indicator=indicator,units=units,id=id, plot_type=plot_type, year=year, indicator_var_name=indicator_var_name, scoring=scoring, areaID=!!areaID, areas=areas, bin_width=bin_width, control_polygon=control_polygon, control_nesteddata=control_nesteddata, control_polygon_out=control_polygon_out)
       ))  |>
-        mutate(readiness=readiness,
-               scale=coalesce(scale, !!scale),
-               theme=theme,
-               SME=SME)
+      mutate(readiness=readiness,
+             scale=coalesce(scale, !!scale),
+             theme=theme,
+             SME=SME)
 
-      # Adding outside data/score
-      if (!(all(is.na(control_polygon)))) {
-        # Pre-allocate
-        final$adjacent_score <- NA_real_
-        final$adjacent_data  <- vector("list", nrow(final))
-        for (j in seq_len(nrow(control_nesteddata))) {
+    # Adding outside data/score
+    if (!(all(is.na(control_polygon)))) {
+      # Pre-allocate
+      final$adjacent_score <- NA_real_
+      final$adjacent_data  <- vector("list", nrow(final))
+      for (j in seq_len(nrow(control_nesteddata))) {
 
-          # Find rows in final that match this areaID
-          idx <- which(final$areaID == control_nesteddata$areaID[j])
+        # Find rows in final that match this areaID
+        idx <- which(final$areaID == control_nesteddata$areaID[j])
 
-          if (length(idx) > 0) {
-            final$adjacent_score[idx] <- control_nesteddata$score[j]
-            final$adjacent_data[idx]  <- control_nesteddata$data[j]
-          }
+        if (length(idx) > 0) {
+          final$adjacent_score[idx] <- control_nesteddata$score[j]
+          final$adjacent_data[idx]  <- control_nesteddata$data[j]
         }
-      } else {
-        final$adjacent_data <- NA
-        final$adjacent_score <- NA
       }
+    } else {
+      final$adjacent_data <- NA
+      final$adjacent_score <- NA
+    }
 
-      if (any(names(final) == "region.y")) {
-        names(final)[which(names(final) == "region.x")] <- 'region'
-      }
+    if (any(names(final) == "region.y")) {
+      names(final)[which(names(final) == "region.x")] <- 'region'
+    }
 
 
-      ## Adding assumptions and caveats
-      ## DATA assumptions:
+    ## Adding assumptions and caveats
+    ## DATA assumptions:
 
-      x <- inherit_from_dependencies(as_tibble(final), n = 2, attribute = TRUE)
+    x <- inherit_from_dependencies(as_tibble(final), n = 2, attribute = TRUE)
 
-      if (all(attr(x, 'assumptions') == "")) {
-        data_assumptions <- paste0(attr(nesteddata, 'assumptions'), collapse="; ") # PULLING FROM DATA SOURCE that is fed into process_indicator
-      } else {
-        # Running in a target
-        data_assumptions <- paste0(unique(x$assumptions), collapse=';')
-      }
+    if (all(attr(x, 'assumptions') == "")) {
+      data_assumptions <- paste0(attr(nesteddata, 'assumptions'), collapse="; ") # PULLING FROM DATA SOURCE that is fed into process_indicator
+    } else {
+      # Running in a target
+      data_assumptions <- paste0(unique(x$assumptions), collapse=';')
+    }
 
-      if (all(attr(x, 'caveats') == "")) {
-        data_caveats <- paste0(attr(nesteddata, 'assumptions'), collapse="; ")
-      } else {
-        # Running in a target
-        data_caveats <- paste0(unique(x$caveats), collapse=';')
-      }
+    if (all(attr(x, 'caveats') == "")) {
+      data_caveats <- paste0(attr(nesteddata, 'assumptions'), collapse="; ")
+    } else {
+      # Running in a target
+      data_caveats <- paste0(unique(x$caveats), collapse=';')
+    }
 
-      # Combining data and indicator assumptions / caveats
+    # Combining data and indicator assumptions / caveats
 
-      if (!(is.na(indicator_assumptions))) {
-        data_assumptions <- paste0(data_assumptions, " Indicator assumptions: ", indicator_assumptions)
-      }
+    if (!(is.na(indicator_assumptions))) {
+      data_assumptions <- paste0(data_assumptions, " Indicator assumptions: ", indicator_assumptions)
+    }
 
-      if (!(is.na(indicator_caveats))) {
-        data_caveats <- paste0(data_caveats, "Indicator caveats: ", indicator_caveats)
-      }
+    if (!(is.na(indicator_caveats))) {
+      data_caveats <- paste0(data_caveats, "Indicator caveats: ", indicator_caveats)
+    }
 
-      final$assumptions <- data_assumptions
-      final$caveats <- data_caveats
-      final$data_year_of_publication <- PUB_DATE
-      final$last_year_of_data_collection <- LAST_SAMPLE_YEAR
-      final$score_note <- NA
+    final$assumptions <- data_assumptions
+    final$caveats <- data_caveats
+    final$data_year_of_publication <- PUB_DATE
+    final$last_year_of_data_collection <- LAST_SAMPLE_YEAR
+    final$score_note <- NA
+    if("score_note" %in% names(nesteddata)){
       for (i in seq_along(final$areaID)) {
         keep <- which(nesteddata$areaID == final$areaID[i])
         if (!(length(keep) == 0)) {
           final$score_note[i] <- nesteddata$score_note[keep]
         }
       }
+    }
   } else {
     # NA data case
     final <- data.frame(
