@@ -295,7 +295,7 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
     if (!(all(is.na(control_polygon)))) {
       control_polygon_out <- control_polygon %>%
         filter(buffer_distance %in% c("twenty_km", "forty_km")) %>%
-        group_by(NAME_E, NAME_F, region) %>%
+        group_by(NAME_E, NAME_F, region, date_of_establishment) %>%
         summarise(
           buffer_distance = "forty_km",
           geoms = st_union(geoms),
