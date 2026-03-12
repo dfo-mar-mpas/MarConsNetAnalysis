@@ -34,7 +34,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
       if("time-series" %in% plot_type[i]) {
 
-          est_year <- MPAs$date_of_establishment[MPAs$NAME_E == id]
+          est_year <- areas$date_of_establishment[areas$NAME_E == id]
 
           # ---- Prepare inside data ----
           inside_data <- data
@@ -185,7 +185,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
         data$decade_group <- floor(data[[year]] / bin_width) * bin_width
 
         # Plot with position_dodge to control width
-        est_year <- MPAs$date_of_establishment[MPAs$NAME_E == id]
+        est_year <- areas$date_of_establishment[areas$NAME_E == id]
         year_range <- range(data[[year]], na.rm = TRUE)
 
         plot_list[[i]] <- ggplot(data, aes(x = decade_group + bin_width/2,
@@ -233,7 +233,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
         } else {
 
           # Plot with position_dodge to control width
-          est_year <- MPAs$date_of_establishment[MPAs$NAME_E == id]
+          est_year <- areas$date_of_establishment[areas$NAME_E == id]
 
           year_range <- range(data[[year]], na.rm = TRUE)
 
