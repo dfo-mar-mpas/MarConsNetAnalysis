@@ -122,7 +122,7 @@ assess_indicator <- function(data, scoring, direction,
       # -----------------------------
       # GET ESTABLISHMENT DATE
       # -----------------------------
-      estab_date <- MPAs$date_of_establishment[MPAs[[areaID]] == unique(nesteddata$areaID[i])]
+      estab_date <- areas$date_of_establishment[areas[[areaID]] == unique(nesteddata$areaID[i])]
 
       # -----------------------------
       # SELECT DATA FOR TREND + SCORE
