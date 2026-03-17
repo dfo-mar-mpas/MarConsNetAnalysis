@@ -17,6 +17,8 @@
 #'
 #' @examples
 plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_var_name, scoring, areaID, areas, bin_width, control_polygon, control_nesteddata,control_polygon_out){
+
+
   p <- NULL
 
   if(!is.null(data)){
@@ -110,13 +112,13 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
               p <- p +
                 geom_text(
                   data = data.frame(
-                    location = if (!is.null(df$location)) df$location[1] else "MPA",   # facet
-                    period   = if (!is.null(df$period)) df$period[1] else "Before",     # facet
+                    location = if (!is.null(df$location)) df$location[1] else "MPA",
+                    period   = if (!is.null(df$period)) df$period[1] else "Before",
                     x = max_global_x,
                     y = max_global_y
                   ),
-                  aes(label = "Insufficient data"),
-                  inherit.aes = FALSE,   # very important!
+                  aes(x = x, y = y, label = "Insufficient data"),
+                  inherit.aes = FALSE,
                   hjust = 1,
                   vjust = 1,
                   size = 4
@@ -180,6 +182,8 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           }
           plot_list[[i]] <- p
       }
+      #browser()
+
       if("boxplot" %in% plot_type[i]) {
         # Create decade grouping
         data$decade_group <- floor(data[[year]] / bin_width) * bin_width

@@ -348,11 +348,41 @@ process_indicator <- function(data, indicator_var_name = NA, indicator, type = N
              bin_rationale = coalesce(bin_rationale, !!bin_rationale),
              project_short_title = coalesce(project_short_title, !!project_short_title),
              climate = coalesce(climate, !!climate),
-             design_target = coalesce(design_target, !!design_target)) |>
+             design_target = coalesce(design_target, !!design_target))
+
+
+    # create an empty list to store plots
+    plots_storage <- vector("list", length = nrow(final))
+
+    # loop over rows
+    #browser()
+    for(nr in seq_len(nrow(final))) {
+      message("Running iteration: ", nr)  # prints the iteration number
+      plots_storage[[nr]] <- plot_indicator(
+        data = final$data[[nr]],
+        indicator = final$indicator[[nr]],
+        units = final$units[[nr]],
+        id = final$areaID[[nr]],
+        plot_type = plot_type,
+        year = year,
+        indicator_var_name = indicator_var_name,
+        scoring = scoring,
+        areaID = areaID,
+        areas = areas,
+        bin_width = bin_width,
+        control_polygon = control_polygon,
+        control_nesteddata = control_nesteddata,
+        control_polygon_out = control_polygon_out
+      )
+    }
+
+    # optionally, store plots back in your data frame
+    final$plot <- plots_storage
+
       # plot!
-      mutate(plot = pmap(list(data,indicator,units,areaID), function(data, indicator, units,id) plot_indicator(data=data,indicator=indicator,units=units,id=id, plot_type=plot_type, year=year, indicator_var_name=indicator_var_name, scoring=scoring, areaID=!!areaID, areas=areas, bin_width=bin_width, control_polygon=control_polygon, control_nesteddata=control_nesteddata, control_polygon_out=control_polygon_out)
-      ))  |>
-      mutate(readiness=readiness,
+      # mutate(plot = pmap(list(data,indicator,units,areaID), function(data, indicator, units,id) plot_indicator(data=data,indicator=indicator,units=units,id=id, plot_type=plot_type, year=year, indicator_var_name=indicator_var_name, scoring=scoring, areaID=!!areaID, areas=areas, bin_width=bin_width, control_polygon=control_polygon, control_nesteddata=control_nesteddata, control_polygon_out=control_polygon_out)
+      # ))  |>
+     final <- final %>%  mutate(readiness=readiness,
              scale=coalesce(scale, !!scale),
              theme=theme,
              SME=SME)

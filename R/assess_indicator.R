@@ -824,7 +824,7 @@ assess_indicator <- function(data, scoring, direction,
 
 
   ## FIX PROBLEM IS MPAs is not the areas argument we don't have Non_Conservation_Area (e.g. ind_musquash_ph). It assigns it to a areaID of NA, which causes problems with save_plots
-
+#browser()
   if (any(is.na(nesteddata$areaID))) {
     nesteddata$areaID[which(is.na(nesteddata$areaID))] <- "Non_Conservation_Area"
   }
