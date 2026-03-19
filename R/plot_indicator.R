@@ -37,6 +37,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
       if("time-series" %in% plot_type[i]) {
 
           est_year <- areas$date_of_establishment[areas$NAME_E == id]
+          if(length(est_year)<1) est_year <- Inf
 
           # ---- Prepare inside data ----
           inside_data <- data
