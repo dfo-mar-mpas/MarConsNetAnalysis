@@ -20,7 +20,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
 
   p <- NULL
-
   if(!is.null(data)){
     plot_list <- list()
 
@@ -65,10 +64,14 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           }
 
           # Combine
-          combined_data <- rbind(
-            inside_data,
-            if (!is.null(control_data)) control_data
-          )
+          #combined_data <- rbind(inside_data,if(!is.null(control_data)) control_data)
+
+          if (!(is.null(control_data))) {
+            combined_data <- rbind(inside_data,control_data)
+          } else {
+            combined_data <- inside_data
+          }
+
 
           # ---- Compute global axis limits ----
           x_range <- range(combined_data[[year]], na.rm = TRUE)

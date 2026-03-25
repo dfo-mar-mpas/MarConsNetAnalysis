@@ -57,7 +57,9 @@ assess_indicator <- function(
         stop("longitude column not found")
       }
       # convert to sf object and join with areas
-      data <- st_as_sf(data, coords = c(longitude, latitude), crs = crs) |>
+      data <- data |>
+        dplyr::filter(!is.na(longitude), !is.na(latitude)) |>
+        st_as_sf(coords = c("longitude", "latitude"), crs = crs) |>
         st_join(dplyr::select(areas, {{ areaID }})) |>
         rename(areaID = {{ areaID }})
     } else {
@@ -93,7 +95,6 @@ assess_indicator <- function(
       nest(data = nest_cols[!is.na(nest_cols)])
 
     ## Score, trend, and status statement
-    #browser()
     # Preallocate storage
     n <- nrow(nesteddata)
 
@@ -1063,12 +1064,12 @@ assess_indicator <- function(
   nesteddata$quality_statement <- NA
 
   ## FIX PROBLEM IS MPAs is not the areas argument we don't have Non_Conservation_Area (e.g. ind_musquash_ph). It assigns it to a areaID of NA, which causes problems with save_plots
-  #browser()
   if (any(is.na(nesteddata$areaID))) {
     nesteddata$areaID[which(is.na(
       nesteddata$areaID
     ))] <- "Non_Conservation_Area"
   }
+
   for (i in seq_along(nesteddata$data)) {
     # Note a sample means unique date and geomtry. If there are multiple depths in a single sample it counts as one sample
     message(i)
@@ -1094,12 +1095,12 @@ assess_indicator <- function(
             ": ",
             "There are no quality statements available for POLYGON type"
           )
-        } else if ("year" %in% names(quality_data)) {
+        } else if (year %in% names(quality_data)) {
           number_of_samples <- quality_data %>%
-            distinct(year, .data[[GEOM]]) %>%
+            distinct({{ year }}, .data[[GEOM]]) %>%
             summarise(n_samples = n())
-          min_year <- min(sort(as.numeric(unique(quality_data$year))))
-          max_year <- max(sort(as.numeric(unique(quality_data$year))))
+          min_year <- min(sort(as.numeric(unique(quality_data[[year]]))))
+          max_year <- max(sort(as.numeric(unique(quality_data[[year]]))))
           if (min_year == max_year) {
             nesteddata$quality_statement[i] <- paste0(
               nesteddata$areaID[i],
