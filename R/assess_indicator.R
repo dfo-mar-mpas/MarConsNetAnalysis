@@ -15,6 +15,8 @@
 #' numeric scores (0–100), data summaries, and human‑readable
 #' status and trend statements.
 #'
+#' @importFrom rang as_name
+#'
 #' @examples
 #' @export
 assess_indicator <- function(
@@ -57,11 +59,14 @@ assess_indicator <- function(
         stop("longitude column not found")
       }
       # convert to sf object and join with areas
-      data <- data |>
-        dplyr::filter(!is.na(longitude), !is.na(latitude)) |>
-        st_as_sf(coords = c("longitude", "latitude"), crs = crs) |>
+      data <- data <- data |>
+        dplyr::filter(!is.na({{ longitude }}), !is.na({{ latitude }})) |>
+        st_as_sf(coords = c(rlang::as_name(ensym(longitude)),
+                            rlang::as_name(ensym(latitude))),
+                 crs = crs) |>
         st_join(dplyr::select(areas, {{ areaID }})) |>
         rename(areaID = {{ areaID }})
+
     } else {
       # join with areas
       data <- data |>
