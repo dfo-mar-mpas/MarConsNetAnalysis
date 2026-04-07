@@ -471,6 +471,7 @@ assess_indicator <- function(
       if (attr(data, "sf_column") == "geometry") {
         data[["geoms"]] <- data[["geometry"]]
       }
+      #browser()
 
       totaloccurrences <- data |>
         mutate(
@@ -527,13 +528,24 @@ assess_indicator <- function(
           project_short_title = project_short_title,
           climate = climate,
           design_target = design_target,
-          status_statement = paste0(
-            areaID,
-            " has had recorded occurrences of ",
-            nrow(rawdata),
-            " taxa which represents ",
-            round(nrow(rawdata) / nrow(data) * 100, 1),
-            "% of taxa recorded in this dataset"
+          status_statement = if_else(
+            !endsWith(scoring, "count"),
+            paste0(
+              areaID,
+              " has had recorded occurrences of ",
+              nrow(rawdata),
+              " taxa which represents ",
+              round(nrow(rawdata) / nrow(data) * 100, 1),
+              "% of taxa recorded in this dataset"
+            ),
+            paste0(
+              areaID,
+              " has had recorded occurrences of ",
+              nrow(rawdata), " ", {{ indicator }},
+              " which represents ",
+              round(nrow(rawdata) / nrow(data) * 100, 1),
+              "% of ", {{ indicator }}
+            )
           ),
           trend_statement = "There is no temporal dimension in this data."
         ) |>
