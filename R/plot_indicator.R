@@ -186,7 +186,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           }
           plot_list[[i]] <- p
       }
-      #browser()
 
       if("boxplot" %in% plot_type[i]) {
         # Create decade grouping
@@ -306,7 +305,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 fill = "white",
                 color = "black"
               ) +
-
               # Main spatial layer without contributing to shape legend
               geom_sf(
                 data = data,
@@ -319,7 +317,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 size = 2,
                 show.legend = FALSE  # Disable broken shape legend here
               ) +
-
               # Add a separate geom_point layer just for legend
               geom_point(
                 data = d_coords,
@@ -332,14 +329,12 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 color = "black",
                 size = 2
               ) +
-
               # Shape legend (works now because of geom_point)
               scale_shape_manual(
                 values = c("FALSE" = 21, "TRUE" = 24),  # Circle = Inside, Triangle = Outside
                 name = "Site Type",
                 labels = c("FALSE" = "Inside", "TRUE" = "Outside")
               ) +
-
               theme_classic() +
               labs(
                 fill = indicator_var_name,
@@ -356,8 +351,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           } else {
               d <- ggplot() +
               geom_sf(data = areas[areas[[areaID]] == id,], fill = "white", color = "black")
-
-             if (!(all(is.na(control_polygon)))) { # JAIM
+             if (!(all(is.na(control_polygon)))) {
                 ctrl_40 <- control_polygon_out[
                   control_polygon_out$buffer_distance == "forty_km" &
                     control_polygon_out$NAME_E == areas[areas[[areaID]] == id,]$NAME_E,
@@ -390,14 +384,26 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 }
 
 
+             }
+
+
+              if (any(sf::st_geometry_type(data) %in% c("LINESTRING", "MULTILINESTRING"))) {
+                d <- d + geom_sf(
+                  data = data,
+                  aes(geometry = aes_geom, color = .data[[indicator_var_name]]),
+                  size = 1
+                )
+              } else {
+                d <- d + geom_sf(
+                  data = data,
+                  aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
+                  shape = 21,
+                  color = "black",
+                  size = 2
+                )
               }
-              d <- d+ geom_sf(
-                data = data,
-                aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
-                shape = 21,
-                color = "black",
-                size = 2
-              ) +
+
+              d <- d +
               theme_classic() +
               theme(
                 plot.title = element_text(size = 10),
