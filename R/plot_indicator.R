@@ -386,22 +386,25 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
              }
 
+#browser()
 
-              if (any(sf::st_geometry_type(data) %in% c("LINESTRING", "MULTILINESTRING"))) {
-                d <- d + geom_sf(
-                  data = data,
-                  aes(geometry = aes_geom, color = .data[[indicator_var_name]]),
-                  size = 1
-                )
-              } else {
-                d <- d + geom_sf(
-                  data = data,
-                  aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
-                  shape = 21,
-                  color = "black",
-                  size = 2
-                )
-              }
+if (any(grepl("sf", class(data)))) {
+  if (any(sf::st_geometry_type(data) %in% c("LINESTRING", "MULTILINESTRING"))) {
+    d <- d + geom_sf(
+      data = data,
+      aes(geometry = aes_geom, color = .data[[indicator_var_name]]),
+      size = 1
+    )
+  }
+} else {
+  d <- d + geom_sf(
+    data = data,
+    aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
+    shape = 21,
+    color = "black",
+    size = 2
+  )
+}
 
               d <- d +
               theme_classic() +
