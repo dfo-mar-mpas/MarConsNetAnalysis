@@ -250,6 +250,8 @@ plot_flowerplot <- function(df,grouping="grouping",labels="labels",score="score"
   if(title==FALSE){
     return(p)
   } else {
+    title <- paste(strwrap(title, width = 30), collapse = "\n")
+
     return(p+
              labs(title=title) +
              theme(plot.title = element_text(hjust = 0.5)))
