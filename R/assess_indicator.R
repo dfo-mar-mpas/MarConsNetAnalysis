@@ -46,6 +46,28 @@ assess_indicator <- function(
 
   score_note <- "No year_of_data_collection column available. Score based on full dataset."
 
+
+  ## Determining which geom to use for join (for externalData, e.g. seals)
+
+  old_geom_col <- attr(areas, "sf_column")  # original geometry
+
+
+
+
+  geom_to_use <- if ("geom_external_buffer" %in% names(areas)) {
+    "geom_external_buffer"   # 🔴 use buffered
+  } else {
+    attr(areas, "sf_column") # 🔴 use original geometry
+  }
+
+  areas_use <- areas
+  if (geom_to_use == 'geom_external_buffer') {
+    areas_use <- areas_use |>
+      st_set_geometry("geom_external_buffer")
+  }
+  ## end externalData
+
+
   if (startsWith(scoring, "desired state")) {
     if (!year %in% names(data)) {
       stop("year column not found")
@@ -59,20 +81,23 @@ assess_indicator <- function(
         stop("longitude column not found")
       }
       # convert to sf object and join with areas
-      data <- data <- data |>
+     data <- data |>
         dplyr::filter(!is.na({{ longitude }}), !is.na({{ latitude }})) |>
         st_as_sf(coords = c(rlang::as_name(ensym(longitude)),
                             rlang::as_name(ensym(latitude))),
                  crs = crs) |>
-        st_join(dplyr::select(areas, {{ areaID }})) |>
+        st_join(dplyr::select(areas_use, {{ areaID }})) |>
         rename(areaID = {{ areaID }})
+
 
     } else {
       # join with areas
       data <- data |>
-        st_join(dplyr::select(areas, {{ areaID }})) |>
+        st_join(dplyr::select(areas_use, {{ areaID }})) |>
         rename(areaID = {{ areaID }})
     }
+
+    old_geom_col <- attr(areas, "sf_column")  # original geometry
 
     # identify the columns to nest
     nest_cols <- c(
@@ -471,7 +496,6 @@ assess_indicator <- function(
       if (attr(data, "sf_column") == "geometry") {
         data[["geoms"]] <- data[["geometry"]]
       }
-      #browser()
 
       totaloccurrences <- data |>
         mutate(
@@ -814,7 +838,7 @@ assess_indicator <- function(
     nest_cols <- c(indicator_var_name, "geometry", other_nest_variables)
 
     nesteddata <- st_as_sf(data, as_points = TRUE) |>
-      st_join(areas, left = FALSE) |>
+      st_join(areas_use, left = FALSE) |>
       rename(areaID = {{ areaID }}) |>
       dplyr::select(c("areaID", nest_cols[!is.na(nest_cols)])) |>
       filter(!is.na({{ indicator_var_name }})) |>
@@ -885,7 +909,7 @@ assess_indicator <- function(
     buffers_sorted <- c("twenty_km", "forty_km", "sixty_km", "eighty_km")
 
     data <- data |>
-      st_join(dplyr::select(areas, {{ areaID }})) |>
+      st_join(dplyr::select(areas_use, {{ areaID }})) |>
       rename(site_areaID = {{ areaID }}) |>
       st_join(dplyr::select(control_polygon, buffer_distance, {{ areaID }})) |>
       rename(control_areaID = {{ areaID }}) |>
@@ -1086,7 +1110,7 @@ assess_indicator <- function(
       nesteddata$areaID
     ))] <- "Non_Conservation_Area"
   }
-
+#good until here
   for (i in seq_along(nesteddata$data)) {
     # Note a sample means unique date and geomtry. If there are multiple depths in a single sample it counts as one sample
     message(i)
@@ -1153,8 +1177,20 @@ assess_indicator <- function(
       nesteddata$quality_statement[i] <- NA
     }
   }
+
+  #browser()
+
+  if ("geom_external_buffer" %in% names(areas)) {
+    assumptions_storage <- paste0(assumptions_storage, " Note: This analysis includes data that is outside of the conservation area boundary. It assumes that the data outside of the boundary is comparible.")
+
+  }
+
   attr(nesteddata, "assumptions") <- assumptions_storage
   attr(nesteddata, "caveats") <- caveats_storage
+
+  # SWITCH BACK TO ORIGINAL GEOMETRY
+  areas_use <- areas_use |>
+    st_set_geometry(old_geom_col)
 
   return(nesteddata)
 }

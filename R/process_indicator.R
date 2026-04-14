@@ -74,6 +74,10 @@
 #' @param indicator_assumptions indicator assumptions
 #' @param indicator_caveats indicator caveats
 #' @param data_year_of_publication the year the data was published
+#' @param externalData Numeric vector (same length as MPAs) indicating inclusion of external data around each site.
+#' Defaults to 0 (no external data). Values > 0 represent a buffer distance (e.g., km) within which external data
+#' are included and combined with in-area data. If any values are non-zero, control polygon information is not used
+#' and an assumption noting the inclusion of external data is added.
 #'
 #' @details
 #' The function performs extensive validation of metadata and arguments.
@@ -192,7 +196,8 @@ process_indicator <- function(
   SME = NA,
   indicator_assumptions = NA,
   indicator_caveats = NA,
-  data_year_of_publication = NA_real_
+  data_year_of_publication = NA_real_,
+  externalData=NULL
 ) {
   if (!('year_of_data_collection' %in% names(data))) {
     # First check if year_of_data_collection is in the data source, if not check for year_of_publication
@@ -305,7 +310,74 @@ process_indicator <- function(
       )
     }
   }
+
+  if (!(is.null(externalData))) {
+    if(!(length(externalData) == nrow(areas))) {
+      stop("externalData must either be NULL or the same length as the areas argument")
+    } else {
+      message("control_polygon being ignored because externalData argument being used")
+      control_polygon <- NULL
+    }
+  } else {
+    externalData <- rep(0, nrow(areas))
+  }
+
+
   if (!dataisna) {
+    ## TEST
+    #browser()
+    if (!all(as.numeric(externalData) == 0)) {
+      areas$externalData <- externalData
+
+      # create buffers (distance assumed in same units as CRS)
+      areas_externalData <- areas |>
+        st_transform(32620) |>  # 🔴 use appropriate projected CRS (e.g., UTM zone)
+        mutate(externalData = externalData) |>
+        rowwise() |>
+        mutate(
+          geoms_external = st_buffer(geoms, dist = externalData * 1000)  # 🔴 km → meters
+        ) |>
+        ungroup() |>
+        st_transform(st_crs(areas))  # back to original CRS
+
+
+      geom_col <- attr(areas, "sf_column")  # 🔴 get geometry column name
+
+      areas_externalData <- areas |>
+        st_transform(32620) |>
+        mutate(externalData = externalData) |>
+        rowwise() |>
+        mutate(
+          !!geom_col := st_buffer(.data[[geom_col]], dist = externalData * 1000)  # 🔴 dynamic
+        ) |>
+        ungroup() |>
+        st_transform(st_crs(areas))
+
+      # NEW TEST
+
+      geom_col <- attr(areas, "sf_column")
+
+      areas <- areas |>
+        st_transform(32620) |>
+        mutate(
+          externalData = externalData,
+          geom_external_buffer = st_buffer(.data[[geom_col]], dist = externalData * 1000)
+        ) |>
+        mutate(
+          geom_external_buffer = st_transform(geom_external_buffer, st_crs(areas))  # 🔴 fix
+        ) |>
+        st_transform(st_crs(areas))
+
+
+
+
+
+
+    }
+
+    # END TEST
+
+
     nesteddata <- assess_indicator(
       data = data,
       scoring = scoring,
@@ -571,6 +643,7 @@ process_indicator <- function(
       }
     }
   } else {
+    browser()
     # NA data case
     final <- data.frame(
       areaID = as.vector(unique(dplyr::select(

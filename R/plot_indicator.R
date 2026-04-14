@@ -72,6 +72,12 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             combined_data <- inside_data
           }
 
+          combined_data <- combined_data |>
+            dplyr::filter(!is.na(.data[[indicator_var_name]])) |>
+            droplevels()   # 🔴 THIS IS THE KEY LINE
+
+
+
 
           # ---- Compute global axis limits ----
           x_range <- range(combined_data[[year]], na.rm = TRUE)
@@ -83,6 +89,8 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           combined_data$period <- factor(combined_data$period,
                                          levels = c("Before", "After"))
 
+          #browser()
+
           # ---- Base plot ----
           p <- ggplot(combined_data,
                       aes(x = .data[[year]],
@@ -91,7 +99,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             geom_vline(xintercept = est_year,
                        colour = "red",
                        linewidth = 1) +
-            facet_grid(period ~ location) +
+            facet_grid(period ~ location, drop=TRUE) +
             coord_cartesian(xlim = x_range,
                             ylim = y_range) +
             ylab(paste0(indicator, " (", units, ")"))
@@ -100,7 +108,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           panel_info <- split(combined_data,
                               list(combined_data$location,
                                    combined_data$period),
-                              drop = FALSE)
+                              drop = TRUE)
 
 
           for (df in panel_info) {
@@ -129,6 +137,8 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 )
 
             } else {
+
+              #browser()
 
               # Fit linear model using base R
               model <- lm(as.formula(paste0(indicator_var_name, " ~ ", year)), data = df)
@@ -474,6 +484,7 @@ if (any(grepl("sf", class(data)))) {
       }
     }
 
+#browser()
 
     if(length(plot_list)==0){
       return(p)
