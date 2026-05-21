@@ -401,12 +401,13 @@ process_indicator <- function(
       regionID = regionID
     )
 
+if (all(as.numeric(externalData) == 0)) {
    if (length(unique(nesteddata$areaID)) == 1) {
      if (unique(nesteddata$areaID) == "Non_Conservation_Area") {
        stop("No data found in conservation areas, consider using externalData argument")
      }
    }
-
+}
     LAST_SAMPLE_YEAR <- NULL
     if (year %in% names(nesteddata$data[[1]])) {
       for (i in seq_along(areas[[areaID]])) {
