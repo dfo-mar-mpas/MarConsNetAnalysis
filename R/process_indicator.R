@@ -325,7 +325,7 @@ process_indicator <- function(
 
   if (!dataisna) {
     ## TEST
-    #browser()
+
     if (!all(as.numeric(externalData) == 0)) {
       areas$externalData <- externalData
 
@@ -400,9 +400,17 @@ process_indicator <- function(
       control_polygon = control_polygon,
       regionID = regionID
     )
+
+   if (length(unique(nesteddata$areaID)) == 1) {
+     if (unique(nesteddata$areaID) == "Non_Conservation_Area") {
+       stop("No data found in conservation areas, consider using externalData argument")
+     }
+   }
+
     LAST_SAMPLE_YEAR <- NULL
     if (year %in% names(nesteddata$data[[1]])) {
       for (i in seq_along(areas[[areaID]])) {
+        message(i)
         if (areas[[areaID]][i] %in% nesteddata$areaID) {
           keeping <- which(nesteddata$areaID == areas[[areaID]][i])
           LAST_SAMPLE_YEAR[i] <- max(
@@ -643,7 +651,6 @@ process_indicator <- function(
       }
     }
   } else {
-    browser()
     # NA data case
     final <- data.frame(
       areaID = as.vector(unique(dplyr::select(
