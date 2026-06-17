@@ -51,9 +51,6 @@ assess_indicator <- function(
 
   old_geom_col <- attr(areas, "sf_column")  # original geometry
 
-
-
-
   geom_to_use <- if ("geom_external_buffer" %in% names(areas)) {
     "geom_external_buffer"   # 🔴 use buffered
   } else {
@@ -80,6 +77,7 @@ assess_indicator <- function(
       if (!longitude %in% names(data)) {
         stop("longitude column not found")
       }
+
       # convert to sf object and join with areas
      data <- data |>
         dplyr::filter(!is.na({{ longitude }}), !is.na({{ latitude }})) |>
@@ -110,6 +108,19 @@ assess_indicator <- function(
     if (any(is.na(data$areaID))) {
       data$areaID[which(is.na(data$areaID))] <- 'Non_Conservation_Area'
     }
+
+
+    if (inherits(data, "sf")) {
+      if (latitude %in% names(data)) {
+        data <- data[, -(which(names(data) == latitude))]
+      }
+
+      if (longitude %in% names(data)) {
+        data <- data[, -(which(names(data) == longitude))]
+      }
+    }
+
+
 
     nesteddata <- data.frame(
       data,
@@ -1178,7 +1189,6 @@ assess_indicator <- function(
     }
   }
 
-  #browser()
 
   if ("geom_external_buffer" %in% names(areas)) {
     assumptions_storage <- paste0(assumptions_storage, " Note: This analysis includes data that is outside of the conservation area boundary. It assumes that the data outside of the boundary is comparible.")
