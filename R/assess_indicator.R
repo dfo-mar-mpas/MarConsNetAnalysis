@@ -1102,7 +1102,142 @@ assess_indicator <- function(
 
     nesteddata$status_statement <- unlist(status_statement)
     nesteddata$trend_statement <- unlist(trend_statement)
-  } else {
+  } else if (scoring == 'proportion of species') {
+    data <- data %>%
+      filter(!is.na(latitude), !is.na(longitude))
+    data <- st_as_sf(
+      data,
+      coords = c("longitude", "latitude"),
+      crs = crs(areas)
+    )
+
+    nest_cols <- c(indicator_var_name, "geometry", other_nest_variables)
+
+    areas_use <- st_make_valid(areas_use)
+    data <- st_make_valid(data)
+
+    nesteddata <- st_as_sf(data, as_points = TRUE) |>
+      st_join(areas_use, left = FALSE) |>
+      rename(areaID = {{ areaID }}) |>
+      #st_drop_geometry() |>
+      filter(!is.na({{ indicator_var_name }})) |>
+      group_by(areaID) |>
+      nest()
+
+    nesteddata <- nesteddata |>
+      mutate(
+
+        score = purrr::map_dbl(data, ~ {
+          yearly_species <- .x |>
+            filter(!is.na(species)) |>
+            group_by(year_of_data_collection) |>
+            summarise(richness = n_distinct(species), .groups = "drop")
+
+          if (nrow(yearly_species) <= 1) {
+            return(NA_real_)
+          }
+
+          if (last(yearly_species$richness) >= first(yearly_species$richness)) 100 else 0
+        }),
+
+        trend_statement = purrr::map_chr(data, ~ {
+          yearly_species <- .x |>
+            filter(!is.na(species)) |>
+            group_by(year_of_data_collection) |>
+            summarise(richness = n_distinct(species), .groups = "drop") |>
+            arrange(year_of_data_collection)
+
+          subclass <- unique(.x$subclass[!is.na(.x$subclass)])[1]
+
+          if (nrow(yearly_species) <= 1) {
+            paste0(
+              "There is only one year of data available for ",
+              subclass,
+              "."
+            )
+          } else if (last(yearly_species$richness) > first(yearly_species$richness)) {
+            paste0(
+              "The number of unique species of ",
+              subclass,
+              " increased from ",
+              first(yearly_species$richness),
+              " to ",
+              last(yearly_species$richness),
+              " from ",
+              first(yearly_species$year_of_data_collection),
+              " to ",
+              last(yearly_species$year_of_data_collection),
+              "."
+            )
+          } else if (last(yearly_species$richness) < first(yearly_species$richness)) {
+            paste0(
+              "The number of unique species of ",
+              subclass,
+              " declined from ",
+              first(yearly_species$richness),
+              " to ",
+              last(yearly_species$richness),
+              " from ",
+              first(yearly_species$year_of_data_collection),
+              " to ",
+              last(yearly_species$year_of_data_collection),
+              "."
+            )
+          } else {
+            paste0(
+              "The number of unique species of ",
+              subclass,
+              " remained stable at ",
+              first(yearly_species$richness),
+              " from ",
+              first(yearly_species$year_of_data_collection),
+              " to ",
+              last(yearly_species$year_of_data_collection),
+              "."
+            )
+          }
+        }),
+
+
+        status_statement = purrr::map_chr(data, ~ {
+          latest_year <- max(.x$year_of_data_collection, na.rm = TRUE)
+
+          latest_species <- .x |>
+            filter(year_of_data_collection == latest_year, !is.na(species)) |>
+            distinct(species) |>
+            pull(species)
+
+          subclass <- unique(.x$subclass[!is.na(.x$subclass)])[1]
+
+          paste0(
+            "The most recent sampling year for ",
+            subclass,
+            " was ",
+            latest_year,
+            ", with ",
+            length(latest_species),
+            " unique species detected: ",
+            paste(latest_species, collapse = ", "),
+            "."
+          )
+        })
+
+
+      )
+
+    nesteddata <- nesteddata |>
+      mutate(
+        indicator = indicator,
+        type = type,
+        units = units,
+        scoring = scoring,
+        PPTID = PPTID,
+        project_short_title = project_short_title,
+        climate = climate,
+        design_target = design_target
+      )
+
+    } else {
     warning("scoring method not supported")
   }
 
@@ -1123,7 +1258,7 @@ assess_indicator <- function(
   }
 #good until here
   for (i in seq_along(nesteddata$data)) {
-    # Note a sample means unique date and geomtry. If there are multiple depths in a single sample it counts as one sample
+    # Note a sample means unique date and geometry. If there are multiple depths in a single sample it counts as one sample
     message(i)
     quality_data <- nesteddata$data[[i]]
 
@@ -1134,7 +1269,6 @@ assess_indicator <- function(
         if (is.null(GEOM)) {
           GEOM <- names(quality_data)[which(grepl("geom", names(quality_data)))]
         }
-
         if (any(grepl("GEOMETRYCOLLECTION", class(quality_data[[GEOM]][1])))) {
           nesteddata$quality_statement[i] <- paste0(
             nesteddata$areaID[i],
@@ -1151,6 +1285,10 @@ assess_indicator <- function(
           number_of_samples <- quality_data %>%
             distinct({{ year }}, .data[[GEOM]]) %>%
             summarise(n_samples = n())
+
+          if (any(grepl("data.frame", class(number_of_samples)))) {
+            number_of_samples <- number_of_samples$n_samples
+          }
           min_year <- min(sort(as.numeric(unique(quality_data[[year]]))))
           max_year <- max(sort(as.numeric(unique(quality_data[[year]]))))
           if (min_year == max_year) {
@@ -1201,6 +1339,7 @@ assess_indicator <- function(
   # SWITCH BACK TO ORIGINAL GEOMETRY
   areas_use <- areas_use |>
     st_set_geometry(old_geom_col)
+
 
   return(nesteddata)
 }

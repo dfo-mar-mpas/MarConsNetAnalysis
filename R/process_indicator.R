@@ -78,6 +78,8 @@
 #' Defaults to 0 (no external data). Values > 0 represent a buffer distance (e.g., km) within which external data
 #' are included and combined with in-area data. If any values are non-zero, control polygon information is not used
 #' and an assumption noting the inclusion of external data is added.
+#' @param SME_validated This is Boolean that is FALSE by default. If this argument is equal to true it means this
+#' indicator has underwent the dataIngestion process and results were reviewed by the SME of that data
 #'
 #' @details
 #' The function performs extensive validation of metadata and arguments.
@@ -197,7 +199,8 @@ process_indicator <- function(
   indicator_assumptions = NA,
   indicator_caveats = NA,
   data_year_of_publication = NA_real_,
-  externalData=NULL
+  externalData=NULL,
+  dataIngestion=FALSE
 ) {
   if (!('year_of_data_collection' %in% names(data))) {
     # First check if year_of_data_collection is in the data source, if not check for year_of_publication
@@ -534,7 +537,6 @@ if (all(as.numeric(externalData) == 0)) {
     plots_storage <- vector("list", length = nrow(final))
 
     # loop over rows
-    #browser()
     for (nr in seq_len(nrow(final))) {
       message("Running iteration: ", nr) # prints the iteration number
       result <- plot_indicator(
@@ -560,7 +562,6 @@ if (all(as.numeric(externalData) == 0)) {
         plots_storage[[nr]] <- result
       }
     }
-
     # optionally, store plots back in your data frame
     final$plot <- plots_storage
 

@@ -88,9 +88,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                                            levels = c("MPA", "Control"))
           combined_data$period <- factor(combined_data$period,
                                          levels = c("Before", "After"))
-
-          #browser()
-
           # ---- Base plot ----
           p <- ggplot(combined_data,
                       aes(x = .data[[year]],
@@ -137,9 +134,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 )
 
             } else {
-
-              #browser()
-
               # Fit linear model using base R
               model <- lm(as.formula(paste0(indicator_var_name, " ~ ", year)), data = df)
               coefs <- coef(model)
@@ -195,6 +189,31 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             }
           }
           plot_list[[i]] <- p
+      }
+
+      if ('community_composition' %in% plot_type[i]) {
+        plot_data <- data |>
+          group_by(year_of_data_collection, species) |>
+          summarise(
+            detections = sum(detections, na.rm = TRUE),
+            .groups = "drop"
+          )
+
+        plot_list[[i]] <- ggplot(plot_data,
+               aes(x = factor(year_of_data_collection),
+                   y = detections,
+                   fill = species)) +
+          geom_col() +
+          labs(
+            x = "Year",
+            y = "Number of detections",
+            fill = "Species"
+          ) +
+          theme_bw()
+
+
+
+
       }
 
       if("boxplot" %in% plot_type[i]) {
@@ -285,7 +304,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
         idx <- areas[[areaID]] == id
 
-        # trigger browser if no match (length 0 or all FALSE)
         if (length(idx) == 0 || !any(idx)) {
           # Non_Conservation_Area
           next
@@ -301,6 +319,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           }
 
         }
+
 
         if (all(st_is_empty(aes_geom))) {
           plot_list[[i]] <- NULL
@@ -396,14 +415,20 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
              }
 
-#browser()
-
 if (any(grepl("sf", class(data)))) {
   if (any(sf::st_geometry_type(data) %in% c("LINESTRING", "MULTILINESTRING"))) {
     d <- d + geom_sf(
       data = data,
       aes(geometry = aes_geom, color = .data[[indicator_var_name]]),
       size = 1
+    )
+  } else {
+    d <- d + geom_sf(
+      data = data,
+      aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
+      shape = 21,
+      color = "black",
+      size = 2
     )
   }
 } else {
@@ -483,8 +508,6 @@ if (any(grepl("sf", class(data)))) {
 
       }
     }
-
-#browser()
 
     if(length(plot_list)==0){
       return(p)
