@@ -200,7 +200,7 @@ process_indicator <- function(
   indicator_caveats = NA,
   data_year_of_publication = NA_real_,
   externalData=NULL,
-  dataIngestion=FALSE
+  SME_validated=FALSE
 ) {
   if (!('year_of_data_collection' %in% names(data))) {
     # First check if year_of_data_collection is in the data source, if not check for year_of_publication
