@@ -1,28 +1,83 @@
-#' Retrieve taxonomic subclass information for species from WoRMS
+#' Classify Taxa Using WoRMS, GBIF, and Manual Fallbacks
 #'
-#' Uses the World Register of Marine Species (WoRMS) API to retrieve the
-#' taxonomic classification of scientific names and extract the subclass rank.
+#' Attempts to classify scientific names to a specified taxonomic rank using a
+#' hierarchical lookup approach. The function first queries the World Register
+#' of Marine Species (WoRMS), then falls back to GBIF if WoRMS cannot resolve
+#' the requested classification. A final curated fallback table is used for
+#' known unresolved taxa.
 #'
-#' @param scientific_names A character vector of accepted scientific species
-#'   names to query in WoRMS.
+#' The function also performs name cleaning to improve matching success,
+#' including removal of environmental sample identifiers, BOLD identifiers,
+#' sequencing/sample codes, taxonomic qualifiers (e.g., "cf."), hybrid names,
+#' and genus-level "sp." identifiers.
 #'
-#' @return A character vector containing the subclass for each species. Returns
-#'   `NA` when no match is found, the query fails, or no subclass is available.
+#' @param scientific_names A character vector of scientific names to classify.
+#' Duplicate names are permitted and the returned vector will maintain the
+#' original length and order.
+#'
+#' @param level Character string specifying the taxonomic rank to return.
+#' Common options include "Kingdom", "Phylum", "Class", "Subclass",
+#' "Order", "Family", "Genus", and "Species".
+#'
+#' @return A character vector containing the requested taxonomic classification
+#' for each input name. The output length and order match the input vector.
 #'
 #' @details
-#' For each scientific name, the function first queries WoRMS using
-#' `worrms::wm_records_name()` to obtain an AphiaID. It then uses
-#' `worrms::wm_classification()` to retrieve the taxonomic hierarchy and
-#' extracts the classification at the "Subclass" rank.
+#' The classification workflow follows this order:
 #'
-#' @importFrom worrms wm_records_name wm_classification
+#' \enumerate{
+#'   \item Query WoRMS using the AphiaID classification hierarchy.
+#'   \item Query GBIF as a secondary taxonomic source.
+#'   \item Apply curated manual classifications for known unresolved taxa.
+#' }
+#'
+#' If a taxon cannot be classified after all steps, the function stops and
+#' returns an error listing the unresolved taxa. This prevents new or
+#' incorrectly formatted taxa from silently entering downstream analyses.
+#'
+#' @section Name cleaning:
+#' The function automatically removes:
+#' \itemize{
+#'   \item Environmental sample labels
+#'   \item BOLD identifiers
+#'   \item Sequencing/sample identifiers (e.g., CMC, HLC, CCMP codes)
+#'   \item "cf." qualifiers
+#'   \item Hybrid designations
+#'   \item "sp." identifiers by reducing to the genus name
+#' }
+#'
+#' @section Data sources:
+#' Primary classification source:
+#' \itemize{
+#'   \item WoRMS (World Register of Marine Species)
+#' }
+#'
+#' Secondary classification source:
+#' \itemize{
+#'   \item GBIF Backbone Taxonomy
+#' }
+#'
+#' Manual fallback classifications are included for taxa that cannot be
+#' reliably resolved through external databases.
 #'
 #' @examples
 #' \dontrun{
-#' species <- c("Gadus morhua", "Scomber scombrus")
-#' taxize_species(species)
+#' species <- c(
+#'   "gadus morhua",
+#'   "sebastes sp.",
+#'   "ammodytes dubius"
+#' )
+#'
+#' taxize_species(
+#'   scientific_names = species,
+#'   level = "Class"
+#' )
 #' }
 #'
+#' @import worrms
+#' @importFrom rgbif name_backbone
+#'
+#' @export
 
 taxize_species <- function(scientific_names, level = "Subclass") {
 
