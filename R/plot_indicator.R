@@ -17,8 +17,6 @@
 #'
 #' @examples
 plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_var_name, scoring, areaID, areas, bin_width, control_polygon, control_nesteddata,control_polygon_out){
-
-
   p <- NULL
   if(!is.null(data)){
     plot_list <- list()
@@ -34,6 +32,8 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
       }
 
       if("time-series" %in% plot_type[i]) {
+
+        #browser()
 
           est_year <- areas$date_of_establishment[areas$NAME_E == id]
           if(length(est_year)<1) est_year <- Inf
@@ -73,8 +73,11 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           }
 
           combined_data <- combined_data |>
-            dplyr::filter(!is.na(.data[[indicator_var_name]])) |>
-            droplevels()   # 🔴 THIS IS THE KEY LINE
+            dplyr::filter(!is.na(.data[[indicator_var_name]]))
+
+          if (!("sf" %in% class(combined_data))) {
+            combined_data <- combined_data %>% droplevels()   # 🔴 THIS IS THE KEY LINE
+          }
 
 
 
@@ -188,6 +191,13 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 )
             }
           }
+
+          p <- p +
+            scale_x_continuous(
+              breaks = scales::breaks_width(1),
+              labels = function(x) as.character(x)
+            )
+
           plot_list[[i]] <- p
       }
 
@@ -213,6 +223,81 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
 
 
+
+      }
+
+      if ('detections' %in% plot_type[i]) {
+        if (id == "St. Anns Bank Marine Protected Area") {
+          tmp_dir <- tempdir()
+
+          # Base URL
+
+          #browser()
+
+          base_url <- "https://raw.githubusercontent.com/dfo-mar-mpas/stannsbank_mpa/main/data/Shapefiles"
+
+          # Download all required shapefile components
+          benth_files <- c(
+            "benthoscape.shp",
+            "benthoscape.shx",
+            "benthoscape.dbf",
+            "benthoscape.prj"
+          )
+
+          for (f in benth_files) {
+            download.file(
+              url = paste0(base_url, "/", f),
+              destfile = file.path(tmp_dir, f),
+              mode = "wb"
+            )
+          }
+
+          # Read shapefile
+          benthoscape <- sf::st_read(
+            file.path(tmp_dir, "benthoscape.shp"),
+            quiet = TRUE
+          )
+
+          d <- ggplot(benthoscape) +
+            geom_sf(aes(fill = Class_name), colour = "black", linewidth = 0.2) +
+            geom_sf(
+              data = areas[areas[[areaID]] == id,],
+              fill = NA,
+              color = "black",
+              linewidth = 0.8
+            ) +
+            scale_fill_discrete(name = "Benthoscape") +
+            theme_minimal() +
+            theme(
+              legend.position = "right"
+            )
+      } else {
+          d <-  ggplot() +
+            geom_sf(
+              data = areas[areas[[areaID]] == id,],
+              fill = "white",
+              color = "black"
+            )
+      }
+
+      n_detections <- data |>
+        group_by(geometry) |>
+        mutate(n_collections = n()) |>
+        ungroup()
+
+      d <- d +
+        geom_sf(
+          data = n_detections,
+          aes(
+            geometry = geometry,
+            size = n_collections
+          ),
+          colour = "black",
+          alpha = 0.6,
+          show.legend = FALSE
+        )
+
+      plot_list[[i]] <- d
 
       }
 
@@ -301,7 +386,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
       }
       if("map" %in% plot_type[i]){
-
         idx <- areas[[areaID]] == id
 
         if (length(idx) == 0 || !any(idx)) {
@@ -414,21 +498,19 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
 
              }
-
 if (any(grepl("sf", class(data)))) {
   if (any(sf::st_geometry_type(data) %in% c("LINESTRING", "MULTILINESTRING"))) {
     d <- d + geom_sf(
       data = data,
       aes(geometry = aes_geom, color = .data[[indicator_var_name]]),
-      size = 1
+      size = 3
     )
   } else {
     d <- d + geom_sf(
       data = data,
       aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
       shape = 21,
-      color = "black",
-      size = 2
+      size = 3
     )
   }
 } else {
@@ -508,7 +590,6 @@ if (any(grepl("sf", class(data)))) {
 
       }
     }
-
     if(length(plot_list)==0){
       return(p)
     } else {

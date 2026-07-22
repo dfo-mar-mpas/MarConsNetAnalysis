@@ -537,6 +537,9 @@ if (all(as.numeric(externalData) == 0)) {
     plots_storage <- vector("list", length = nrow(final))
 
     # loop over rows
+
+    #browser()
+
     for (nr in seq_len(nrow(final))) {
       message("Running iteration: ", nr) # prints the iteration number
       result <- plot_indicator(

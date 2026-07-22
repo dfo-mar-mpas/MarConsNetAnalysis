@@ -1146,52 +1146,81 @@ assess_indicator <- function(
             group_by(year_of_data_collection) |>
             summarise(richness = n_distinct(species), .groups = "drop") |>
             arrange(year_of_data_collection)
+          # Determine the appropriate name to describe the group
+          unique_species <- unique(na.omit(.x$species))
 
-          subclass <- unique(.x$subclass[!is.na(.x$subclass)])[1]
+          if (length(unique_species) == 1) {
+            # One species
+            group_name <- unique_species
+
+          } else {
+            # Find common word(s) among species names (e.g., wolffish)
+            common_words <- Reduce(
+              intersect,
+              strsplit(tolower(unique_species), "\\s+")
+            )
+
+            if (length(common_words) > 0) {
+              # Multiple species sharing a common name
+              group_name <- paste(common_words, collapse = " ")
+
+            } else {
+              # Fall back to taxonomy
+              group_name <- unique(na.omit(.x$subclass))[1]
+
+              if (is.na(group_name) || length(group_name) == 0) {
+                group_name <- unique(na.omit(.x$class))[1]
+              }
+
+              if (is.na(group_name) || length(group_name) == 0) {
+                group_name <- unique(na.omit(.x$superclass))[1]
+              }
+            }
+          }
 
           if (nrow(yearly_species) <= 1) {
             paste0(
-              "There is only one year of data available for ",
-              subclass,
+              "There is only one year of sampling data available for ",
+              group_name,
               "."
             )
           } else if (last(yearly_species$richness) > first(yearly_species$richness)) {
             paste0(
-              "The number of unique species of ",
-              subclass,
-              " increased from ",
+              "The number of unique ",
+              group_name,
+              " species detected increased from ",
               first(yearly_species$richness),
               " to ",
               last(yearly_species$richness),
-              " from ",
+              " between ",
               first(yearly_species$year_of_data_collection),
-              " to ",
+              " and ",
               last(yearly_species$year_of_data_collection),
               "."
             )
           } else if (last(yearly_species$richness) < first(yearly_species$richness)) {
             paste0(
-              "The number of unique species of ",
-              subclass,
-              " declined from ",
+              "The number of unique ",
+              group_name,
+              " species detected declined from ",
               first(yearly_species$richness),
               " to ",
               last(yearly_species$richness),
-              " from ",
+              " between ",
               first(yearly_species$year_of_data_collection),
-              " to ",
+              " and ",
               last(yearly_species$year_of_data_collection),
               "."
             )
           } else {
             paste0(
-              "The number of unique species of ",
-              subclass,
-              " remained stable at ",
+              "The number of unique ",
+              group_name,
+              " species detected remained stable at ",
               first(yearly_species$richness),
-              " from ",
+              " between ",
               first(yearly_species$year_of_data_collection),
-              " to ",
+              " and ",
               last(yearly_species$year_of_data_collection),
               "."
             )
@@ -1207,19 +1236,53 @@ assess_indicator <- function(
             distinct(species) |>
             pull(species)
 
-          subclass <- unique(.x$subclass[!is.na(.x$subclass)])[1]
+          unique_species <- unique(na.omit(.x$species))
+
+          if (length(unique_species) == 1) {
+            # One species
+            group_name <- unique_species
+
+          } else {
+            # Find common word(s) among species names (e.g., wolffish)
+            common_words <- Reduce(
+              intersect,
+              strsplit(tolower(unique_species), "\\s+")
+            )
+
+            if (length(common_words) > 0) {
+              # Multiple species sharing a common name
+              group_name <- paste(common_words, collapse = " ")
+
+            } else {
+              # Fall back to taxonomy
+              group_name <- unique(na.omit(.x$subclass))[1]
+
+              if (is.na(group_name) || length(group_name) == 0) {
+                group_name <- unique(na.omit(.x$class))[1]
+              }
+
+              if (is.na(group_name) || length(group_name) == 0) {
+                group_name <- unique(na.omit(.x$superclass))[1]
+              }
+            }
+          }
+
+
 
           paste0(
-            "The most recent sampling year for ",
-            subclass,
-            " was ",
+            "The most recent sampling year was ",
             latest_year,
-            ", with ",
+            ", during which ",
             length(latest_species),
-            " unique species detected: ",
+            " unique ",
+            group_name,
+            " species were detected: ",
             paste(latest_species, collapse = ", "),
             "."
           )
+
+
+
         })
 
 
