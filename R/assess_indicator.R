@@ -1178,6 +1178,10 @@ assess_indicator <- function(
             }
           }
 
+          if (grepl("trophic", indicator, ignore.case=TRUE)) {
+            group_name <- unique(na.omit(.x$ai_trophic_level))
+          }
+
           if (nrow(yearly_species) <= 1) {
             paste0(
               "There is only one year of sampling data available for ",
@@ -1265,6 +1269,10 @@ assess_indicator <- function(
                 group_name <- unique(na.omit(.x$superclass))[1]
               }
             }
+          }
+
+          if (grepl("trophic", indicator, ignore.case=TRUE)) {
+            group_name <- unique(na.omit(.x$ai_trophic_level))
           }
 
 
