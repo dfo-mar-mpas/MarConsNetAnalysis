@@ -1102,7 +1102,7 @@ assess_indicator <- function(
 
     nesteddata$status_statement <- unlist(status_statement)
     nesteddata$trend_statement <- unlist(trend_statement)
-  } else if (scoring == 'proportion of species') {
+  } else if (scoring %in% c('proportion of species', 'community composition')) {
     data <- data %>%
       filter(!is.na(latitude), !is.na(longitude))
     data <- st_as_sf(
@@ -1123,6 +1123,127 @@ assess_indicator <- function(
       filter(!is.na({{ indicator_var_name }})) |>
       group_by(areaID) |>
       nest()
+
+    nesteddata$score <- NA
+    nesteddata$status_statement <- NA
+    nesteddata$trend_statement <- NA
+    nesteddata$quality_statement <- NA
+
+    if (scoring == 'community composition') { # JAIM
+      for (n in seq_along(1:nrow(nesteddata))) {
+        message(n)
+        #browser()
+        ## 1. Convert data into community matrix
+
+        community <- nesteddata$data[[n]] %>%
+          sf::st_drop_geometry() %>%
+          select(ID, year_of_data_collection, method, species, detections) %>%
+          pivot_wider(
+            names_from = species,
+            values_from = detections,
+            values_fill = list(detections = 0),
+            values_fn = sum
+          )
+
+        # Keep sample metadata separate
+        metadata <- community %>%
+          select(ID, year_of_data_collection)
+
+        community_matrix <- community %>%
+          select(-ID, -year_of_data_collection)
+
+        ## 2. Identify historical vs recent samples
+        recent_year <- max(data$year_of_data_collection)
+
+        historical <- metadata$year_of_data_collection < recent_year
+
+        recent <- metadata$year_of_data_collection == recent_year
+
+        ## 3: Estimate expected richness using historical community
+        # Collapse detections across all historical and recent samples
+        historical_matrix <- community_matrix[historical, ] %>%
+          sf::st_drop_geometry() %>%
+          select(-method)
+
+        recent_matrix <- community_matrix[recent, ] %>%
+          sf::st_drop_geometry() %>%
+          select(-method)
+
+        historical_total <- colSums(historical_matrix)
+        recent_total <- colSums(recent_matrix)
+
+        # Estimate expected historical richness (accounts for unseen species)
+        historical_est <- vegan::estimateR(historical_total)
+
+        expected_species <- as.numeric(historical_est["S.chao1"]) #Chao1 estimated species richness
+
+
+        ## 4: Calculate observed recent richness
+
+        observed_recent <- sum(recent_total > 0)
+
+
+        ## 5. Calculate the score
+
+        score <- (observed_recent / expected_species) * 100
+
+        # Cap score at 100
+        # If, 68 it means the number of species detected in the most recent
+        # sampling year was 68% of the number of species expected based on the
+        # historical eDNA community (after accounting for undetected species
+        # using the richness estimator).
+        nesteddata$score[n] <- min(score, 100)
+
+        historical_species <- names(historical_total[historical_total > 0])
+
+        recent_species <- names(recent_total[recent_total > 0])
+
+        missing_species <- setdiff(historical_species, recent_species)
+
+        new_species <- setdiff(recent_species, historical_species)
+
+
+        nesteddata$status_statement[n] <- paste0(
+          "In ", recent_year, ", ", observed_recent,
+          " species were detected: ", paste(recent_species, collapse = ", "),
+          ". Historical eDNA observations indicate an expected community of approximately ",
+          round(expected_species, 0), " species, with ",
+          length(missing_species),
+          " historical species not detected in the most recent sampling period: ",
+          paste(missing_species, collapse = ", "), "."
+        )
+
+
+        nesteddata$trend_statement[n] <- paste0(
+          "Compared to the historical eDNA community, the current community has ",
+          observed_recent, " detected species compared to ",
+          length(historical_species),
+          " historically detected species. ",
+          ifelse(length(missing_species) > 0,
+                 paste0("Species detected historically but not in the most recent survey include: ",
+                        paste(missing_species, collapse = ", "), "."),
+                 "All historically detected species were also detected in the most recent survey."),
+          ifelse(length(new_species) > 0,
+                 paste0(" New species detected in the most recent survey include: ",
+                        paste(new_species, collapse = ", "), "."),
+                 "")
+        )
+
+
+        nesteddata$quality_statement[n] <- paste0(
+          "The assessment was based on ", nrow(recent_matrix),
+          " eDNA samples collected in ", recent_year,
+          " and compared against ", nrow(historical_matrix),
+          " historical eDNA samples. Species richness estimates were adjusted using the Chao1 estimator ",
+          "to account for potentially undetected species in the historical dataset."
+        )
+
+
+
+      }
+
+
+    } else {
 
     nesteddata <- nesteddata |>
       mutate(
@@ -1292,9 +1413,8 @@ assess_indicator <- function(
 
 
         })
-
-
       )
+    }
 
     nesteddata <- nesteddata |>
       mutate(
