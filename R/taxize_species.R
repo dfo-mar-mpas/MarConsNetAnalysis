@@ -81,6 +81,107 @@
 
 taxize_species <- function(scientific_names, level = "Subclass") {
 
+
+  # ----------------------
+  # Common name lookup
+  # ----------------------
+
+  if(tolower(level) == "common_name"){
+
+
+    output <- rep(NA_character_, length(scientific_names))
+
+    for(i in seq_along(scientific_names)){
+
+      name <- scientific_names[i]
+
+       name_split <- strsplit(tolower(name), " ")[[1]]
+       name <- paste(
+           tools::toTitleCase(name_split[1]),
+           paste(name_split[-1], collapse = " "),
+           sep = " "
+         )
+
+      # FishBase (fish)
+      fb <- tryCatch(
+        rfishbase::species(name),
+        error = function(e) NULL
+      )
+
+      if(!is.null(fb) && nrow(fb) > 0){
+
+        if("FBname" %in% names(fb) && !is.na(fb$FBname[1])){
+          output[i] <- fb$FBname[1]
+        }
+      }
+
+
+      # ITIS via taxize
+      if(is.na(output[i])){
+
+        tsn <- tryCatch(
+          taxize::get_tsn(name, rows = 1),
+          error = function(e) NULL
+        )
+
+        if(!is.null(tsn)){
+
+          cn <- tryCatch(
+            taxize::common_names(tsn),
+            error = function(e) NULL
+          )
+
+          if(!is.null(cn) && nrow(cn) > 0){
+
+            if("ComName" %in% names(cn) && !is.na(cn$ComName[1])){
+              output[i] <- cn$ComName[1]
+            }
+          }
+        }
+      }
+
+
+      # GBIF vernacular names
+      if(is.na(output[i])){
+
+        gbif <- tryCatch(
+          rgbif::name_backbone(name),
+          error=function(e) NULL
+        )
+
+        if(!is.null(gbif) && "vernacularNames" %in% names(gbif)){
+
+          if(length(gbif$vernacularNames) > 0){
+            output[i] <- gbif$vernacularNames[[1]]$vernacularName
+          }
+        }
+      }
+
+
+      # WoRMS common name
+      if(is.na(output[i])){
+
+        worms <- tryCatch(
+          worrms::wm_records_name(name),
+          error=function(e) NULL
+        )
+
+        if(!is.null(worms) && nrow(worms) > 0){
+
+          if("commonname" %in% names(worms) &&
+             !is.na(worms$commonname[1])){
+
+            output[i] <- worms$commonname[1]
+          }
+        }
+      }
+
+      message(i, "/", length(scientific_names), ": ", name, " -> ", output[i])
+    }
+
+    output
+  } else {
+
   # ----------------------
   # AI/manual fallback table
   # ----------------------
@@ -146,7 +247,20 @@ taxize_species <- function(scientific_names, level = "Subclass") {
     # sp.
     x <- gsub(" sp\\..*", "", x)
 
-    trimws(x)
+    x <- trimws(x)
+
+    # capitalize genus, keep species lowercase
+    name_split <- strsplit(x, " ")[[1]]
+
+    if(length(name_split) >= 2){
+      x <- paste(
+        tools::toTitleCase(name_split[1]),
+        paste(name_split[-1], collapse = " "),
+        sep = " "
+      )
+    }
+
+    x
   }
 
 
@@ -291,6 +405,7 @@ taxize_species <- function(scientific_names, level = "Subclass") {
       ": ",
       paste(missing, collapse=", ")
     )
+  }
   }
 
 

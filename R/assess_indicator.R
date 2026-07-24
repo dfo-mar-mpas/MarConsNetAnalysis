@@ -1103,7 +1103,7 @@ assess_indicator <- function(
     nesteddata$status_statement <- unlist(status_statement)
     nesteddata$trend_statement <- unlist(trend_statement)
   } else if (scoring %in% c('proportion of species', 'community composition') |
-             grepl('probability of detection', scoring, ignore.case = TRUE)) {
+             grepl('probability of detection', scoring, ignore.case = TRUE)) { # JAIM
     data <- data %>%
       filter(!is.na(latitude), !is.na(longitude))
     data <- st_as_sf(
@@ -1129,6 +1129,7 @@ assess_indicator <- function(
     nesteddata$status_statement <- NA
     nesteddata$trend_statement <- NA
     nesteddata$quality_statement <- NA
+
 
     if (scoring == 'community composition') {
       for (n in seq_along(1:nrow(nesteddata))) {
@@ -1203,14 +1204,43 @@ assess_indicator <- function(
         new_species <- setdiff(recent_species, historical_species)
 
 
+        ## NEW
+        #Create lookup of scientific -> formatted name
+        species_lookup <- nesteddata$data[[n]] |>
+          dplyr::distinct(species, common_name) |>
+          dplyr::group_by(species) |>
+          dplyr::summarise(
+            common_name = dplyr::first(na.omit(common_name)),
+            .groups = "drop"
+          )
+
+        species_labels <- setNames(
+          ifelse(
+            is.na(species_lookup$common_name) | species_lookup$common_name == "",
+            species_lookup$species,
+            paste0(species_lookup$species, " (", species_lookup$common_name, ")")
+          ),
+          species_lookup$species
+        )
+
+        # Helper function
+        format_species <- function(x) {
+          out <- species_labels[x]
+          out[is.na(out)] <- x[is.na(out)]  # fallback if species isn't in lookup
+          out
+        }
+
+        ## END NEW
+
+
         nesteddata$status_statement[n] <- paste0(
           "In ", recent_year, ", ", observed_recent,
-          " species were detected: ", paste(recent_species, collapse = ", "),
+          " species were detected: ", paste(format_species(recent_species), collapse = ", "),
           ". Historical eDNA observations indicate an expected community of approximately ",
           round(expected_species, 0), " species, with ",
           length(missing_species),
           " historical species not detected in the most recent sampling period: ",
-          paste(missing_species, collapse = ", "), "."
+          paste(format_species(missing_species), collapse = ", "), "."
         )
 
 
@@ -1221,11 +1251,11 @@ assess_indicator <- function(
           " historically detected species. ",
           ifelse(length(missing_species) > 0,
                  paste0("Species detected historically but not in the most recent survey include: ",
-                        paste(missing_species, collapse = ", "), "."),
+                        paste(format_species(missing_species), collapse = ", "), "."),
                  "All historically detected species were also detected in the most recent survey."),
           ifelse(length(new_species) > 0,
                  paste0(" New species detected in the most recent survey include: ",
-                        paste(new_species, collapse = ", "), "."),
+                        paste(format_species(new_species), collapse = ", "), "."),
                  "")
         )
 
@@ -1244,7 +1274,6 @@ assess_indicator <- function(
 
 
     } else if (scoring == 'proportion of species') {
-
     nesteddata <- nesteddata |>
       mutate(
 
@@ -1396,6 +1425,29 @@ assess_indicator <- function(
             group_name <- unique(na.omit(.x$ai_trophic_level))
           }
 
+          species_lookup <- .x |>
+            distinct(species, common_name) |>
+            group_by(species) |>
+            summarise(
+              common_name = first(na.omit(common_name)),
+              .groups = "drop"
+            )
+
+          species_labels <- setNames(
+            ifelse(
+              is.na(species_lookup$common_name) | species_lookup$common_name == "",
+              species_lookup$species,
+              paste0(species_lookup$species, " (", species_lookup$common_name, ")")
+            ),
+            species_lookup$species
+          )
+
+          format_species <- function(x) {
+            out <- species_labels[as.character(x)]
+            out[is.na(out)] <- x[is.na(out)]
+            unname(out)
+          }
+
 
 
           paste0(
@@ -1406,7 +1458,7 @@ assess_indicator <- function(
             " unique ",
             group_name,
             " species were detected: ",
-            paste(latest_species, collapse = ", "),
+            paste(format_species(latest_species), collapse = ", "),
             "."
           )
 
@@ -1414,9 +1466,10 @@ assess_indicator <- function(
 
         })
       )
-    } else { # JAIM
+    } else {
 
       #probability of detection
+      # JAIM
 
       # Create columns
       nesteddata$score <- NA_real_
