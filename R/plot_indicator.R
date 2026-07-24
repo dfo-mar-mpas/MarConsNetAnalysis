@@ -32,9 +32,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
       }
 
       if("time-series" %in% plot_type[i]) {
-
-        #browser()
-
           est_year <- areas$date_of_establishment[areas$NAME_E == id]
           if(length(est_year)<1) est_year <- Inf
 
@@ -231,9 +228,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           tmp_dir <- tempdir()
 
           # Base URL
-
-          #browser()
-
           base_url <- "https://raw.githubusercontent.com/dfo-mar-mpas/stannsbank_mpa/main/data/Shapefiles"
 
           # Download all required shapefile components
@@ -403,8 +397,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           }
 
         }
-
-
         if (all(st_is_empty(aes_geom))) {
           plot_list[[i]] <- NULL
         } else {
@@ -498,6 +490,24 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
 
              }
+
+
+vals <- data[[indicator_var_name]][is.finite(data[[indicator_var_name]]) & data[[indicator_var_name]] > 0]
+use_log <- length(vals) > 0 && (max(vals) / min(vals) > 100)
+
+
+if (use_log) {
+  d <- d +
+    scale_fill_viridis_c(trans = "log10",
+                         name = paste0(indicator_var_name, "\n(log10 scale)"))
+} else {
+  d <- d +
+    scale_fill_viridis_c()
+
+}
+
+
+
 if (any(grepl("sf", class(data)))) {
   if (any(sf::st_geometry_type(data) %in% c("LINESTRING", "MULTILINESTRING"))) {
     d <- d + geom_sf(

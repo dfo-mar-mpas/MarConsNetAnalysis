@@ -1102,7 +1102,8 @@ assess_indicator <- function(
 
     nesteddata$status_statement <- unlist(status_statement)
     nesteddata$trend_statement <- unlist(trend_statement)
-  } else if (scoring %in% c('proportion of species', 'community composition')) {
+  } else if (scoring %in% c('proportion of species', 'community composition') |
+             grepl('probability of detection', scoring, ignore.case = TRUE)) {
     data <- data %>%
       filter(!is.na(latitude), !is.na(longitude))
     data <- st_as_sf(
@@ -1129,10 +1130,9 @@ assess_indicator <- function(
     nesteddata$trend_statement <- NA
     nesteddata$quality_statement <- NA
 
-    if (scoring == 'community composition') { # JAIM
+    if (scoring == 'community composition') {
       for (n in seq_along(1:nrow(nesteddata))) {
         message(n)
-        #browser()
         ## 1. Convert data into community matrix
 
         community <- nesteddata$data[[n]] %>%
@@ -1243,7 +1243,7 @@ assess_indicator <- function(
       }
 
 
-    } else {
+    } else if (scoring == 'proportion of species') {
 
     nesteddata <- nesteddata |>
       mutate(
@@ -1414,8 +1414,143 @@ assess_indicator <- function(
 
         })
       )
-    }
+    } else { # JAIM
 
+      #probability of detection
+
+      # Create columns
+      nesteddata$score <- NA_real_
+      nesteddata$status_statement <- NA_character_
+      nesteddata$trend_statement <- NA_character_
+
+      for (n in seq_along(nesteddata$data)) {
+
+        df <- nesteddata$data[[n]]
+
+        # Get species keyword from scoring (after :)
+        target <- strsplit(scoring, ":")[[1]][2] |>
+          trimws() |>
+          tolower()
+
+        # Calculate yearly proportion of samples detecting target species
+        yearly_detection <- aggregate(
+          detected ~ year_of_data_collection + ID,
+          data = transform(
+            df,
+            detected = grepl(target, species, ignore.case = TRUE)
+          ),
+          FUN = any
+        )
+
+        yearly_detection <- aggregate(
+          detected ~ year_of_data_collection,
+          data = yearly_detection,
+          FUN = mean
+        )
+
+        names(yearly_detection)[2] <- "proportion_detected"
+
+        yearly_detection <- yearly_detection[
+          order(yearly_detection$year_of_data_collection),
+        ]
+
+        # Cannot calculate trend with one year
+        if (nrow(yearly_detection) <= 1) {
+
+          nesteddata$score[n] <- NA_real_
+
+          nesteddata$status_statement[n] <- paste0(
+            "There is only one year of sampling data available for ",
+            target,
+            "."
+          )
+
+          nesteddata$trend_statement[n] <- paste0(
+            "A trend in probability of detection for ",
+            target,
+            " cannot be assessed."
+          )
+
+        } else {
+
+          first_detection <- yearly_detection$proportion_detected[1]
+          last_detection <- yearly_detection$proportion_detected[nrow(yearly_detection)]
+
+          # Score
+          nesteddata$score[n] <- ifelse(
+            last_detection >= first_detection,
+            100,
+            0
+          )
+
+          # Status
+          nesteddata$status_statement[n] <- paste0(
+            "In the most recent sampling year (",
+            tail(yearly_detection$year_of_data_collection, 1),
+            "), ",
+            round(last_detection * 100, 1),
+            "% of samples detected ",
+            target,
+            "."
+          )
+
+          # Trend
+          if (last_detection > first_detection) {
+
+            nesteddata$trend_statement[n] <- paste0(
+              "The probability of detection for ",
+              target,
+              " increased from ",
+              round(first_detection * 100, 1),
+              "% to ",
+              round(last_detection * 100, 1),
+              "% between ",
+              yearly_detection$year_of_data_collection[1],
+              " and ",
+              tail(yearly_detection$year_of_data_collection, 1),
+              "."
+
+            )
+
+          } else if (last_detection < first_detection) {
+
+            nesteddata$trend_statement[n] <- paste0(
+              "The probability of detection for ",
+              target,
+              " declined from ",
+              round(first_detection * 100, 1),
+              "% to ",
+              round(last_detection * 100, 1),
+              "% between ",
+              yearly_detection$year_of_data_collection[1],
+              " and ",
+              tail(yearly_detection$year_of_data_collection, 1),
+              "."
+
+            )
+
+          } else {
+
+            nesteddata$trend_statement[n] <- paste0(
+              "The probability of detection for ",
+              target,
+              " remained stable at ",
+              round(last_detection * 100, 1),
+              "% between ",
+              yearly_detection$year_of_data_collection[1],
+              " and ",
+              tail(yearly_detection$year_of_data_collection, 1),
+              "."
+            )
+          }
+        }
+      }
+
+
+
+      ## END
+
+    }
     nesteddata <- nesteddata |>
       mutate(
         indicator = indicator,
