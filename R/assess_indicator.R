@@ -15,7 +15,7 @@
 #' numeric scores (0–100), data summaries, and human‑readable
 #' status and trend statements.
 #'
-#' @importFrom rang as_name
+#' @importFrom rlang as_name
 #'
 #' @examples
 #' @export

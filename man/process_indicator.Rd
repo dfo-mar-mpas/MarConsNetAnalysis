@@ -20,7 +20,7 @@ process_indicator(
   crs = 4326,
   latitude = "latitude",
   longitude = "longitude",
-  year = "year",
+  year = "year_of_data_collection",
   other_nest_variables = NA,
   areas = NA,
   areaID = "NAME_E",
@@ -39,7 +39,10 @@ process_indicator(
   theme = NA,
   SME = NA,
   indicator_assumptions = NA,
-  indicator_caveats = NA
+  indicator_caveats = NA,
+  data_year_of_publication = NA_real_,
+  externalData = NULL,
+  SME_validated = FALSE
 )
 }
 \arguments{
@@ -141,6 +144,16 @@ or "Anthropogenic Pressure and Impacts"}
 \item{indicator_assumptions}{indicator assumptions}
 
 \item{indicator_caveats}{indicator caveats}
+
+\item{data_year_of_publication}{the year the data was published}
+
+\item{externalData}{Numeric vector (same length as MPAs) indicating inclusion of external data around each site.
+Defaults to 0 (no external data). Values > 0 represent a buffer distance (e.g., km) within which external data
+are included and combined with in-area data. If any values are non-zero, control polygon information is not used
+and an assumption noting the inclusion of external data is added.}
+
+\item{SME_validated}{This is Boolean that is FALSE by default. If this argument is equal to true it means this
+indicator has underwent the dataIngestion process and results were reviewed by the SME of that data}
 }
 \value{
 A tibble with one row per area containing:

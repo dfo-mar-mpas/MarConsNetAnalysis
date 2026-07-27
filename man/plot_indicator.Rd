@@ -15,7 +15,10 @@ plot_indicator(
   scoring,
   areaID,
   areas,
-  bin_width
+  bin_width,
+  control_polygon,
+  control_nesteddata,
+  control_polygon_out
 )
 }
 \arguments{
@@ -54,6 +57,8 @@ managed areas.
 \item{areas}{A spatial or tabular object defining assessment areas.}
 
 \item{bin_width}{Numeric. Bin width used for plotting or scoring.}
+
+\item{control_polygon}{Optional spatial polygon used for control comparisons.}
 }
 \value{
 a plot
