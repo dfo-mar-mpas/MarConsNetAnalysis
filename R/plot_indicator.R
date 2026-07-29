@@ -25,12 +25,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
       par(mar = c(4, 4.5, 0.5, 1))
 
-      if ('map-species' %in% plot_type[i]) {
-        # if (!(length(data[[which(areas$NAME_E == id)]][[indicator_var_name]]) > 25)) {
-        #   plot_type <- "map"
-        # }
-      }
-
       if("time-series" %in% plot_type[i]) {
           est_year <- areas$date_of_establishment[areas$NAME_E == id]
           if(length(est_year)<1) est_year <- Inf
@@ -380,6 +374,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
       }
       if("map" %in% plot_type[i]){
+
         idx <- areas[[areaID]] == id
 
         if (length(idx) == 0 || !any(idx)) {
@@ -546,11 +541,26 @@ if (any(grepl("sf", class(data)))) {
         }
       }
       if ("map-species" %in% plot_type[i]) {
+        # Choose fill column and legend title
+        if ("subclass" %in% names(data)) {
+          fill_col <- "subclass"
+          legend_title <- "Subclass"
+        } else {
+          fill_col <- "scientificName"
+          legend_title <- "Species"
+        }
+
         plot_list[[i]] <- ggplot() +
-          geom_sf(data = areas[areas[[areaID]] == id,], fill = "white", color = "black") +
-          geom_sf(data = data, aes(fill = subclass), shape = 21, color = "black", size = 2) +
+          geom_sf(data = areas[areas[[areaID]] == id,],
+                  fill = "white",
+                  color = "black") +
+          geom_sf(data = data,
+                  aes(fill = .data[[fill_col]]),
+                  shape = 21,
+                  color = "black",
+                  size = 2) +
           theme_classic() +
-          labs(fill = "Subclass", title = id) +
+          labs(fill = legend_title, title = id) +
           theme(
             plot.title = element_text(size = 10),
             axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
@@ -558,6 +568,54 @@ if (any(grepl("sf", class(data)))) {
           coord_sf(crs = st_crs(areas))
 
       }
+
+      if ("region-mpa-comparison" %in% plot_type[i]) {
+        full_data <- get("data", envir = parent.frame())
+
+        library(dplyr)
+        library(ggplot2)
+
+        # MPA NIS
+        mpa_nis <- data %>%
+          distinct(scientificName) %>%
+          mutate(
+            count = 1,
+            source = "MPA"
+          )
+
+        # Regional NIS
+        region_nis <- full_data %>%
+          distinct(scientificName) %>%
+          mutate(
+            count = 1,
+            source = "Region"
+          )
+
+        # Combine
+        nis_summary <- bind_rows(
+          mpa_nis,
+          region_nis
+        )
+
+        plot_list[[i]] <- ggplot(
+          nis_summary,
+          aes(
+            x = source,
+            y = count,
+            fill = scientificName
+          )
+        ) +
+          geom_col() +
+          theme_bw() +
+          labs(
+            x = NULL,
+            y = "Number of non-indigenous species",
+            fill = "Species"
+          )
+
+
+      }
+
       if ("outside-comparison" %in% plot_type[i]) {
         summary_data <- data %>%
           group_by(.data[[year]], control) %>%

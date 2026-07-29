@@ -224,18 +224,6 @@ process_indicator <- function(
     }
   }
 
-  if ("map-species" %in% plot_type) {
-    if (all(is.na(other_nest_variables))) {
-      stop(
-        "Must provide other_nest_variable named containing subclass and class when plot_type = 'map-species'"
-      )
-    } else if (!('subclass' %in% other_nest_variables)) {
-      stop(
-        "Must provide other_nest_variable named containing subclass and class when plot_type = 'map-species'"
-      )
-    }
-  }
-
   if (climate) {
     if (is.na(climate_expectation)) {
       stop(

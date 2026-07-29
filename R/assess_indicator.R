@@ -56,7 +56,6 @@ assess_indicator <- function(
   } else {
     attr(areas, "sf_column") # 🔴 use original geometry
   }
-
   areas_use <- areas
   if (geom_to_use == 'geom_external_buffer') {
     areas_use <- areas_use |>
@@ -995,11 +994,6 @@ assess_indicator <- function(
         filter(!is.na(control)) |>
         filter(!is.na(.data[[indicator_var_name]])) |>
         group_by(areaID) |>
-        #mutate(garbage = case_when(all(control)~TRUE,
-        #                           all(!control)~TRUE,
-        #                          .default = FALSE)) |>
-        #filter(!garbage) |>
-        #dplyr::select(-garbage) |>
         ungroup(),
       indicator = indicator,
       type = type,
@@ -1103,7 +1097,7 @@ assess_indicator <- function(
     nesteddata$status_statement <- unlist(status_statement)
     nesteddata$trend_statement <- unlist(trend_statement)
   } else if (scoring %in% c('proportion of species', 'community composition') |
-             grepl('probability of detection', scoring, ignore.case = TRUE)) { # JAIM
+             grepl('probability of detection', scoring, ignore.case = TRUE)) {
     data <- data %>%
       filter(!is.na(latitude), !is.na(longitude))
     data <- st_as_sf(
@@ -1467,10 +1461,7 @@ assess_indicator <- function(
         })
       )
     } else {
-
       #probability of detection
-      # JAIM
-
       # Create columns
       nesteddata$score <- NA_real_
       nesteddata$status_statement <- NA_character_
@@ -1579,11 +1570,8 @@ assess_indicator <- function(
               " and ",
               tail(yearly_detection$year_of_data_collection, 1),
               "."
-
             )
-
           } else {
-
             nesteddata$trend_statement[n] <- paste0(
               "The probability of detection for ",
               target,
@@ -1599,10 +1587,6 @@ assess_indicator <- function(
         }
       }
 
-
-
-      ## END
-
     }
     nesteddata <- nesteddata |>
       mutate(
@@ -1616,7 +1600,133 @@ assess_indicator <- function(
         design_target = design_target
       )
 
-    } else {
+  } else if (scoring == 'proportion') { # JAIM
+    data <- data %>%
+      filter(!is.na(latitude), !is.na(longitude))
+    data <- st_as_sf(
+      data,
+      coords = c("longitude", "latitude"),
+      crs = crs(areas)
+    )
+
+    nest_cols <- c(indicator_var_name, "geometry", other_nest_variables)
+
+    areas_use <- st_make_valid(areas_use)
+    data <- st_make_valid(data)
+
+    nesteddata <- st_as_sf(data, as_points = TRUE) |>
+      st_join(areas_use, left = FALSE) |>
+      rename(areaID = {{ areaID }}) |>
+      #st_drop_geometry() |>
+      filter(!is.na({{ indicator_var_name }})) |>
+      group_by(areaID) |>
+      nest()
+
+    nesteddata$score <- NA
+    nesteddata$status_statement <- NA
+    nesteddata$trend_statement <- NA
+    nesteddata$quality_statement <- NA
+
+    for (n in seq_along(nesteddata$areaID)) {
+
+      mpa_data <- nesteddata$data[[n]]
+
+      target_species <- c(
+        "Codium fragile",
+        "Membranipora membranacea",
+        "Fucus serratus"
+      )
+
+      identified_species_for_area <- unique(mpa_data$scientificName)
+      identified_species_for_area <- identified_species_for_area[
+        identified_species_for_area %in% target_species
+      ]
+
+      identified_species_for_all_samples <- unique(data$scientificName)
+      identified_species_for_all_samples <- identified_species_for_all_samples[
+        identified_species_for_all_samples %in% target_species
+      ]
+
+      # Score
+      nesteddata$score[n] <- 100 -
+        (length(identified_species_for_area) /
+           length(identified_species_for_all_samples) * 100)
+
+      # Status statement
+      if(length(identified_species_for_area) == 0) {
+        nesteddata$status_statement[n] <-
+          "No target non-indigenous species (Codium fragile, Membranipora membranacea, or Fucus serratus) were detected within this area."
+      } else {
+        nesteddata$status_statement[n] <- paste0(
+          "Target non-indigenous species detected within this area: ",
+          paste(identified_species_for_area, collapse = ", "),
+          ". The following targeted non-indigenous species were detected in the region: ", paste0(identified_species_for_all_samples, collapse=", "))
+
+      }
+
+      # Trend statement
+      yearly_species <- mpa_data %>%
+        filter(
+          scientificName %in% target_species,
+          !is.na(year)
+        ) %>%
+        group_by(year) %>%
+        summarise(
+          n_species = n_distinct(scientificName),
+          .groups = "drop"
+        )
+
+      if(nrow(yearly_species) < 2) {
+        nesteddata$trend_statement[n] <-
+          "Trend cannot be assessed due to insufficient temporal data."
+      } else {
+        early <- mean(yearly_species$n_species[yearly_species$year == min(yearly_species$year)])
+        recent <- mean(yearly_species$n_species[yearly_species$year == max(yearly_species$year)])
+
+        if(recent < early) {
+          nesteddata$trend_statement[n] <-
+            "The number of target non-indigenous species detected has decreased over time, indicating an improving trend."
+        } else if(recent > early) {
+          nesteddata$trend_statement[n] <-
+            "The number of target non-indigenous species detected has increased over time, indicating a declining trend."
+        } else {
+          nesteddata$trend_statement[n] <-
+            "The number of target non-indigenous species detected has remained stable over time."
+        }
+      }
+
+      # Quality statement
+      n_samples <- nrow(mpa_data)
+      start_year <- min(mpa_data$year, na.rm = TRUE)
+      end_year <- max(mpa_data$year, na.rm = TRUE)
+
+      if(n_samples > 0) {
+        if (start_year == end_year) {
+          nesteddata$quality_statement[n] <- paste0(
+            "This indicator is based on ",
+            n_samples,
+            " samples collected in ",
+            start_year,"."
+          )
+        } else {
+        nesteddata$quality_statement[n] <- paste0(
+          "This indicator is based on ",
+          n_samples,
+          " samples collected between ",
+          start_year,
+          " and ",
+          end_year,
+          "."
+        )
+        }
+      } else {
+        nesteddata$quality_statement[n] <-
+          "No samples were available for this area."
+      }
+    }
+
+
+  } else {
     warning("scoring method not supported")
   }
 
@@ -1627,6 +1737,7 @@ assess_indicator <- function(
     stop("direction must be 'normal' or 'inverse'")
   }
 
+  if (!('quality_statement' %in% names(nesteddata))) {
   nesteddata$quality_statement <- NA
 
   ## FIX PROBLEM IS MPAs is not the areas argument we don't have Non_Conservation_Area (e.g. ind_musquash_ph). It assigns it to a areaID of NA, which causes problems with save_plots
@@ -1706,6 +1817,8 @@ assess_indicator <- function(
     }
   }
 
+}
+
 
   if ("geom_external_buffer" %in% names(areas)) {
     assumptions_storage <- paste0(assumptions_storage, " Note: This analysis includes data that is outside of the conservation area boundary. It assumes that the data outside of the boundary is comparible.")
@@ -1718,7 +1831,5 @@ assess_indicator <- function(
   # SWITCH BACK TO ORIGINAL GEOMETRY
   areas_use <- areas_use |>
     st_set_geometry(old_geom_col)
-
-
   return(nesteddata)
 }
