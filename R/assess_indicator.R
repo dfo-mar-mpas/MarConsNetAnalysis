@@ -819,14 +819,12 @@ assess_indicator <- function(
             " covers ",
             round(cp_area / 1000000),
             " km^2 of ",
-            unique(data$plainname),
-            " which is ",
+            unique(data$plainname), ".",
+            " This achieves ",
             round(cp_percent, 2),
-            "% of the area of this feature while ",
-            unique(data$min_target),
-            " to ",
-            unique(data$max_target),
-            "% was targeted"
+            " % of the established ",
+            unique(data$min_target), "-", unique(data$max_target),
+            " % protection target."
           ),
           trend_statement = "There is no temporal dimension in this data."
         ) |>
@@ -838,7 +836,7 @@ assess_indicator <- function(
             {{ indicator_var_name }}
           )
         )
-    }
+     }
   } else if (startsWith(scoring, "median")) {
     # check if data is an stars object
     if (!inherits(data, "stars")) {
