@@ -502,7 +502,6 @@ if (use_log) {
 }
 
 
-
 if (any(grepl("sf", class(data)))) {
   if (any(sf::st_geometry_type(data) %in% c("LINESTRING", "MULTILINESTRING"))) {
     d <- d + geom_sf(
@@ -519,12 +518,12 @@ if (any(grepl("sf", class(data)))) {
     )
   }
 } else {
-  d <- d + geom_sf(
+  D <- d + geom_sf(
     data = data,
     aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
     shape = 21,
     color = "black",
-    size = 2
+    size = 0.5
   )
 }
 
@@ -539,6 +538,14 @@ if (any(grepl("sf", class(data)))) {
               plot_list[[i]] <- d
           }
         }
+
+        plot_list[[i]] <- plot_list[[i]] +
+               geom_sf(
+                    data = areas[areas[[areaID]] == id, ],
+                    fill = NA,
+                    color = "grey",
+                    linewidth = 0.8
+               )
       }
       if ("map-species" %in% plot_type[i]) {
         # Choose fill column and legend title
