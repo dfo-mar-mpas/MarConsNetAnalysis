@@ -518,7 +518,7 @@ if (any(grepl("sf", class(data)))) {
     )
   }
 } else {
-  D <- d + geom_sf(
+  d <- d + geom_sf(
     data = data,
     aes(geometry = aes_geom, fill = .data[[indicator_var_name]]),
     shape = 21,
