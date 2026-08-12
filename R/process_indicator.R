@@ -255,7 +255,7 @@ process_indicator <- function(
     stop("Must provide a indicator_rationale argument")
   }
 
-  if (is.na(project_short_title)) {
+  if (all(is.na(project_short_title))) {
     stop("Must provide a project_short_title argument")
   }
 
@@ -501,7 +501,7 @@ if (all(as.numeric(externalData) == 0)) {
         type = coalesce(type, !!type),
         units = coalesce(units, !!units),
         scoring = coalesce(scoring, !!scoring),
-        PPTID = coalesce(PPTID, !!PPTID),
+        PPTID = paste0(PPTID,collapse=" ;;; "),
         source = coalesce(source, !!source),
         climate_expectation = coalesce(
           climate_expectation,
@@ -513,10 +513,7 @@ if (all(as.numeric(externalData) == 0)) {
         ),
         objectives = paste0(objectives, collapse = " ;;; "),
         bin_rationale = coalesce(bin_rationale, !!bin_rationale),
-        project_short_title = coalesce(
-          project_short_title,
-          !!project_short_title
-        ),
+        project_short_title = paste0(project_short_title,collapse=" ;;; "),
         climate = coalesce(climate, !!climate),
         design_target = coalesce(design_target, !!design_target)
       )

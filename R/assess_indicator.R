@@ -127,8 +127,8 @@ assess_indicator <- function(
       type = type,
       units = units,
       scoring = scoring,
-      PPTID = PPTID,
-      project_short_title = project_short_title,
+      PPTID =  paste0(PPTID,collapse=" ;;; "),
+      project_short_title =  paste0(project_short_title,collapse=" ;;; "),
       climate = climate,
       design_target = design_target
     ) |>
@@ -447,8 +447,8 @@ assess_indicator <- function(
           type = type,
           units = units,
           scoring = scoring,
-          PPTID = PPTID,
-          project_short_title = project_short_title,
+          PPTID =  paste0(PPTID,collapse=" ;;; "),
+          project_short_title =  paste0(project_short_title,collapse=" ;;; "),
           climate = climate,
           design_target = design_target,
           status_statement = paste0(
@@ -488,11 +488,8 @@ assess_indicator <- function(
           type = coalesce(type, !!type),
           units = coalesce(units, !!units),
           scoring = coalesce(scoring, !!scoring),
-          PPTID = coalesce(PPTID, !!PPTID),
-          project_short_title = coalesce(
-            project_short_title,
-            !!project_short_title
-          ),
+          PPTID =  paste0(PPTID,collapse=" ;;; "),
+          project_short_title =  paste0(project_short_title,collapse=" ;;; "),
           climate = coalesce(climate, !!climate),
           design_target = coalesce(design_target, !!design_target),
           status_statement = if_else(
@@ -558,8 +555,8 @@ assess_indicator <- function(
           type = type,
           units = units,
           scoring = scoring,
-          PPTID = PPTID,
-          project_short_title = project_short_title,
+          PPTID =  paste0(PPTID,collapse=" ;;; "),
+          project_short_title =  paste0(project_short_title,collapse=" ;;; "),
           climate = climate,
           design_target = design_target,
           status_statement = if_else(
@@ -599,11 +596,8 @@ assess_indicator <- function(
           type = coalesce(type, !!type),
           units = coalesce(units, !!units),
           scoring = coalesce(scoring, !!scoring),
-          PPTID = coalesce(PPTID, !!PPTID),
-          project_short_title = coalesce(
-            project_short_title,
-            !!project_short_title
-          ),
+          PPTID =  paste0(PPTID,collapse=" ;;; "),
+          project_short_title =  paste0(project_short_title,collapse=" ;;; "),
           climate = coalesce(climate, !!climate),
           design_target = coalesce(design_target, !!design_target),
           status_statement = if_else(
@@ -732,8 +726,8 @@ assess_indicator <- function(
           type = type,
           units = units,
           scoring = scoring,
-          PPTID = PPTID,
-          project_short_title = project_short_title,
+          PPTID =  paste0(PPTID,collapse=" ;;; "),
+          project_short_title =  paste0(project_short_title,collapse=" ;;; "),
           climate = climate,
           design_target = design_target,
           status_statement = paste0(
@@ -765,8 +759,17 @@ assess_indicator <- function(
         st_make_valid() |>
         st_intersection(st_geometry(data)) |>
         st_make_valid() |>
-        full_join(st_drop_geometry(areas), by = areaID) |>
-        cross_join(st_drop_geometry(data))
+        full_join(
+          st_drop_geometry(areas),
+          by = areaID
+        ) |>
+        cross_join(
+          st_drop_geometry(data) |>
+            dplyr::select(
+              -any_of(c("NAME_E", "NAME_F", "region", "date_of_establishment"))
+            )
+        )
+
 
       # else normal coverage type
       site_prot_cp <- intersect |>
@@ -810,8 +813,8 @@ assess_indicator <- function(
           type = type,
           units = units,
           scoring = scoring,
-          PPTID = PPTID,
-          project_short_title = project_short_title,
+          PPTID = paste0(PPTID,collapse=" ;;; "),
+          project_short_title = paste0(project_short_title, collapse=" ;;; "),
           climate = climate,
           design_target = design_target,
           status_statement = paste0(
@@ -864,8 +867,8 @@ assess_indicator <- function(
         type = type,
         units = units,
         scoring = scoring,
-        PPTID = PPTID,
-        project_short_title = project_short_title,
+        PPTID =  paste0(PPTID,collapse=" ;;; "),
+        project_short_title =  paste0(project_short_title,collapse=" ;;; "),
         climate = climate,
         design_target = design_target,
         status_statement = paste0(
@@ -997,8 +1000,8 @@ assess_indicator <- function(
       type = type,
       units = units,
       scoring = scoring,
-      PPTID = PPTID,
-      project_short_title = project_short_title,
+      PPTID =  paste0(PPTID,collapse=" ;;; "),
+      project_short_title =  paste0(project_short_title,collapse=" ;;; "),
       climate = climate,
       design_target = design_target
     ) |>
@@ -1592,8 +1595,8 @@ assess_indicator <- function(
         type = type,
         units = units,
         scoring = scoring,
-        PPTID = PPTID,
-        project_short_title = project_short_title,
+        PPTID =  paste0(PPTID,collapse=" ;;; "),
+        project_short_title =  paste0(project_short_title,collapse=" ;;; "),
         climate = climate,
         design_target = design_target
       )
@@ -1827,6 +1830,7 @@ assess_indicator <- function(
   attr(nesteddata, "caveats") <- caveats_storage
 
   # SWITCH BACK TO ORIGINAL GEOMETRY
+
   areas_use <- areas_use |>
     st_set_geometry(old_geom_col)
   return(nesteddata)
