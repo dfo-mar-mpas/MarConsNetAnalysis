@@ -94,14 +94,7 @@ taxize_species <- function(scientific_names, level = "Subclass") {
     for(i in seq_along(scientific_names)){
 
       name <- scientific_names[i]
-
-       name_split <- strsplit(tolower(name), " ")[[1]]
-       name <- paste(
-           tools::toTitleCase(name_split[1]),
-           paste(name_split[-1], collapse = " "),
-           sep = " "
-         )
-
+      name <- clean_species_names(scientific_names=name)
       # FishBase (fish)
       fb <- tryCatch(
         rfishbase::species(name),
@@ -186,39 +179,99 @@ taxize_species <- function(scientific_names, level = "Subclass") {
   # AI/manual fallback table
   # ----------------------
 
-  ai_taxonomy <- data.frame(
-    scientific_name = c(
-      "annelida sp.",
-      "cnidaria sp.",
-      "bryozoa sp.",
-      "anthozoa sp.",
-      "lophiidae sp.",
-      "sebastes sp."
-    ),
-    Phylum = c(
-      "Annelida",
-      "Cnidaria",
-      "Bryozoa",
-      "Cnidaria",
-      "Chordata",
-      "Chordata"
-    ),
-    Class = c(
-      NA,
-      NA,
-      NA,
-      "Anthozoa",
-      "Actinopterygii",
-      "Actinopterygii"
-    ),
-    Subclass = c(
-      NA,
-      NA,
-      NA,
-      NA,
-      "Neopterygii",
-      "Neopterygii"
-    ),
+    ai_taxonomy <- data.frame(
+      scientific_name = c(
+        # Existing
+        "annelida sp.",
+        "cnidaria sp.",
+        "bryozoa sp.",
+        "anthozoa sp.",
+        "lophiidae sp.",
+        "sebastes sp.",
+
+        # Added
+        "Henricia spp",
+        "Nemertea sp3",
+        "Colus spp",
+        "Sertularia spp",
+        "Sertularia sp2",
+        "Nemertea sp2",
+        "Nemertea sp1",
+        "Sertularia sp3",
+        "Sipuncula sp1",
+        "Ceriantharia sp1",
+        "Sipuncula sp2",
+        "Platyhelminthes"
+      ),
+      Phylum = c(
+        # Existing
+        "Annelida",
+        "Cnidaria",
+        "Bryozoa",
+        "Cnidaria",
+        "Chordata",
+        "Chordata",
+
+        # Added
+        "Echinodermata",
+        "Nemertea",
+        "Mollusca",
+        "Cnidaria",
+        "Cnidaria",
+        "Nemertea",
+        "Nemertea",
+        "Cnidaria",
+        "Sipuncula",
+        "Cnidaria",
+        "Sipuncula",
+        "Platyhelminthes"
+      ),
+      Class = c(
+        # Existing
+        NA,
+        NA,
+        NA,
+        "Anthozoa",
+        "Actinopterygii",
+        "Actinopterygii",
+
+        # Added
+        "Asteroidea",
+        NA,
+        "Gastropoda",
+        "Hydrozoa",
+        "Hydrozoa",
+        NA,
+        NA,
+        "Hydrozoa",
+        NA,
+        "Anthozoa",
+        NA,
+        NA
+      ),
+      Subclass = c(
+        # Existing
+        NA,
+        NA,
+        NA,
+        NA,
+        "Neopterygii",
+        "Neopterygii",
+
+        # Added
+        NA,
+        NA,
+        NA,
+        NA,
+        NA,
+        NA,
+        NA,
+        NA,
+        NA,
+        NA,
+        NA,
+        NA
+      ),
     stringsAsFactors = FALSE
   )
 

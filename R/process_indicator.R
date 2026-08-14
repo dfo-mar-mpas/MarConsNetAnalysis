@@ -359,11 +359,6 @@ process_indicator <- function(
         ) |>
         st_transform(st_crs(areas))
 
-
-
-
-
-
     }
 
     # END TEST

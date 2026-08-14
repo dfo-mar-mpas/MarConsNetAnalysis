@@ -368,6 +368,7 @@ assess_indicator <- function(
     nesteddata$status_statement <- unlist(status_statement)
     nesteddata$trend_statement <- unlist(trend_statement)
   } else if (startsWith(scoring, "representation")) {
+
     #areas <- areas[-which(areas$NAME_E == "Non_Conservation_Area"),]
 
     if (!inherits(data, "sf")) {
@@ -1601,7 +1602,7 @@ assess_indicator <- function(
         design_target = design_target
       )
 
-  } else if (scoring == 'proportion') { # JAIM
+  } else if (startsWith(scoring, "proportion")) { # JAIM (proportion: bad species, proportion: good species)
     data <- data %>%
       filter(!is.na(latitude), !is.na(longitude))
     data <- st_as_sf(
@@ -1609,6 +1610,8 @@ assess_indicator <- function(
       coords = c("longitude", "latitude"),
       crs = crs(areas)
     )
+
+    browser()
 
     nest_cols <- c(indicator_var_name, "geometry", other_nest_variables)
 
@@ -1628,15 +1631,27 @@ assess_indicator <- function(
     nesteddata$trend_statement <- NA
     nesteddata$quality_statement <- NA
 
+    if ('species' %in% names(data)) {
+      names(data)[which(names(data) == 'species')]  <- 'scientificName'
+    }
+
     for (n in seq_along(nesteddata$areaID)) {
 
       mpa_data <- nesteddata$data[[n]]
 
+      if (endsWith(scoring, "bad")) { # THIS MIGHT CHANGE
       target_species <- c(
         "Codium fragile",
         "Membranipora membranacea",
         "Fucus serratus"
       )
+      } else {
+        if ('species' %in% names(mpa_data)) {
+          names(mpa_data)[which(names(mpa_data) == 'species')]  <- 'scientificName'
+        }
+        target_species <- unique(mpa_data$scientificName)
+
+      }
 
       identified_species_for_area <- unique(mpa_data$scientificName)
       identified_species_for_area <- identified_species_for_area[
@@ -1644,16 +1659,28 @@ assess_indicator <- function(
       ]
 
       identified_species_for_all_samples <- unique(data$scientificName)
+      if (endsWith(scoring, 'bad')) {
       identified_species_for_all_samples <- identified_species_for_all_samples[
         identified_species_for_all_samples %in% target_species
       ]
+      }
 
       # Score
-      nesteddata$score[n] <- 100 -
-        (length(identified_species_for_area) /
-           length(identified_species_for_all_samples) * 100)
+
+      if (endsWith(scoring, 'bad')) {
+        nesteddata$score[n] <- 100 -
+          (length(identified_species_for_area) /
+             length(identified_species_for_all_samples) * 100)
+
+      } else {
+        nesteddata$score[n] <- length(identified_species_for_area) /
+             length(identified_species_for_all_samples) * 100
+
+      }
+
 
       # Status statement
+      if (endsWith(scoring, 'bad')) {
       if(length(identified_species_for_area) == 0) {
         nesteddata$status_statement[n] <-
           "No target non-indigenous species (Codium fragile, Membranipora membranacea, or Fucus serratus) were detected within this area."
@@ -1664,8 +1691,16 @@ assess_indicator <- function(
           ". The following targeted non-indigenous species were detected in the region: ", paste0(identified_species_for_all_samples, collapse=", "))
 
       }
+      } else {
+        nesteddata$status_statement[n] <- paste0(
+          "Target non-indigenous species detected within this area: ",
+          paste(identified_species_for_area, collapse = ", "),
+          ". The following targeted non-indigenous species were detected in the region: ", paste0(identified_species_for_all_samples, collapse=", "))
+      }
 
       # Trend statement
+
+      if (length(unique(data[[year]])) == 0) {
       yearly_species <- mpa_data %>%
         filter(
           scientificName %in% target_species,
@@ -1694,6 +1729,9 @@ assess_indicator <- function(
           nesteddata$trend_statement[n] <-
             "The number of target non-indigenous species detected has remained stable over time."
         }
+      }
+      } else {
+        nesteddata$trend_statement[n] <- NA
       }
 
       # Quality statement
