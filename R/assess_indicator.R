@@ -65,7 +65,7 @@ assess_indicator <- function(
 
 
   if (startsWith(scoring, "desired state")) {
-    browser()
+    #browser()
     if (!year %in% names(data)) {
       stop("year column not found")
     }
@@ -1612,7 +1612,7 @@ assess_indicator <- function(
       crs = crs(areas)
     )
 
-    browser()
+    #browser()
 
     nest_cols <- c(indicator_var_name, "geometry", other_nest_variables)
 
@@ -1701,7 +1701,7 @@ assess_indicator <- function(
 
       # Trend statement
 
-      if (length(unique(data[[year]])) == 0) {
+      if (!(length(unique(data[[year]])) == 1)) {
       yearly_species <- mpa_data %>%
         filter(
           scientificName %in% target_species,
@@ -1732,14 +1732,15 @@ assess_indicator <- function(
         }
       }
       } else {
-        nesteddata$trend_statement[n] <- NA
+        nesteddata$trend_statement[n] <- "Trend cannot be assessed due to insufficient temporal data."
       }
 
       # Quality statement
-      n_samples <- nrow(mpa_data)
-      start_year <- min(mpa_data$year, na.rm = TRUE)
-      end_year <- max(mpa_data$year, na.rm = TRUE)
 
+      if (endsWith(scoring, 'bad species')) {
+        n_samples <- nrow(mpa_data)
+        start_year <- min(mpa_data$year, na.rm = TRUE)
+        end_year <- max(mpa_data$year, na.rm = TRUE)
       if(n_samples > 0) {
         if (start_year == end_year) {
           nesteddata$quality_statement[n] <- paste0(
@@ -1763,6 +1764,10 @@ assess_indicator <- function(
         nesteddata$quality_statement[n] <-
           "No samples were available for this area."
       }
+
+      } else {
+        nesteddata$quality_statement[n] <- paste0("This is based off of ", length(unique(mpa_data$ID)), ' samples in ', unique(mpa_data[[year]]),".")
+    }
     }
 
 
