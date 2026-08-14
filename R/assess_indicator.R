@@ -65,6 +65,7 @@ assess_indicator <- function(
 
 
   if (startsWith(scoring, "desired state")) {
+    browser()
     if (!year %in% names(data)) {
       stop("year column not found")
     }
@@ -1269,200 +1270,200 @@ assess_indicator <- function(
       }
 
 
-    } else if (scoring == 'proportion of species') {
-    nesteddata <- nesteddata |>
-      mutate(
-
-        score = purrr::map_dbl(data, ~ {
-          yearly_species <- .x |>
-            filter(!is.na(species)) |>
-            group_by(year_of_data_collection) |>
-            summarise(richness = n_distinct(species), .groups = "drop")
-
-          if (nrow(yearly_species) <= 1) {
-            return(NA_real_)
-          }
-
-          if (last(yearly_species$richness) >= first(yearly_species$richness)) 100 else 0
-        }),
-
-        trend_statement = purrr::map_chr(data, ~ {
-          yearly_species <- .x |>
-            filter(!is.na(species)) |>
-            group_by(year_of_data_collection) |>
-            summarise(richness = n_distinct(species), .groups = "drop") |>
-            arrange(year_of_data_collection)
-          # Determine the appropriate name to describe the group
-          unique_species <- unique(na.omit(.x$species))
-
-          if (length(unique_species) == 1) {
-            # One species
-            group_name <- unique_species
-
-          } else {
-            # Find common word(s) among species names (e.g., wolffish)
-            common_words <- Reduce(
-              intersect,
-              strsplit(tolower(unique_species), "\\s+")
-            )
-
-            if (length(common_words) > 0) {
-              # Multiple species sharing a common name
-              group_name <- paste(common_words, collapse = " ")
-
-            } else {
-              # Fall back to taxonomy
-              group_name <- unique(na.omit(.x$subclass))[1]
-
-              if (is.na(group_name) || length(group_name) == 0) {
-                group_name <- unique(na.omit(.x$class))[1]
-              }
-
-              if (is.na(group_name) || length(group_name) == 0) {
-                group_name <- unique(na.omit(.x$superclass))[1]
-              }
-            }
-          }
-
-          if (grepl("trophic", indicator, ignore.case=TRUE)) {
-            group_name <- unique(na.omit(.x$ai_trophic_level))
-          }
-
-          if (nrow(yearly_species) <= 1) {
-            paste0(
-              "There is only one year of sampling data available for ",
-              group_name,
-              "."
-            )
-          } else if (last(yearly_species$richness) > first(yearly_species$richness)) {
-            paste0(
-              "The number of unique ",
-              group_name,
-              " species detected increased from ",
-              first(yearly_species$richness),
-              " to ",
-              last(yearly_species$richness),
-              " between ",
-              first(yearly_species$year_of_data_collection),
-              " and ",
-              last(yearly_species$year_of_data_collection),
-              "."
-            )
-          } else if (last(yearly_species$richness) < first(yearly_species$richness)) {
-            paste0(
-              "The number of unique ",
-              group_name,
-              " species detected declined from ",
-              first(yearly_species$richness),
-              " to ",
-              last(yearly_species$richness),
-              " between ",
-              first(yearly_species$year_of_data_collection),
-              " and ",
-              last(yearly_species$year_of_data_collection),
-              "."
-            )
-          } else {
-            paste0(
-              "The number of unique ",
-              group_name,
-              " species detected remained stable at ",
-              first(yearly_species$richness),
-              " between ",
-              first(yearly_species$year_of_data_collection),
-              " and ",
-              last(yearly_species$year_of_data_collection),
-              "."
-            )
-          }
-        }),
-
-
-        status_statement = purrr::map_chr(data, ~ {
-          latest_year <- max(.x$year_of_data_collection, na.rm = TRUE)
-
-          latest_species <- .x |>
-            filter(year_of_data_collection == latest_year, !is.na(species)) |>
-            distinct(species) |>
-            pull(species)
-
-          unique_species <- unique(na.omit(.x$species))
-
-          if (length(unique_species) == 1) {
-            # One species
-            group_name <- unique_species
-
-          } else {
-            # Find common word(s) among species names (e.g., wolffish)
-            common_words <- Reduce(
-              intersect,
-              strsplit(tolower(unique_species), "\\s+")
-            )
-
-            if (length(common_words) > 0) {
-              # Multiple species sharing a common name
-              group_name <- paste(common_words, collapse = " ")
-
-            } else {
-              # Fall back to taxonomy
-              group_name <- unique(na.omit(.x$subclass))[1]
-
-              if (is.na(group_name) || length(group_name) == 0) {
-                group_name <- unique(na.omit(.x$class))[1]
-              }
-
-              if (is.na(group_name) || length(group_name) == 0) {
-                group_name <- unique(na.omit(.x$superclass))[1]
-              }
-            }
-          }
-
-          if (grepl("trophic", indicator, ignore.case=TRUE)) {
-            group_name <- unique(na.omit(.x$ai_trophic_level))
-          }
-
-          species_lookup <- .x |>
-            distinct(species, common_name) |>
-            group_by(species) |>
-            summarise(
-              common_name = first(na.omit(common_name)),
-              .groups = "drop"
-            )
-
-          species_labels <- setNames(
-            ifelse(
-              is.na(species_lookup$common_name) | species_lookup$common_name == "",
-              species_lookup$species,
-              paste0(species_lookup$species, " (", species_lookup$common_name, ")")
-            ),
-            species_lookup$species
-          )
-
-          format_species <- function(x) {
-            out <- species_labels[as.character(x)]
-            out[is.na(out)] <- x[is.na(out)]
-            unname(out)
-          }
-
-
-
-          paste0(
-            "The most recent sampling year was ",
-            latest_year,
-            ", during which ",
-            length(latest_species),
-            " unique ",
-            group_name,
-            " species were detected: ",
-            paste(format_species(latest_species), collapse = ", "),
-            "."
-          )
-
-
-
-        })
-      )
-    } else {
+    # } else if (scoring == 'proportion of species') {
+    # nesteddata <- nesteddata |>
+    #   mutate(
+    #
+    #     score = purrr::map_dbl(data, ~ {
+    #       yearly_species <- .x |>
+    #         filter(!is.na(species)) |>
+    #         group_by(year_of_data_collection) |>
+    #         summarise(richness = n_distinct(species), .groups = "drop")
+    #
+    #       if (nrow(yearly_species) <= 1) {
+    #         return(NA_real_)
+    #       }
+    #
+    #       if (last(yearly_species$richness) >= first(yearly_species$richness)) 100 else 0
+    #     }),
+    #
+    #     trend_statement = purrr::map_chr(data, ~ {
+    #       yearly_species <- .x |>
+    #         filter(!is.na(species)) |>
+    #         group_by(year_of_data_collection) |>
+    #         summarise(richness = n_distinct(species), .groups = "drop") |>
+    #         arrange(year_of_data_collection)
+    #       # Determine the appropriate name to describe the group
+    #       unique_species <- unique(na.omit(.x$species))
+    #
+    #       if (length(unique_species) == 1) {
+    #         # One species
+    #         group_name <- unique_species
+    #
+    #       } else {
+    #         # Find common word(s) among species names (e.g., wolffish)
+    #         common_words <- Reduce(
+    #           intersect,
+    #           strsplit(tolower(unique_species), "\\s+")
+    #         )
+    #
+    #         if (length(common_words) > 0) {
+    #           # Multiple species sharing a common name
+    #           group_name <- paste(common_words, collapse = " ")
+    #
+    #         } else {
+    #           # Fall back to taxonomy
+    #           group_name <- unique(na.omit(.x$subclass))[1]
+    #
+    #           if (is.na(group_name) || length(group_name) == 0) {
+    #             group_name <- unique(na.omit(.x$class))[1]
+    #           }
+    #
+    #           if (is.na(group_name) || length(group_name) == 0) {
+    #             group_name <- unique(na.omit(.x$superclass))[1]
+    #           }
+    #         }
+    #       }
+    #
+    #       if (grepl("trophic", indicator, ignore.case=TRUE)) {
+    #         group_name <- unique(na.omit(.x$ai_trophic_level))
+    #       }
+    #
+    #       if (nrow(yearly_species) <= 1) {
+    #         paste0(
+    #           "There is only one year of sampling data available for ",
+    #           group_name,
+    #           "."
+    #         )
+    #       } else if (last(yearly_species$richness) > first(yearly_species$richness)) {
+    #         paste0(
+    #           "The number of unique ",
+    #           group_name,
+    #           " species detected increased from ",
+    #           first(yearly_species$richness),
+    #           " to ",
+    #           last(yearly_species$richness),
+    #           " between ",
+    #           first(yearly_species$year_of_data_collection),
+    #           " and ",
+    #           last(yearly_species$year_of_data_collection),
+    #           "."
+    #         )
+    #       } else if (last(yearly_species$richness) < first(yearly_species$richness)) {
+    #         paste0(
+    #           "The number of unique ",
+    #           group_name,
+    #           " species detected declined from ",
+    #           first(yearly_species$richness),
+    #           " to ",
+    #           last(yearly_species$richness),
+    #           " between ",
+    #           first(yearly_species$year_of_data_collection),
+    #           " and ",
+    #           last(yearly_species$year_of_data_collection),
+    #           "."
+    #         )
+    #       } else {
+    #         paste0(
+    #           "The number of unique ",
+    #           group_name,
+    #           " species detected remained stable at ",
+    #           first(yearly_species$richness),
+    #           " between ",
+    #           first(yearly_species$year_of_data_collection),
+    #           " and ",
+    #           last(yearly_species$year_of_data_collection),
+    #           "."
+    #         )
+    #       }
+    #     }),
+    #
+    #
+    #     status_statement = purrr::map_chr(data, ~ {
+    #       latest_year <- max(.x$year_of_data_collection, na.rm = TRUE)
+    #
+    #       latest_species <- .x |>
+    #         filter(year_of_data_collection == latest_year, !is.na(species)) |>
+    #         distinct(species) |>
+    #         pull(species)
+    #
+    #       unique_species <- unique(na.omit(.x$species))
+    #
+    #       if (length(unique_species) == 1) {
+    #         # One species
+    #         group_name <- unique_species
+    #
+    #       } else {
+    #         # Find common word(s) among species names (e.g., wolffish)
+    #         common_words <- Reduce(
+    #           intersect,
+    #           strsplit(tolower(unique_species), "\\s+")
+    #         )
+    #
+    #         if (length(common_words) > 0) {
+    #           # Multiple species sharing a common name
+    #           group_name <- paste(common_words, collapse = " ")
+    #
+    #         } else {
+    #           # Fall back to taxonomy
+    #           group_name <- unique(na.omit(.x$subclass))[1]
+    #
+    #           if (is.na(group_name) || length(group_name) == 0) {
+    #             group_name <- unique(na.omit(.x$class))[1]
+    #           }
+    #
+    #           if (is.na(group_name) || length(group_name) == 0) {
+    #             group_name <- unique(na.omit(.x$superclass))[1]
+    #           }
+    #         }
+    #       }
+    #
+    #       if (grepl("trophic", indicator, ignore.case=TRUE)) {
+    #         group_name <- unique(na.omit(.x$ai_trophic_level))
+    #       }
+    #
+    #       species_lookup <- .x |>
+    #         distinct(species, common_name) |>
+    #         group_by(species) |>
+    #         summarise(
+    #           common_name = first(na.omit(common_name)),
+    #           .groups = "drop"
+    #         )
+    #
+    #       species_labels <- setNames(
+    #         ifelse(
+    #           is.na(species_lookup$common_name) | species_lookup$common_name == "",
+    #           species_lookup$species,
+    #           paste0(species_lookup$species, " (", species_lookup$common_name, ")")
+    #         ),
+    #         species_lookup$species
+    #       )
+    #
+    #       format_species <- function(x) {
+    #         out <- species_labels[as.character(x)]
+    #         out[is.na(out)] <- x[is.na(out)]
+    #         unname(out)
+    #       }
+    #
+    #
+    #
+    #       paste0(
+    #         "The most recent sampling year was ",
+    #         latest_year,
+    #         ", during which ",
+    #         length(latest_species),
+    #         " unique ",
+    #         group_name,
+    #         " species were detected: ",
+    #         paste(format_species(latest_species), collapse = ", "),
+    #         "."
+    #       )
+    #
+    #
+    #
+    #     })
+    #   )
+    # } else {
       #probability of detection
       # Create columns
       nesteddata$score <- NA_real_
