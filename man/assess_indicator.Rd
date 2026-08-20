@@ -2,7 +2,7 @@
 % Please edit documentation in R/assess_indicator.R
 \name{assess_indicator}
 \alias{assess_indicator}
-\title{Perform indicator scoring and assessment}
+\title{Assess an indicator using the specified scoring method}
 \usage{
 assess_indicator(
   data,
@@ -27,22 +27,124 @@ assess_indicator(
   regionID
 )
 }
+\arguments{
+\item{data}{A spatial data frame containing the indicator observations.}
+
+\item{scoring}{Character string specifying the scoring method. Supported
+methods include \code{"desired trend"}, \code{"representation"},
+\code{"protection coverage"}, \code{"mpa effect"}, and \code{"community retention"}.}
+
+\item{direction}{Character string specifying the direction of the score.
+\code{"normal"} retains the calculated score, while \code{"inverse"} reverses it
+using \code{100 - score}.}
+
+\item{areas}{An \code{sf} object containing the conservation areas used in the
+assessment.}
+
+\item{year}{Column name containing the year of data collection.}
+
+\item{indicator_var_name}{Column name containing the indicator variable.}
+
+\item{areaID}{Column name identifying the conservation area.}
+
+\item{other_nest_variables}{Additional variables used when nesting or
+grouping the data.}
+
+\item{type}{Character string describing the indicator type.}
+
+\item{units}{Character string specifying the units of the indicator.}
+
+\item{PPTID}{Identifier for the associated PPT.}
+
+\item{project_short_title}{Short title of the project or assessment.}
+
+\item{climate}{Character string describing the climate-related context of
+the indicator.}
+
+\item{design_target}{Design target associated with the indicator.}
+
+\item{latitude}{Column name containing latitude values.}
+
+\item{longitude}{Column name containing longitude values.}
+
+\item{crs}{Coordinate reference system used for spatial processing.}
+
+\item{indicator}{Character string identifying the indicator.}
+
+\item{control_polygon}{Spatial object containing control polygons used for
+MPA effect assessments.}
+
+\item{regionID}{Column name identifying the region associated with each
+observation or conservation area.}
+}
+\value{
+A data frame containing the assessment results and calculated
+scores. The returned object may include a \code{quality_statement} column and
+retains the \code{assumptions} and \code{caveats} attributes from \code{data}.
+}
 \description{
-Calculates indicator scores and associated status and trend summaries
-for a given indicator dataset, based on a specified scoring method.
+Applies the selected scoring method to indicator data within conservation
+areas, optionally adjusting the resulting score for the direction of the
+indicator. The function acts as a wrapper around the individual scoring
+functions, selecting the appropriate function based on the value of
+\code{scoring}.
 }
 \details{
-This function supports multiple indicator scoring frameworks used in
-the MarConsNet analysis workflow, including:
-\itemize{
-\item \strong{trend‑based scoring} (linear regression over time),
-\item \strong{representation} (proportion of area or occurrences within MPAs),
-\item \strong{coverage} (coverage of features relative to conservation targets),
-\item \strong{median} (median value relative to maximum),
-\item \strong{control site comparisons} (difference inside vs outside MPAs).
+Supported scoring methods include desired trend, representation,
+protection coverage, MPA effect, and community retention. The function also
+generates quality statements when they are not already provided and
+preserves assumptions and caveats stored as attributes on the input data.
+
+If \code{direction} is set to \code{"inverse"}, scores are reversed so that a higher
+final score represents a more desirable condition. The function also
+supports analyses using an external buffer geometry and restores the
+original geometry of \code{areas} before returning.
+
+The scoring method is selected from the beginning of the \code{scoring} string,
+allowing related scoring methods to share a common prefix. The selected
+scoring function is then responsible for calculating the initial score.
+
+When an external buffer geometry (\code{geom_external_buffer}) is present in
+\code{areas}, that geometry is temporarily used for spatial processing. The
+original geometry is restored before the function returns.
+
+Quality statements are generated when they are not already present. For
+point-based data, the statement describes the number and temporal range of
+samples where a year variable is available. Polygon and geometry
+collection data are handled separately because sample-based quality
+statements are not applicable.
+}
+\examples{
+\dontrun{
+result <- assess_indicator(
+  data = indicator_data,
+  scoring = "desired trend: no decrease",
+  direction = "normal",
+  areas = MPAs,
+  year = year_of_data_collection,
+  indicator_var_name = detections,
+  areaID = NAME_E,
+  other_nest_variables = NULL,
+  type = "abundance",
+  units = "detections",
+  PPTID = "PPT001",
+  project_short_title = "Example project",
+  climate = NULL,
+  design_target = NULL,
+  latitude = latitude,
+  longitude = longitude,
+  crs = 4326,
+  indicator = "Example indicator",
+  control_polygon = NULL,
+  regionID = region
+)
 }
 
-The function returns a tibble with one row per area, including
-numeric scores (0–100), data summaries, and human‑readable
-status and trend statements.
+}
+\seealso{
+\code{\link[=assess_desired_trend]{assess_desired_trend()}},
+\code{\link[=assess_representation_regional]{assess_representation_regional()}},
+\code{\link[=assess_protection_coverage]{assess_protection_coverage()}},
+\code{\link[=assess_mpa_effect]{assess_mpa_effect()}},
+\code{\link[=assess_community_retention]{assess_community_retention()}}
 }

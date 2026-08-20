@@ -360,7 +360,7 @@ process_indicator <- function(
     }
 
     # END TEST
-    nesteddata <- new_assess_indicator(
+    nesteddata <- assess_indicator(
       data = data,
       scoring = scoring,
       direction = direction,
@@ -435,7 +435,7 @@ if (all(as.numeric(externalData) == 0)) {
           geoms = st_union(geoms),
           .groups = "drop"
         )
-      control_nesteddata <- new_assess_indicator(
+      control_nesteddata <- assess_indicator(
         data = data,
         scoring = scoring,
         direction = direction,
