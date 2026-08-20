@@ -313,7 +313,6 @@ process_indicator <- function(
     externalData <- rep(0, nrow(areas))
   }
 
-
   if (!dataisna) {
     ## TEST
 
@@ -347,7 +346,6 @@ process_indicator <- function(
       # NEW TEST
 
       geom_col <- attr(areas, "sf_column")
-
       areas <- areas |>
         st_transform(32620) |>
         mutate(
@@ -362,9 +360,7 @@ process_indicator <- function(
     }
 
     # END TEST
-
-
-    nesteddata <- assess_indicator(
+    nesteddata <- new_assess_indicator(
       data = data,
       scoring = scoring,
       direction = direction,
@@ -439,15 +435,7 @@ if (all(as.numeric(externalData) == 0)) {
           geoms = st_union(geoms),
           .groups = "drop"
         )
-
-      # leaflet() %>%
-      #   addProviderTiles(providers$CartoDB.Positron) %>%
-      #   addPolygons(data = MPAs[44,], color = "blue") %>%
-      #   addPolygons(data = control_polygon_out[44,], color = "red")
-
-      #browser()
-
-      control_nesteddata <- assess_indicator(
+      control_nesteddata <- new_assess_indicator(
         data = data,
         scoring = scoring,
         direction = direction,
@@ -481,34 +469,31 @@ if (all(as.numeric(externalData) == 0)) {
     if (scale == "region-site") {
       scale <- "site"
     }
-    #browser()
+
+    if ('areaID' %in% names(nesteddata)) {
+      names(nesteddata)[which(names(nesteddata) == 'areaID')] <- areaID
+    }
+
     final <- dplyr::select(
       as.data.frame(areas),
       {{ areaID }},
       {{ regionID }}
     ) |>
       unique() |>
-      #full_join(nesteddata, by = c(setNames("areaID", areaID),setNames("region", regionID)))|>
-      full_join(nesteddata, by = c(setNames("areaID", areaID))) |>
+      full_join(nesteddata, by = {{ areaID }}) |>  # 🔴 CHANGED
       rename(areaID = {{ areaID }}) |>
       mutate(
         indicator = coalesce(indicator, !!indicator),
         type = coalesce(type, !!type),
         units = coalesce(units, !!units),
         scoring = coalesce(scoring, !!scoring),
-        PPTID = paste0(PPTID,collapse=" ;;; "),
+        PPTID = paste0(PPTID, collapse = " ;;; "),
         source = coalesce(source, !!source),
-        climate_expectation = coalesce(
-          climate_expectation,
-          !!climate_expectation
-        ),
-        indicator_rationale = coalesce(
-          indicator_rationale,
-          !!indicator_rationale
-        ),
+        climate_expectation = coalesce(climate_expectation, !!climate_expectation),
+        indicator_rationale = coalesce(indicator_rationale, !!indicator_rationale),
         objectives = paste0(objectives, collapse = " ;;; "),
         bin_rationale = coalesce(bin_rationale, !!bin_rationale),
-        project_short_title = paste0(project_short_title,collapse=" ;;; "),
+        project_short_title = paste0(project_short_title, collapse = " ;;; "),
         climate = coalesce(climate, !!climate),
         design_target = coalesce(design_target, !!design_target)
       )
@@ -517,8 +502,6 @@ if (all(as.numeric(externalData) == 0)) {
     plots_storage <- vector("list", length = nrow(final))
 
     # loop over rows
-
-    #browser()
 
     for (nr in seq_len(nrow(final))) {
       message("Running iteration: ", nr) # prints the iteration number
@@ -545,6 +528,7 @@ if (all(as.numeric(externalData) == 0)) {
         plots_storage[[nr]] <- result
       }
     }
+
     # optionally, store plots back in your data frame
     final$plot <- plots_storage
 

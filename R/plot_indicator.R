@@ -18,6 +18,7 @@
 #' @examples
 plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_var_name, scoring, areaID, areas, bin_width, control_polygon, control_nesteddata,control_polygon_out){
   p <- NULL
+
   if(!is.null(data)){
     plot_list <- list()
 
@@ -382,6 +383,24 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           next
         }
 
+        if (any(grepl("SpatRaster", class(data)))) {
+
+          plot_list[[i]] <-
+            ggplot2::ggplot() +
+            tidyterra::geom_spatraster(
+              data = data
+            ) +
+            ggplot2::geom_sf(
+              data = areas[which(areas[[areaID]] == id), ],
+              fill = NA,
+              colour = "red",
+              linewidth = 1
+            ) +
+            ggplot2::theme_minimal()
+
+          next
+        }
+
         if ((!("sf" %in% class(data)))) {
           aes_geom <- st_as_sf(data)[[attr(st_as_sf(data), "sf_column")]]
         } else {
@@ -665,6 +684,8 @@ if (any(grepl("sf", class(data)))) {
 
       }
     }
+
+    #browser()
     if(length(plot_list)==0){
       return(p)
     } else {
