@@ -156,6 +156,10 @@ assess_desired_trend <- function(
   # 1. Convert arguments to column names
   # ---------------------------------------------------------
 
+  if (any(st_is_empty(data))) { # Looking for empty points
+    data <- data[!st_is_empty(data), ]
+  }
+
   year_col <- {{year}}
   indicator_col <- {{indicator_var_name}}
   latitude_col <- {{latitude}}
@@ -247,6 +251,7 @@ assess_desired_trend <- function(
       )
 
   } else {
+    # JAIM
 
     data <- data |>
       sf::st_join(
@@ -259,6 +264,7 @@ assess_desired_trend <- function(
         areaID = {{ areaID }}
       )
   }
+
 
 
   # ---------------------------------------------------------
@@ -474,7 +480,8 @@ assess_desired_trend <- function(
     # Increase / decrease
     # -------------------------------------------------------
 
-    if (grepl('increase', sc) || grepl('decrease', sc)) {
+    if ((grepl("increase", sc) || grepl("decrease", sc)) &&
+        !grepl("no decrease", sc)) {
       # 1 = increase
       # -1 = decrease
 
@@ -509,8 +516,7 @@ assess_desired_trend <- function(
       # Probability of detection – no decrease
       # -------------------------------------------------------
 
-      if (grepl("probability of detection", names(data), ignore.case = TRUE)) {
-        browser()
+      if ("probability of detection" %in% names(data)) {
         # Calculate whether the target species was detected
         # in each sample
         yearly_detection <- aggregate(
@@ -598,6 +604,7 @@ assess_desired_trend <- function(
           )
         }
       }
+
     }
 
     # =======================================================
@@ -899,5 +906,6 @@ assess_desired_trend <- function(
   nesteddata$status_statement <- status_statement
   nesteddata$trend_statement <- trend_statement
   nesteddata$score_note <- score_note
+
   nesteddata
 }

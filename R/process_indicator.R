@@ -360,6 +360,7 @@ process_indicator <- function(
     }
 
     # END TEST
+    #browser()
     nesteddata <- assess_indicator(
       data = data,
       scoring = scoring,
