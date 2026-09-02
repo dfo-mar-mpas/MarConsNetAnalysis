@@ -169,7 +169,6 @@ assess_desired_trend <- function(
   # 2. Helper function for species group name
   # ---------------------------------------------------------
 
-
   get_group_name <- function(x) {
     unique_species <- unique(stats::na.omit(x$species))
 
@@ -627,7 +626,6 @@ assess_desired_trend <- function(
         dplyr::pull(
           .data$species
         )
-
 
       group_name <- get_group_name(
         DATA

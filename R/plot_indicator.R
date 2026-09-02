@@ -247,6 +247,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             quiet = TRUE
           )
 
+
           d <- ggplot(benthoscape) +
             geom_sf(aes(fill = Class_name), colour = "black", linewidth = 0.2) +
             geom_sf(
@@ -260,6 +261,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             theme(
               legend.position = "right"
             )
+
       } else {
           d <-  ggplot() +
             geom_sf(
@@ -273,6 +275,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
         group_by(geometry) |>
         mutate(n_collections = n()) |>
         ungroup()
+      n_detections <- st_as_sf(n_detections)
 
       d <- d +
         geom_sf(
@@ -685,7 +688,6 @@ if (any(grepl("sf", class(data)))) {
       }
     }
 
-    #browser()
     if(length(plot_list)==0){
       return(p)
     } else {
