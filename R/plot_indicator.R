@@ -19,8 +19,10 @@
 plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_var_name, scoring, areaID, areas, bin_width, control_polygon, control_nesteddata,control_polygon_out,habitat_display){
   p <- NULL
 
+  if (!(is.null(habitat_display))) {
   if (!(class(habitat_display) == 'list')) {
     stop('habitat_display must be a list')
+  }
   }
 
   if(!is.null(data)){
