@@ -255,7 +255,14 @@ assess_indicator <- function(
   if (!('quality_statement' %in% names(nesteddata))) {
     nesteddata$quality_statement <- NA
 
-    if (any(is.na(nesteddata$areaID))) {nesteddata$areaID[which(is.na(nesteddata$areaID))] <- "Non_Conservation_Area"}
+
+    if (!(areaID %in% names(nesteddata))) {
+      if ("areaID" %in% names(nesteddata)) {
+        names(nesteddata)[which(names(nesteddata) == 'areaID')] <- areaID
+      }
+    }
+
+    if (any(is.na(nesteddata[[areaID]]))) {nesteddata[[areaID]][which(is.na(nesteddata[[areaID]]))] <- "Non_Conservation_Area"}
     #good until here
     for (i in seq_along(nesteddata$data)) {
       # Note a sample means unique date and geometry. If there are multiple depths in a single sample it counts as one sample
@@ -271,13 +278,13 @@ assess_indicator <- function(
           }
           if (any(grepl("GEOMETRYCOLLECTION", class(quality_data[[GEOM]][1])))) {
             nesteddata$quality_statement[i] <- paste0(
-              nesteddata$areaID[i],
+              nesteddata[[areaID]][i],
               ": ",
               "There are no quality statements available for GEOMETRYCOLLECTION type"
             )
           } else if (any(grepl("POLYGON", class(quality_data[[GEOM]][1])))) {
             nesteddata$quality_statement[i] <- paste0(
-              nesteddata$areaID[i],
+              nesteddata[[areaID]][i],
               ": ",
               "There are no quality statements available for POLYGON type"
             )
@@ -293,7 +300,7 @@ assess_indicator <- function(
             max_year <- max(sort(as.numeric(unique(quality_data[[year]]))))
             if (min_year == max_year) {
               nesteddata$quality_statement[i] <- paste0(
-                nesteddata$areaID[i],
+                nesteddata[[areaID]][i],
                 ": ",
                 number_of_samples,
                 " samples taken (",
@@ -302,7 +309,7 @@ assess_indicator <- function(
               )
             } else {
               nesteddata$quality_statement[i] <- paste0(
-                nesteddata$areaID[i],
+                nesteddata[[areaID]][i],
                 ": ",
                 number_of_samples,
                 " samples taken (",

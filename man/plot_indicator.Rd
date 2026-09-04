@@ -18,7 +18,8 @@ plot_indicator(
   bin_width,
   control_polygon,
   control_nesteddata,
-  control_polygon_out
+  control_polygon_out,
+  habitat_display
 )
 }
 \arguments{
@@ -59,6 +60,10 @@ managed areas.
 \item{bin_width}{Numeric. Bin width used for plotting or scoring.}
 
 \item{control_polygon}{Optional spatial polygon used for control comparisons.}
+
+\item{habitat_display}{a list of habitat conditions to display on a map feasturesincluding "bottom_current_mean",
+"bottom_salinity_mean","bottom_temperature_mean", "depth","fishing_effort_mobile","sediment_grain_size",
+"slope", or 'benthoscape'. See data_epibenthic_communities_environmental and}
 }
 \value{
 a plot

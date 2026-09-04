@@ -80,6 +80,9 @@
 #' and an assumption noting the inclusion of external data is added.
 #' @param SME_validated This is Boolean that is FALSE by default. If this argument is equal to true it means this
 #' indicator has underwent the dataIngestion process and results were reviewed by the SME of that data
+#' @param habitat_display a list of habitat conditions to display on a map feasturesincluding "bottom_current_mean",
+#' "bottom_salinity_mean","bottom_temperature_mean", "depth","fishing_effort_mobile","sediment_grain_size",
+#' "slope", or 'benthoscape'. See data_epibenthic_communities_environmental and
 #'
 #' @details
 #' The function performs extensive validation of metadata and arguments.
@@ -200,7 +203,8 @@ process_indicator <- function(
   indicator_caveats = NA,
   data_year_of_publication = NA_real_,
   externalData=NULL,
-  SME_validated=FALSE
+  SME_validated=FALSE,
+  habitat_display=NULL
 ) {
   if (!('year_of_data_collection' %in% names(data))) {
     # First check if year_of_data_collection is in the data source, if not check for year_of_publication
@@ -520,7 +524,8 @@ if (all(as.numeric(externalData) == 0)) {
         bin_width = bin_width,
         control_polygon = control_polygon,
         control_nesteddata = control_nesteddata,
-        control_polygon_out = control_polygon_out
+        control_polygon_out = control_polygon_out,
+        habitat_display=habitat_display
       )
 
       if (is.null(result)) {

@@ -185,8 +185,7 @@ assess_representation_regional <- function(
 
   # Columns retained in nested data
   geometry_col <- attr(data, "sf_column")
-
-  if (!(is.na(other_nest_variables))) {
+  if (!all(is.na(other_nest_variables))) {
     nest_cols <- unique(c(
       indicator_col,
       geometry_col,
@@ -262,6 +261,7 @@ assess_representation_regional <- function(
       represented <- data.frame()
     }
   } else {
+
     # -------------------------------------------------------
     # Point / multipoint representation
     # -------------------------------------------------------
@@ -284,26 +284,16 @@ assess_representation_regional <- function(
       data_with_id,
       areas
     )
+
+
     if (nrow(represented) > 0) {
       geometry_col <- attr(data, "sf_column")
       represented <- represented |>
-        dplyr::left_join(total_occurrences, by = indicator_col) |>
-        dplyr::select(
-          dplyr::all_of(c(area_col, nest_cols, ".total_occurrences", ".observation_id"))
-        ) |>
-        dplyr::group_by(
-          .data[[area_col]],
-          .data[[indicator_col]],
-          .data$.total_occurrences
-        ) |>
-        dplyr::summarise(
-          .occurrences = dplyr::n_distinct(.data$.observation_id),
-          !!geometry_col := sf::st_union(.data[[geometry_col]]),
-          .groups = "drop"
-        ) |>
-        dplyr::mutate(
-          representation = .occurrences / .total_occurrences
+        dplyr::left_join(
+          total_occurrences,
+          by = indicator_col
         )
+
 
     } else {
 
@@ -323,19 +313,25 @@ assess_representation_regional <- function(
     dplyr::distinct()
 
   if (nrow(represented) > 0) {
+
     representation_by_area <- represented |>
       sf::st_drop_geometry() |>
       dplyr::group_by(.data[[area_col]]) |>
       dplyr::summarise(
-        representation = mean(representation, na.rm = TRUE),
+        .occurrences = dplyr::n_distinct(.data$.observation_id),
+        .total_occurrences = dplyr::first(.data$.total_occurrences),
+        representation = .occurrences / .total_occurrences,
         .groups = "drop"
       )
+    ## JAIM HERE
     nesteddata <- represented |>
-      dplyr::select(-dplyr::any_of("representation")) |>
-      dplyr::group_by(dplyr::across(dplyr::all_of(area_col))) |>
-      tidyr::nest(data = dplyr::all_of(nest_cols)) |>
+      dplyr::group_by(.data[[area_col]]) |>
+      tidyr::nest(data = -dplyr::all_of(area_col)) |>
       dplyr::ungroup() |>
-      dplyr::left_join(representation_by_area, by = area_col)
+      dplyr::left_join(
+        representation_by_area,
+        by = area_col
+      )
 
   } else {
     nesteddata <- tibble::tibble(

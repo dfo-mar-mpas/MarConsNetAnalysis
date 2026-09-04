@@ -9,15 +9,19 @@
 #'
 #' @inheritParams process_indicator
 #' @param data data processed in `assess_indicator()`
-#' @inherit process_indicator params indicator units plot_type year indicator_var_name scoring areaID areas bin_width control_polygon
+#' @inherit process_indicator params indicator units plot_type year indicator_var_name scoring areaID areas bin_width control_polygon habitat_display
 #' @param id Equivalent to `areaID` in [process_indicator()]
 #'
 #' @returns a plot
 #' @export
 #'
 #' @examples
-plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_var_name, scoring, areaID, areas, bin_width, control_polygon, control_nesteddata,control_polygon_out){
+plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_var_name, scoring, areaID, areas, bin_width, control_polygon, control_nesteddata,control_polygon_out,habitat_display){
   p <- NULL
+
+  if (!(class(habitat_display) == 'list')) {
+    stop('habitat_display must be a list')
+  }
 
   if(!is.null(data)){
     plot_list <- list()
@@ -193,105 +197,508 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           plot_list[[i]] <- p
       }
 
-      if ('community_composition' %in% plot_type[i]) {
-        plot_data <- data |>
-          group_by(year_of_data_collection, species) |>
-          summarise(
-            detections = sum(detections, na.rm = TRUE),
-            .groups = "drop"
-          )
-
-        plot_list[[i]] <- ggplot(plot_data,
-               aes(x = factor(year_of_data_collection),
-                   y = detections,
-                   fill = species)) +
-          geom_col() +
-          labs(
-            x = "Year",
-            y = "Number of detections",
-            fill = "Species"
-          ) +
-          theme_bw()
-
-
-
-
-      }
 
       if ('detections' %in% plot_type[i]) {
-        if (id == "St. Anns Bank Marine Protected Area") {
-          tmp_dir <- tempdir()
 
-          # Base URL
-          base_url <- "https://raw.githubusercontent.com/dfo-mar-mpas/stannsbank_mpa/main/data/Shapefiles"
+        # ------------------------------------------------------------
+        # Current area
+        # ------------------------------------------------------------
 
-          # Download all required shapefile components
-          benth_files <- c(
-            "benthoscape.shp",
-            "benthoscape.shx",
-            "benthoscape.dbf",
-            "benthoscape.prj"
-          )
+        current_area <- areas[areas[[areaID]] == id, ]
 
-          for (f in benth_files) {
-            download.file(
-              url = paste0(base_url, "/", f),
-              destfile = file.path(tmp_dir, f),
-              mode = "wb"
+        # ------------------------------------------------------------
+        # Species column
+        # ------------------------------------------------------------
+
+        if (!('species' %in% names(data))) {
+
+          if ('common_name' %in% names(data)) {
+
+            names(data)[which(names(data) == 'common_name')] <- 'species'
+
+          } else if ('scientific_name' %in% names(data)) {
+
+            names(data)[which(names(data) == 'scientific_name')] <- 'species'
+
+          } else if ('scientificName' %in% names(data)) {
+
+            names(data)[which(names(data) == 'scientificName')] <- 'species'
+
+          } else {
+
+            stop(
+              paste0(
+                'species is a required column to plot detections type. ',
+                'You have the following in your data: ',
+                paste0(names(data), collapse = ", ")
+              )
             )
           }
+        }
 
-          # Read shapefile
-          benthoscape <- sf::st_read(
-            file.path(tmp_dir, "benthoscape.shp"),
-            quiet = TRUE
-          )
+        # ------------------------------------------------------------
+        # Detection counts -- unchanged
+        # ------------------------------------------------------------
 
+        n_detections <- data |>
+          group_by(geometry, species) |>
+          mutate(n_collections = n()) |>
+          ungroup() |>
+          st_as_sf()
 
-          d <- ggplot(benthoscape) +
-            geom_sf(aes(fill = Class_name), colour = "black", linewidth = 0.2) +
+        # ------------------------------------------------------------
+        # Create one plot for each habitat display
+        # ------------------------------------------------------------
+
+        habitat_plots <- list()
+
+        if (length(habitat_display) > 0) {
+
+          for (j in seq_along(habitat_display)) {
+
+            message(names(habitat_display)[j])
+
+            habitat <- habitat_display[[j]]
+
+            print(
+              paste0(
+                "Processing habitat_display[[", j, "]] of ",
+                length(habitat_display),
+                " | class: ",
+                paste(class(habitat), collapse = ", ")
+              )
+            )
+
+            # ----------------------------------------------------------
+            # Start a NEW plot for this habitat
+            # ----------------------------------------------------------
+
+            d <- ggplot() +
+              geom_sf(
+                data = current_area,
+                fill = "white",
+                color = "black"
+              )
+
+            # ----------------------------------------------------------
+            # Habitat display is an sf object
+            # ----------------------------------------------------------
+
+            if (inherits(habitat, "sf")) {
+
+              # Make sure CRS matches
+              habitat <- st_transform(
+                habitat,
+                st_crs(current_area)
+              )
+
+              # Fix invalid habitat geometries
+              habitat <- st_make_valid(habitat)
+
+              # Find habitat polygons that overlap the current area
+              habitat_overlap <- habitat[
+                lengths(
+                  st_intersects(
+                    habitat,
+                    current_area
+                  )
+                ) > 0,
+              ]
+
+              if (nrow(habitat_overlap) > 0) {
+
+                d <- d +
+                  geom_sf(
+                    data = habitat_overlap,
+                    aes(fill = Class_name),
+                    colour = "black",
+                    linewidth = 0.2
+                  ) +
+                  scale_fill_discrete(
+                    name = names(habitat_display)[j]
+                  )
+              }
+
+              # ----------------------------------------------------------
+              # Habitat display is a SpatRaster
+              # ----------------------------------------------------------
+
+            } else if (inherits(habitat, "SpatRaster")) {
+
+              print(
+                paste0(
+                  "Converting raster to polygons: ",
+                  terra::ncell(habitat),
+                  " cells"
+                )
+              )
+
+              # Convert raster to polygons
+              habitat_poly <- terra::as.polygons(
+                habitat,
+                dissolve = FALSE,
+                na.rm = TRUE
+              )
+
+              # Convert to sf
+              habitat_poly <- sf::st_as_sf(habitat_poly)
+
+              # Transform to same CRS as current area
+              habitat_poly <- sf::st_transform(
+                habitat_poly,
+                sf::st_crs(current_area)
+              )
+
+              # Keep only raster cells that overlap current area
+              habitat_overlap <- habitat_poly[
+                lengths(
+                  sf::st_intersects(
+                    habitat_poly,
+                    current_area
+                  )
+                ) > 0,
+              ]
+
+              if (nrow(habitat_overlap) > 0) {
+
+                # Get raster value column
+                value_col <- setdiff(
+                  names(habitat_overlap),
+                  attr(
+                    habitat_overlap,
+                    "sf_column"
+                  )
+                )[1]
+
+                d <- d +
+                  geom_sf(
+                    data = habitat_overlap,
+                    aes(fill = .data[[value_col]]),
+                    colour = NA,
+                    alpha = 0.6
+                  )
+              }
+            }
+
+            # ----------------------------------------------------------
+            # Put area boundary on top
+            # ----------------------------------------------------------
+
+            d <- d +
+              geom_sf(
+                data = current_area,
+                fill = NA,
+                color = "black",
+                linewidth = 0.8
+              )
+
+            # ----------------------------------------------------------
+            # Add detections
+            # ----------------------------------------------------------
+
+            d <- d +
+              geom_sf(
+                data = n_detections,
+                aes(
+                  geometry = geometry,
+                  size = n_collections,
+                  colour = species
+                ),
+                alpha = 0.6,
+                show.legend = c(
+                  size = FALSE,
+                  colour = TRUE
+                )
+              ) +
+              labs(
+                colour = "Species"
+              ) +
+              theme_minimal() +
+              theme(
+                legend.position = "right"
+              )
+
+            # ----------------------------------------------------------
+            # Store this habitat plot
+            # ----------------------------------------------------------
+
+            habitat_plots[[j]] <- d
+          }
+
+        } else {
+
+          # ----------------------------------------------------------
+          # No habitat displays -- make one normal detections plot
+          # ----------------------------------------------------------
+
+          d <- ggplot() +
             geom_sf(
-              data = areas[areas[[areaID]] == id,],
+              data = current_area,
+              fill = "white",
+              color = "black"
+            ) +
+            geom_sf(
+              data = current_area,
               fill = NA,
               color = "black",
               linewidth = 0.8
             ) +
-            scale_fill_discrete(name = "Benthoscape") +
+            geom_sf(
+              data = n_detections,
+              aes(
+                geometry = geometry,
+                size = n_collections,
+                colour = species
+              ),
+              alpha = 0.6,
+              show.legend = c(
+                size = FALSE,
+                colour = TRUE
+              )
+            ) +
+            labs(
+              colour = "Species"
+            ) +
             theme_minimal() +
             theme(
               legend.position = "right"
             )
 
-      } else {
-          d <-  ggplot() +
-            geom_sf(
-              data = areas[areas[[areaID]] == id,],
-              fill = "white",
-              color = "black"
-            )
-      }
+          habitat_plots[[1]] <- d
+        }
 
-      n_detections <- data |>
-        group_by(geometry) |>
-        mutate(n_collections = n()) |>
-        ungroup()
-      n_detections <- st_as_sf(n_detections)
+        # ------------------------------------------------------------
+        # Automatically arrange habitat plots
+        # ------------------------------------------------------------
 
-      d <- d +
-        geom_sf(
-          data = n_detections,
-          aes(
-            geometry = geometry,
-            size = n_collections
-          ),
-          colour = "black",
-          alpha = 0.6,
-          show.legend = FALSE
+        n_plots <- length(habitat_plots)
+
+        n_cols <- ceiling(sqrt(n_plots))
+        n_rows <- ceiling(n_plots / n_cols)
+
+        plot_list[[i]] <- patchwork::wrap_plots(
+          habitat_plots,
+          ncol = n_cols,
+          nrow = n_rows
         )
-
-      plot_list[[i]] <- d
-
       }
+
+
+      # if ('detections' %in% plot_type[i]) {
+      #
+      #   # Current area
+      #   current_area <- areas[areas[[areaID]] == id, ]
+      #
+      #   # Start with the current area
+      #   d <- ggplot() +
+      #     geom_sf(
+      #       data = current_area,
+      #       fill = "white",
+      #       color = "black"
+      #     )
+      #
+      #   # Add any habitat displays that overlap the current area
+      #   if (length(habitat_display) > 0) {
+      #
+      #     for (j in seq_along(habitat_display)) {
+      #       message(names(habitat_display)[j])
+      #
+      #       habitat <- habitat_display[[j]]
+      #
+      #       print(paste0(
+      #         "Processing habitat_display[[", j, "]] of ",
+      #         length(habitat_display),
+      #         " | class: ",
+      #         paste(class(habitat), collapse = ", ")
+      #       ))
+      #
+      #       # ------------------------------------------------------------
+      #       # Habitat display is an sf object
+      #       # ------------------------------------------------------------
+      #
+      #       # ------------------------------------------------------------
+      #       # Habitat display is an sf object
+      #       # ------------------------------------------------------------
+      #       if (inherits(habitat, "sf")) {
+      #
+      #         # Make sure CRS matches
+      #         habitat <- st_transform(
+      #           habitat,
+      #           st_crs(current_area)
+      #         )
+      #
+      #         # Fix invalid habitat geometries
+      #         habitat <- st_make_valid(habitat)
+      #
+      #         # Find habitat polygons that overlap the current area
+      #         habitat_overlap <- habitat[
+      #           lengths(
+      #             st_intersects(
+      #               habitat,
+      #               current_area
+      #             )
+      #           ) > 0,
+      #         ]
+      #
+      #         if (nrow(habitat_overlap) > 0) {
+      #           d <- ggplot(habitat_overlap) +
+      #             geom_sf(
+      #               aes(fill = Class_name),
+      #               colour = "black",
+      #               linewidth = 0.2
+      #             ) +
+      #             geom_sf(
+      #               data = areas[areas[[areaID]] == id, ],
+      #               fill = NA,
+      #               color = "black",
+      #               linewidth = 0.8
+      #             ) +
+      #             scale_fill_discrete(name = "Habitat") +
+      #             theme_minimal() +
+      #             theme(
+      #               legend.position = "right"
+      #             )
+      #         }
+      #       } else if (inherits(habitat, "SpatRaster")) {
+      #
+      #         print(
+      #           paste0(
+      #             "Converting raster to polygons: ",
+      #             terra::ncell(habitat),
+      #             " cells"
+      #           )
+      #         )
+      #
+      #         # Convert raster to polygons
+      #         habitat_poly <- terra::as.polygons(
+      #           habitat,
+      #           dissolve = FALSE,
+      #           na.rm = TRUE
+      #         )
+      #
+      #         # Convert to sf
+      #         habitat_poly <- sf::st_as_sf(habitat_poly)
+      #
+      #         # Transform to same CRS as current area
+      #         habitat_poly <- sf::st_transform(
+      #           habitat_poly,
+      #           sf::st_crs(current_area)
+      #         )
+      #
+      #         # Keep only raster cells that overlap the current area
+      #         habitat_overlap <- habitat_poly[
+      #           lengths(
+      #             sf::st_intersects(
+      #               habitat_poly,
+      #               current_area
+      #             )
+      #           ) > 0,
+      #         ]
+      #
+      #         if (nrow(habitat_overlap) > 0) {
+      #
+      #           # Get raster value column
+      #           value_col <- setdiff(
+      #             names(habitat_overlap),
+      #             attr(
+      #               habitat_overlap,
+      #               "sf_column"
+      #             )
+      #           )[1]
+      #
+      #           d <- d +
+      #             geom_sf(
+      #               data = habitat_overlap,
+      #               aes(fill = .data[[value_col]]),
+      #               colour = NA,
+      #               alpha = 0.6
+      #             )
+      #         }
+      #       }
+      #     }
+      #   }
+      #
+      #   # Put the area boundary on top
+      #   d <- d +
+      #     geom_sf(
+      #       data = current_area,
+      #       fill = NA,
+      #       color = "black",
+      #       linewidth = 0.8
+      #     )
+      #
+      #   # ------------------------------------------------------------
+      #   # Species column
+      #   # ------------------------------------------------------------
+      #
+      #   if (!('species' %in% names(data))) {
+      #
+      #     if ('common_name' %in% names(data)) {
+      #
+      #       names(data)[which(names(data) == 'common_name')] <- 'species'
+      #
+      #     } else if ('scientific_name' %in% names(data)) {
+      #
+      #       names(data)[which(names(data) == 'scientific_name')] <- 'species'
+      #
+      #     } else if ('scientificName' %in% names(data)) {
+      #
+      #       names(data)[which(names(data) == 'scientificName')] <- 'species'
+      #
+      #     } else {
+      #
+      #       stop(
+      #         paste0(
+      #           'species is a required column to plot detections type. ',
+      #           'You have the following in your data: ',
+      #           paste0(names(data), collapse = ", ")
+      #         )
+      #       )
+      #     }
+      #   }
+      #
+      #   # ------------------------------------------------------------
+      #   # Detection counts -- unchanged
+      #   # ------------------------------------------------------------
+      #
+      #   n_detections <- data |>
+      #     group_by(geometry, species) |>
+      #     mutate(n_collections = n()) |>
+      #     ungroup() |>
+      #     st_as_sf()
+      #
+      #   # ------------------------------------------------------------
+      #   # Add detections
+      #   # ------------------------------------------------------------
+      #
+      #   plot_list[[i]] <- d +
+      #     geom_sf(
+      #       data = n_detections,
+      #       aes(
+      #         geometry = geometry,
+      #         size = n_collections,
+      #         colour = species
+      #       ),
+      #       alpha = 0.6,
+      #       show.legend = c(
+      #         size = FALSE,
+      #         colour = TRUE
+      #       )
+      #     ) +
+      #     labs(colour = "Species")
+      # }
+
+
+
+
+
+
+
+
+
+
+
+
 
       if("boxplot" %in% plot_type[i]) {
         # Create decade grouping
@@ -322,63 +729,8 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             minor_breaks = NULL
           ) +
           theme_classic()
-
-
-      }
-      if("violin" %in% plot_type[i]) {
-        # Create decade grouping
-        data$decade_group <- floor(data[[year]] / bin_width) * bin_width
-
-        violin_ok <- data %>%
-          group_by(decade_group) %>%
-          summarise(n_obs = n()) %>%
-          summarise(any_group_has_enough = any(n_obs >= 2)) %>%
-          pull(any_group_has_enough)
-
-        if (!(violin_ok)) {
-          # violin plot not possible
-          plot_list[[i]] <-  ggplot(data,aes(x=.data[[year]], y=.data[[indicator_var_name]]))+
-            geom_point()+
-            theme_classic()+
-            ylab(paste0(indicator, " (", units, ")"))
-
-
-        } else {
-
-          # Plot with position_dodge to control width
-          est_year <- areas$date_of_establishment[areas$NAME_E == id]
-
-          year_range <- range(data[[year]], na.rm = TRUE)
-
-          plot_list[[i]] <- ggplot(data, aes(x = decade_group + bin_width/2,
-                           y = .data[[indicator_var_name]],
-                           group = decade_group)) +
-            geom_violin(width = bin_width * 0.9) +
-            {
-              if (length(est_year) > 0 &&
-                  !is.na(est_year) &&
-                  est_year >= year_range[1] &&
-                  est_year <= year_range[2]) {
-
-                geom_vline(xintercept = est_year,
-                           colour = "red",
-                           linewidth = 1)
-              }
-            } +
-            scale_x_continuous(
-              name = year,
-              breaks = unique(data$decade_group),
-              minor_breaks = NULL
-            ) +
-            theme_classic() +
-            theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-
-        }
-
-
       }
       if("map" %in% plot_type[i]){
-
         idx <- areas[[areaID]] == id
 
         if (length(idx) == 0 || !any(idx)) {
@@ -641,49 +993,39 @@ if (any(grepl("sf", class(data)))) {
             y = "Number of non-indigenous species",
             fill = "Species"
           )
-
-
       }
 
-      if ("outside-comparison" %in% plot_type[i]) {
-        summary_data <- data %>%
-          group_by(.data[[year]], control) %>%
-          summarize(mean_value = mean(.data[[indicator_var_name]], na.rm = TRUE), .groups = "drop")
+      if ("indicator_by_taxa" %in% plot_type[i]) {
+        # JAIM HERE!!!
 
-        # Plot with separate lines for inside vs outside
-        plot_list[[i]] <- ggplot(summary_data, aes(x = .data[[year]], y = mean_value, color = control)) +
-          geom_point() +
-          geom_line() +
-          theme_classic() +
-          ylab(paste0(indicator, " (", units, ")")) +
-          scale_color_manual(values = c("FALSE" = "blue", "TRUE" = "red"),
-                             labels = c("Inside MPA", "Outside MPA"),
-                             name = "Location")
 
-      }
-      if ("community-composition" %in% plot_type[i]) {
-        if ("station" %in% names(data)) {
-          plot_list[[i]] <- ggplot(data, aes(x = indicator_var_name, y = year, fill = taxa)) +
-            geom_bar(stat = "identity") +
-            facet_wrap(~ station) +
-            labs(x = indicator_var_name, y = "Year", fill = "Taxa") +
-            theme_minimal() +
-            theme(
-              legend.text = element_text(size = 8),
-              legend.title = element_text(size = 9),
-              legend.key.size = unit(0.5, "cm")
-            )
-        } else {
-          plot_list[[i]] <- ggplot(data, aes(x = year, y = indicator_var_name, fill = taxa)) +
-            geom_area() +
-            labs(x = "Year", y = indicator_var_name, fill = "Taxa") +
-            theme_minimal() +
-            theme(
-              legend.text = element_text(size = 8),
-              legend.title = element_text(size = 9),
-              legend.key.size = unit(0.5, "cm")
-            )
-        }
+        data <- data |>
+          mutate(year_of_data_collection = as.integer(year_of_data_collection))
+
+        plot_list[[i]] <- ggplot(
+          data,
+          aes(
+            x = year_of_data_collection,
+            y = detections,
+            fill = species
+          )
+        ) +
+          geom_col() +
+          #facet_wrap(~ location) +
+          scale_x_continuous(
+            breaks = sort(unique(data$year_of_data_collection))
+          ) +
+          labs(
+            x = "Year",
+            y = "Detections",
+            fill = "Species"
+          ) +
+          theme_minimal() +
+          theme(
+            legend.text = element_text(size = 8),
+            legend.title = element_text(size = 9),
+            legend.key.size = unit(0.5, "cm")
+          )
 
       }
     }

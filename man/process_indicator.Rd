@@ -42,7 +42,8 @@ process_indicator(
   indicator_caveats = NA,
   data_year_of_publication = NA_real_,
   externalData = NULL,
-  SME_validated = FALSE
+  SME_validated = FALSE,
+  habitat_display = NULL
 )
 }
 \arguments{
@@ -154,6 +155,10 @@ and an assumption noting the inclusion of external data is added.}
 
 \item{SME_validated}{This is Boolean that is FALSE by default. If this argument is equal to true it means this
 indicator has underwent the dataIngestion process and results were reviewed by the SME of that data}
+
+\item{habitat_display}{a list of habitat conditions to display on a map feasturesincluding "bottom_current_mean",
+"bottom_salinity_mean","bottom_temperature_mean", "depth","fishing_effort_mobile","sediment_grain_size",
+"slope", or 'benthoscape'. See data_epibenthic_communities_environmental and}
 }
 \value{
 A tibble with one row per area containing:
