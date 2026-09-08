@@ -211,7 +211,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
         # ------------------------------------------------------------
         # Species column
         # ------------------------------------------------------------
-
         if (!('species' %in% names(data))) {
 
           if ('common_name' %in% names(data)) {
@@ -255,7 +254,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
         habitat_plots <- list()
 
         if (length(habitat_display) > 0) {
-
           for (j in seq_along(habitat_display)) {
 
             message(names(habitat_display)[j])
@@ -271,6 +269,9 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
               )
             )
 
+            # Name of the habitat variable
+            habitat_name <- names(habitat_display)[j]
+
             # ----------------------------------------------------------
             # Start a NEW plot for this habitat
             # ----------------------------------------------------------
@@ -280,7 +281,13 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 data = current_area,
                 fill = "white",
                 color = "black"
+              ) +
+              labs(
+                title = habitat_name
               )
+
+            # Track whether there is overlap
+            has_overlap <- FALSE
 
             # ----------------------------------------------------------
             # Habitat display is an sf object
@@ -288,16 +295,13 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
             if (inherits(habitat, "sf")) {
 
-              # Make sure CRS matches
               habitat <- st_transform(
                 habitat,
                 st_crs(current_area)
               )
 
-              # Fix invalid habitat geometries
               habitat <- st_make_valid(habitat)
 
-              # Find habitat polygons that overlap the current area
               habitat_overlap <- habitat[
                 lengths(
                   st_intersects(
@@ -309,6 +313,8 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
               if (nrow(habitat_overlap) > 0) {
 
+                has_overlap <- TRUE
+
                 d <- d +
                   geom_sf(
                     data = habitat_overlap,
@@ -317,7 +323,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                     linewidth = 0.2
                   ) +
                   scale_fill_discrete(
-                    name = names(habitat_display)[j]
+                    name = habitat_name
                   )
               }
 
@@ -335,23 +341,19 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 )
               )
 
-              # Convert raster to polygons
               habitat_poly <- terra::as.polygons(
                 habitat,
                 dissolve = FALSE,
                 na.rm = TRUE
               )
 
-              # Convert to sf
               habitat_poly <- sf::st_as_sf(habitat_poly)
 
-              # Transform to same CRS as current area
               habitat_poly <- sf::st_transform(
                 habitat_poly,
                 sf::st_crs(current_area)
               )
 
-              # Keep only raster cells that overlap current area
               habitat_overlap <- habitat_poly[
                 lengths(
                   sf::st_intersects(
@@ -363,7 +365,8 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
               if (nrow(habitat_overlap) > 0) {
 
-                # Get raster value column
+                has_overlap <- TRUE
+
                 value_col <- setdiff(
                   names(habitat_overlap),
                   attr(
@@ -380,6 +383,24 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                     alpha = 0.6
                   )
               }
+            }
+
+            # ----------------------------------------------------------
+            # If no overlap, make this obvious
+            # ----------------------------------------------------------
+
+            if (!has_overlap) {
+
+              d <- d +
+                annotate(
+                  "text",
+                  x = Inf,
+                  y = Inf,
+                  label = "No overlap",
+                  hjust = 1.1,
+                  vjust = 1.5,
+                  size = 5
+                )
             }
 
             # ----------------------------------------------------------
@@ -409,7 +430,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 alpha = 0.6,
                 show.legend = c(
                   size = FALSE,
-                  colour = TRUE
+                  colour = (j == 1)
                 )
               ) +
               labs(
@@ -426,6 +447,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
             habitat_plots[[j]] <- d
           }
+
 
         } else {
 
