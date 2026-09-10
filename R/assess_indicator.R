@@ -291,7 +291,7 @@ assess_indicator <- function(
           } else if (year %in% names(quality_data)) {
             number_of_samples <- quality_data %>%
               distinct({{ year }}, .data[[GEOM]]) %>%
-              summarise(n_samples = n())
+              dplyr::summarise(n_samples = n())
 
             if (any(grepl("data.frame", class(number_of_samples)))) {
               number_of_samples <- number_of_samples$n_samples

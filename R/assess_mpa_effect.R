@@ -1,4 +1,3 @@
-
 #' Assess MPA effect
 #'
 #' Assesses the effect of a marine protected area (MPA) by comparing indicator
@@ -1110,7 +1109,7 @@ assess_mpa_effect <- function(
 
             years <- sort(
               unique(
-                mpa_data$year
+                mpa_data[[year]]
               )
             )
 

@@ -124,6 +124,9 @@ assess_representation_regional <- function(
     other_nest_variables = NULL
 ) {
 
+
+
+  if (!(grepl("calculated", scoring))) {
   # ---------------------------------------------------------
   # 1. Validate inputs
   # ---------------------------------------------------------
@@ -323,7 +326,6 @@ assess_representation_regional <- function(
         representation = .occurrences / .total_occurrences,
         .groups = "drop"
       )
-    ## JAIM HERE
     nesteddata <- represented |>
       dplyr::group_by(.data[[area_col]]) |>
       tidyr::nest(data = -dplyr::all_of(area_col)) |>
@@ -406,4 +408,86 @@ assess_representation_regional <- function(
       -dplyr::all_of(region_col),
       -representation
     )
+} else {
+  if (!all(c("NAME_E", "region", "data", "year_of_publication") %in% names(data))) {
+
+    stop(
+      "For this indicator, data must contain the following columns: ",
+      "NAME_E, region, data, and year_of_publication. ",
+      "The 'proportions' column must be a character string structured as ",
+      "'class,n,data' for each substrate class, with multiple classes ",
+      "separated by '; '. For example: ",
+      "'Mud,87,0.236; Sand,236,0.642'. ",
+      "Here, 'class' is the sediment class, 'n' is the number of raster ",
+      "cells in that class, and 'proportion' is the proportion of the MPA ",
+      "occupied by that class."
+    )
+  }
+
+  data <- data |>
+    group_by(region) |>
+    mutate(
+      # Regional relative ranking
+      score = cume_dist(shannon) * 100
+    ) |>
+    ungroup() |>
+    mutate(
+      # Status statement
+      status_statement = paste0(
+        "The MPA has a Shannon seabed substrate diversity of ",
+        round(shannon, 2),
+        ". The seabed is composed of ",
+        sapply(data, function(x) {
+
+          substrate <- strsplit(x, "; ")[[1]]
+
+          substrate <- lapply(substrate, function(y) {
+            parts <- strsplit(y, ",")[[1]]
+
+            paste0(
+              parts[1],
+              " (",
+              round(as.numeric(parts[3]) * 100, 1),
+              "%; ",
+              parts[2],
+              " raster cells)"
+            )
+          })
+
+          if (length(substrate) == 1) {
+            substrate[[1]]
+          } else if (length(substrate) == 2) {
+            paste(substrate, collapse = " and ")
+          } else {
+            paste(
+              paste(substrate[-length(substrate)], collapse = ", "),
+              substrate[[length(substrate)]],
+              sep = ", and "
+            )
+          }
+        }),
+        "."
+      ),
+
+      # status_statement = paste0(
+      #   "The MPA has a Shannon seabed substrate diversity of ",
+      #   round(shannon, 2),
+      #   ", based on the following substrate composition: ",
+      #   data,
+      #   "."
+      # ),
+
+      # No temporal information available
+      trend_statement = "No temporal data are available to assess change in seabed substrate diversity.",
+
+      # Quality statement based on number of raster cells
+      quality_statement = paste0(
+        "The assessment is based on ",
+        sapply(strsplit(data, "; "), function(x) {
+          sum(as.numeric(sapply(strsplit(x, ","), `[`, 2)))
+        }),
+        " raster cells."
+      )
+    )
+}
 }

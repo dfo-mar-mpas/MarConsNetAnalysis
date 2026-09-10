@@ -25,7 +25,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
   }
   }
 
-  if(!is.null(data)){
+  if(!is.null(data) & !(is.na(data))){
     plot_list <- list()
 
     for (i in seq_along(plot_type)) {
@@ -202,6 +202,8 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
       if ('detections' %in% plot_type[i]) {
 
+        #browser()
+
         # ------------------------------------------------------------
         # Current area
         # ------------------------------------------------------------
@@ -225,27 +227,31 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
             names(data)[which(names(data) == 'scientificName')] <- 'species'
 
-          } else {
-
-            stop(
-              paste0(
-                'species is a required column to plot detections type. ',
-                'You have the following in your data: ',
-                paste0(names(data), collapse = ", ")
-              )
-            )
           }
+
+          # else {
+          #
+          #   stop(
+          #     paste0(
+          #       'species is a required column to plot detections type. ',
+          #       'You have the following in your data: ',
+          #       paste0(names(data), collapse = ", ")
+          #     )
+          #   )
+          # }
         }
 
         # ------------------------------------------------------------
         # Detection counts -- unchanged
         # ------------------------------------------------------------
 
+        if ('species' %in% names(data)) {
         n_detections <- data |>
           group_by(geometry, species) |>
           mutate(n_collections = n()) |>
           ungroup() |>
           st_as_sf()
+        }
 
         # ------------------------------------------------------------
         # Create one plot for each habitat display
@@ -419,6 +425,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             # Add detections
             # ----------------------------------------------------------
 
+            if ('species' %in% names(data)) {
             d <- d +
               geom_sf(
                 data = n_detections,
@@ -440,6 +447,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
               theme(
                 legend.position = "right"
               )
+            }
 
             # ----------------------------------------------------------
             # Store this habitat plot
@@ -506,223 +514,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           nrow = n_rows
         )
       }
-
-
-      # if ('detections' %in% plot_type[i]) {
-      #
-      #   # Current area
-      #   current_area <- areas[areas[[areaID]] == id, ]
-      #
-      #   # Start with the current area
-      #   d <- ggplot() +
-      #     geom_sf(
-      #       data = current_area,
-      #       fill = "white",
-      #       color = "black"
-      #     )
-      #
-      #   # Add any habitat displays that overlap the current area
-      #   if (length(habitat_display) > 0) {
-      #
-      #     for (j in seq_along(habitat_display)) {
-      #       message(names(habitat_display)[j])
-      #
-      #       habitat <- habitat_display[[j]]
-      #
-      #       print(paste0(
-      #         "Processing habitat_display[[", j, "]] of ",
-      #         length(habitat_display),
-      #         " | class: ",
-      #         paste(class(habitat), collapse = ", ")
-      #       ))
-      #
-      #       # ------------------------------------------------------------
-      #       # Habitat display is an sf object
-      #       # ------------------------------------------------------------
-      #
-      #       # ------------------------------------------------------------
-      #       # Habitat display is an sf object
-      #       # ------------------------------------------------------------
-      #       if (inherits(habitat, "sf")) {
-      #
-      #         # Make sure CRS matches
-      #         habitat <- st_transform(
-      #           habitat,
-      #           st_crs(current_area)
-      #         )
-      #
-      #         # Fix invalid habitat geometries
-      #         habitat <- st_make_valid(habitat)
-      #
-      #         # Find habitat polygons that overlap the current area
-      #         habitat_overlap <- habitat[
-      #           lengths(
-      #             st_intersects(
-      #               habitat,
-      #               current_area
-      #             )
-      #           ) > 0,
-      #         ]
-      #
-      #         if (nrow(habitat_overlap) > 0) {
-      #           d <- ggplot(habitat_overlap) +
-      #             geom_sf(
-      #               aes(fill = Class_name),
-      #               colour = "black",
-      #               linewidth = 0.2
-      #             ) +
-      #             geom_sf(
-      #               data = areas[areas[[areaID]] == id, ],
-      #               fill = NA,
-      #               color = "black",
-      #               linewidth = 0.8
-      #             ) +
-      #             scale_fill_discrete(name = "Habitat") +
-      #             theme_minimal() +
-      #             theme(
-      #               legend.position = "right"
-      #             )
-      #         }
-      #       } else if (inherits(habitat, "SpatRaster")) {
-      #
-      #         print(
-      #           paste0(
-      #             "Converting raster to polygons: ",
-      #             terra::ncell(habitat),
-      #             " cells"
-      #           )
-      #         )
-      #
-      #         # Convert raster to polygons
-      #         habitat_poly <- terra::as.polygons(
-      #           habitat,
-      #           dissolve = FALSE,
-      #           na.rm = TRUE
-      #         )
-      #
-      #         # Convert to sf
-      #         habitat_poly <- sf::st_as_sf(habitat_poly)
-      #
-      #         # Transform to same CRS as current area
-      #         habitat_poly <- sf::st_transform(
-      #           habitat_poly,
-      #           sf::st_crs(current_area)
-      #         )
-      #
-      #         # Keep only raster cells that overlap the current area
-      #         habitat_overlap <- habitat_poly[
-      #           lengths(
-      #             sf::st_intersects(
-      #               habitat_poly,
-      #               current_area
-      #             )
-      #           ) > 0,
-      #         ]
-      #
-      #         if (nrow(habitat_overlap) > 0) {
-      #
-      #           # Get raster value column
-      #           value_col <- setdiff(
-      #             names(habitat_overlap),
-      #             attr(
-      #               habitat_overlap,
-      #               "sf_column"
-      #             )
-      #           )[1]
-      #
-      #           d <- d +
-      #             geom_sf(
-      #               data = habitat_overlap,
-      #               aes(fill = .data[[value_col]]),
-      #               colour = NA,
-      #               alpha = 0.6
-      #             )
-      #         }
-      #       }
-      #     }
-      #   }
-      #
-      #   # Put the area boundary on top
-      #   d <- d +
-      #     geom_sf(
-      #       data = current_area,
-      #       fill = NA,
-      #       color = "black",
-      #       linewidth = 0.8
-      #     )
-      #
-      #   # ------------------------------------------------------------
-      #   # Species column
-      #   # ------------------------------------------------------------
-      #
-      #   if (!('species' %in% names(data))) {
-      #
-      #     if ('common_name' %in% names(data)) {
-      #
-      #       names(data)[which(names(data) == 'common_name')] <- 'species'
-      #
-      #     } else if ('scientific_name' %in% names(data)) {
-      #
-      #       names(data)[which(names(data) == 'scientific_name')] <- 'species'
-      #
-      #     } else if ('scientificName' %in% names(data)) {
-      #
-      #       names(data)[which(names(data) == 'scientificName')] <- 'species'
-      #
-      #     } else {
-      #
-      #       stop(
-      #         paste0(
-      #           'species is a required column to plot detections type. ',
-      #           'You have the following in your data: ',
-      #           paste0(names(data), collapse = ", ")
-      #         )
-      #       )
-      #     }
-      #   }
-      #
-      #   # ------------------------------------------------------------
-      #   # Detection counts -- unchanged
-      #   # ------------------------------------------------------------
-      #
-      #   n_detections <- data |>
-      #     group_by(geometry, species) |>
-      #     mutate(n_collections = n()) |>
-      #     ungroup() |>
-      #     st_as_sf()
-      #
-      #   # ------------------------------------------------------------
-      #   # Add detections
-      #   # ------------------------------------------------------------
-      #
-      #   plot_list[[i]] <- d +
-      #     geom_sf(
-      #       data = n_detections,
-      #       aes(
-      #         geometry = geometry,
-      #         size = n_collections,
-      #         colour = species
-      #       ),
-      #       alpha = 0.6,
-      #       show.legend = c(
-      #         size = FALSE,
-      #         colour = TRUE
-      #       )
-      #     ) +
-      #     labs(colour = "Species")
-      # }
-
-
-
-
-
-
-
-
-
-
-
-
 
       if("boxplot" %in% plot_type[i]) {
         # Create decade grouping
