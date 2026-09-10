@@ -25,7 +25,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
   }
   }
 
-  if(!is.null(data) & !(is.na(data))){
+  if(!is.null(data) & !(all(is.na(data)))){
     plot_list <- list()
 
     for (i in seq_along(plot_type)) {
