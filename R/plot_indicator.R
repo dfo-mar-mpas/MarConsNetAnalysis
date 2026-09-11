@@ -201,9 +201,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
 
       if ('detections' %in% plot_type[i]) {
-
-        #browser()
-
         # ------------------------------------------------------------
         # Current area
         # ------------------------------------------------------------
@@ -228,17 +225,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             names(data)[which(names(data) == 'scientificName')] <- 'species'
 
           }
-
-          # else {
-          #
-          #   stop(
-          #     paste0(
-          #       'species is a required column to plot detections type. ',
-          #       'You have the following in your data: ',
-          #       paste0(names(data), collapse = ", ")
-          #     )
-          #   )
-          # }
         }
 
         # ------------------------------------------------------------
@@ -463,6 +449,142 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           # No habitat displays -- make one normal detections plot
           # ----------------------------------------------------------
 
+          if (!is.null(control_polygon)) {
+
+            original_data <- get("data", envir = parent.frame())
+
+            control_polygon <- control_polygon |>
+              dplyr::filter(NAME_E == id) |>
+              dplyr::mutate(
+                buffer_order = match(
+                  buffer_distance,
+                  c(
+                    "twenty_km",
+                    "forty_km",
+                    "sixty_km",
+                    "eighty_km"
+                  )
+                )
+              ) |>
+              dplyr::arrange(buffer_order)
+
+            # Initialize in case no buffer contains observations
+            control_detections <- NULL
+            selected_buffer <- NULL
+
+            for (i in seq_len(nrow(control_polygon))) {
+
+              test_polygon <- control_polygon[i, ]
+
+              test_data <- original_data |>
+                sf::st_join(
+                  test_polygon,
+                  left = FALSE
+                )
+
+              if (nrow(test_data) > 0) {
+                control_polygon <- test_polygon
+                control_detections <- test_data
+                selected_buffer <- test_polygon$buffer_distance
+                break
+              }
+            }
+
+            # Plot with control buffer if one was found
+            if (!is.null(control_detections)) {
+
+              d <- ggplot() +
+                geom_sf(
+                  data = current_area,
+                  fill = "white",
+                  color = "black"
+                ) +
+                geom_sf(
+                  data = control_polygon,
+                  fill = NA,
+                  color = "grey40",
+                  linewidth = 0.8,
+                  linetype = "dashed"
+                ) +
+                geom_sf(
+                  data = current_area,
+                  fill = NA,
+                  color = "black",
+                  linewidth = 0.8
+                ) +
+                geom_sf(
+                  data = n_detections,
+                  aes(
+                    geometry = geometry,
+                    size = n_collections,
+                    colour = species
+                  ),
+                  alpha = 0.6,
+                  show.legend = c(
+                    size = FALSE,
+                    colour = TRUE
+                  )
+                ) +
+                geom_sf(
+                  data = control_detections,
+                  aes(
+                    geometry = geometry,
+                    colour = species
+                  ),
+                  alpha = 0.6,
+                  show.legend = FALSE
+                ) +
+                labs(
+                  colour = "Species",
+                  subtitle = paste(
+                    "Control buffer:",
+                    gsub("_", " ", selected_buffer)
+                  )
+                ) +
+                theme_minimal() +
+                theme(
+                  legend.position = "right"
+                )
+
+            } else {
+
+              # No control buffer contains observations
+              d <- ggplot() +
+                geom_sf(
+                  data = current_area,
+                  fill = "white",
+                  color = "black"
+                ) +
+                geom_sf(
+                  data = current_area,
+                  fill = NA,
+                  color = "black",
+                  linewidth = 0.8
+                ) +
+                geom_sf(
+                  data = n_detections,
+                  aes(
+                    geometry = geometry,
+                    size = n_collections,
+                    colour = species
+                  ),
+                  alpha = 0.6,
+                  show.legend = c(
+                    size = FALSE,
+                    colour = TRUE
+                  )
+                ) +
+                labs(
+                  colour = "Species"
+                ) +
+                theme_minimal() +
+                theme(
+                  legend.position = "right"
+                )
+            }
+
+            habitat_plots[[1]] <- d
+          } else {
           d <- ggplot() +
             geom_sf(
               data = current_area,
@@ -497,6 +619,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             )
 
           habitat_plots[[1]] <- d
+          }
         }
 
         # ------------------------------------------------------------
@@ -508,7 +631,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
         n_cols <- ceiling(sqrt(n_plots))
         n_rows <- ceiling(n_plots / n_cols)
 
-        plot_list[[i]] <- patchwork::wrap_plots(
+        plot_list[[length(plot_list) + 1]]  <- patchwork::wrap_plots(
           habitat_plots,
           ncol = n_cols,
           nrow = n_rows

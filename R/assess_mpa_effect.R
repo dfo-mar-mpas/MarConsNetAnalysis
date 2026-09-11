@@ -226,128 +226,246 @@ assess_mpa_effect <- function(
   # ============================================================
   # MPA EFFECT – MEDIAN DIFFERENCE
   # ============================================================
-
   if (scoring == "mpa effect: median difference") {
+    # ----------------------------------------------------------
+    # Check data type
+    # ----------------------------------------------------------
 
-    if (!inherits(data, "stars")) {
-      stop("data must be a stars object for ","'mpa effect: median difference'")
+    if (!inherits(data, "stars") && !inherits(data, "sf")) {
+      stop(
+        "For 'mpa effect: median difference', data must be ",
+        "either a stars object or an sf object."
+      )
     }
 
-    # ----------------------------------------------------------
-    # Keep data as a raster.
-    #
-    # DO NOT use st_as_sf(data, as_points = TRUE).
-    # That would create ~30 million points for the vessel raster.
-    # ----------------------------------------------------------
-    raster_data <- terra::rast(data)
+    # ==========================================================
+    # STARS / RASTER WORKFLOW
+    # ==========================================================
 
-    value_col <- names(raster_data)[1]
+    if (inherits(data, "stars")) {
+      # --------------------------------------------------------
+      # Keep data as a raster.
+      #
+      # DO NOT use st_as_sf(data, as_points = TRUE).
+      # That would create ~30 million points for large rasters.
+      # --------------------------------------------------------
 
-    # Transform polygons to raster CRS
-    mpa_polygons <- sf::st_transform(
-      areas_use,
-      terra::crs(raster_data)
-    )
-    ## Trying to get the data
-    mpa_rasters <- lapply(seq_len(nrow(mpa_polygons)), function(i) {
-      terra::mask(
-        terra::crop(
-          raster_data,
-          terra::vect(mpa_polygons[i, ])
-        ),
-        terra::vect(mpa_polygons[i, ])
-      )
-    })
+      raster_data <- terra::rast(data)
 
-    control_polygons_raster <- sf::st_transform(
-      control_polygons,
-      terra::crs(raster_data)
-    )
+      value_col <- names(raster_data)[1]
 
-    # ----------------------------------------------------------
-    # Extract raster values within MPAs
-    # ----------------------------------------------------------
+      # --------------------------------------------------------
+      # Transform polygons to raster CRS
+      # --------------------------------------------------------
 
-    mpa_values <- terra::extract(
-      raster_data,
-      terra::vect(mpa_polygons),
-      na.rm = TRUE
-    )
-
-    mpa_medians <- mpa_values |>
-      dplyr::group_by(ID) |>
-      dplyr::summarise(
-        median_inside = median(
-          .data[[value_col]],
-          na.rm = TRUE
-        ),
-        n_inside = sum(
-          !is.na(.data[[value_col]])
-        ),
-        .groups = "drop"
-      ) |>
-      dplyr::mutate(
-        areaID = mpa_polygons[[areaID]][ID]
+      mpa_polygons <- sf::st_transform(
+        areas_use,
+        terra::crs(raster_data)
       )
 
-    # ----------------------------------------------------------
-    # Extract raster values within control polygons
-    # ----------------------------------------------------------
-
-    control_values <- terra::extract(
-      raster_data,
-      terra::vect(control_polygons_raster),
-      na.rm = TRUE
-    )
-
-    control_medians <- control_values |>
-      dplyr::group_by(ID) |>
-      dplyr::summarise(
-        median_outside = median(
-          .data[[value_col]],
-          na.rm = TRUE
-        ),
-        n_outside = sum(
-          !is.na(.data[[value_col]])
-        ),
-        .groups = "drop"
-      ) |>
-      dplyr::mutate(
-        areaID = control_polygons_raster[[areaID]][ID],
-        buffer_distance =
-          control_polygons_raster$buffer_distance[ID]
+      control_polygons_raster <- sf::st_transform(
+        control_polygons,
+        terra::crs(raster_data)
       )
 
-    # ----------------------------------------------------------
-    # Select the control polygon to use
-    #
-    # Prefer the smallest available control buffer.
-    # ----------------------------------------------------------
+      # --------------------------------------------------------
+      # Extract raster values within MPAs
+      # --------------------------------------------------------
 
-    control_medians <- control_medians |>
-      dplyr::mutate(
-        buffer_order = match(
-          buffer_distance,
-          c(
-            "twenty_km",
-            "forty_km",
-            "sixty_km",
-            "eighty_km"
-          )
+      mpa_values <- terra::extract(
+        raster_data,
+        terra::vect(mpa_polygons),
+        na.rm = TRUE
+      )
+      # --------------------------------------------------------
+      # Extract raster values within control polygons
+      # --------------------------------------------------------
+
+      control_values <- terra::extract(
+        raster_data,
+        terra::vect(control_polygons_raster),
+        na.rm = TRUE
+      )
+
+      control_medians <- control_values |>
+        dplyr::group_by(ID) |>
+        dplyr::summarise(
+          median_outside = median(
+            .data[[value_col]],
+            na.rm = TRUE
+          ),
+          n_outside = sum(
+            !is.na(.data[[value_col]])
+          ),
+          .groups = "drop"
+        ) |>
+        dplyr::mutate(
+          areaID = control_polygons_raster[[areaID]][ID],
+          buffer_distance =
+            control_polygons_raster$buffer_distance[ID]
         )
-      ) |>
-      dplyr::arrange(
-        areaID,
-        buffer_order
-      ) |>
-      dplyr::group_by(areaID) |>
-      dplyr::slice_head(n = 1) |>
-      dplyr::ungroup()
 
-    # ----------------------------------------------------------
-    # Calculate MPA effect
-    # ----------------------------------------------------------
+      # ==========================================================
+      # SF POINT WORKFLOW
+      # ==========================================================
 
+    } else if (inherits(data, "sf")) {
+      # --------------------------------------------------------
+      # Make sure data is in the same CRS as the polygons
+      # --------------------------------------------------------
+
+      data <- sf::st_transform(
+        data,
+        sf::st_crs(areas_use)
+      )
+
+      areas_use <- sf::st_make_valid(
+        areas_use
+      )
+
+      control_polygons <- sf::st_make_valid(
+        control_polygons
+      )
+
+      # --------------------------------------------------------
+      # Identify observations inside MPAs
+      # --------------------------------------------------------
+
+      mpa_data <- data |>
+        sf::st_join(
+          dplyr::select(
+            areas_use,
+            {{ areaID }}
+          ),
+          left = FALSE
+        ) |>
+        dplyr::rename(
+          areaID = {{ areaID }}
+        ) |>
+        dplyr::filter(
+          !is.na(.data[[indicator_var_name]])
+        )
+
+      # --------------------------------------------------------
+      # Calculate indicator value within each MPA
+      # --------------------------------------------------------
+
+      mpa_medians <- mpa_data |>
+        dplyr::group_by(areaID) |>
+        dplyr::summarise(
+          median_inside = if (indicator_var_name == "species") {
+            dplyr::n_distinct(
+              .data[[indicator_var_name]],
+              na.rm = TRUE
+            )
+          } else {
+            median(
+              .data[[indicator_var_name]],
+              na.rm = TRUE
+            )
+          },
+          n_inside = sum(
+            !is.na(.data[[indicator_var_name]])
+          ),
+          .groups = "drop"
+        ) |>
+        sf::st_drop_geometry()
+
+      # --------------------------------------------------------
+      # Identify observations inside control polygons
+      # --------------------------------------------------------
+
+      control_data <- data |>
+        sf::st_join(
+          dplyr::select(
+            control_polygons,
+            buffer_distance,
+            {{ areaID }}
+          ),
+          left = FALSE
+        ) |>
+        dplyr::rename(
+          areaID = {{ areaID }}
+        ) |>
+        dplyr::filter(
+          !is.na(.data[[indicator_var_name]])
+        )
+
+      # --------------------------------------------------------
+      # Calculate indicator value within each control polygon
+      # --------------------------------------------------------
+
+      control_medians <- control_data |>
+        dplyr::group_by(
+          areaID,
+          buffer_distance
+        ) |>
+        dplyr::summarise(
+          median_outside = if (indicator_var_name == "species") {
+            dplyr::n_distinct(
+              .data[[indicator_var_name]],
+              na.rm = TRUE
+            )
+          } else {
+            median(
+              .data[[indicator_var_name]],
+              na.rm = TRUE
+            )
+          },
+          n_outside = sum(
+            !is.na(.data[[indicator_var_name]])
+          ),
+          .groups = "drop"
+        ) |>
+        sf::st_drop_geometry()
+
+      # --------------------------------------------------------
+      # Select the smallest available control buffer
+      # --------------------------------------------------------
+
+      control_medians <- control_medians |>
+        dplyr::mutate(
+          buffer_order = match(
+            buffer_distance,
+            c(
+              "twenty_km",
+              "forty_km",
+              "sixty_km",
+              "eighty_km"
+            )
+          )
+        ) |>
+        dplyr::arrange(
+          areaID,
+          buffer_order
+        ) |>
+        dplyr::group_by(areaID) |>
+        dplyr::slice_head(n = 1) |>
+        dplyr::ungroup()
+
+    }
+
+    # ==========================================================
+    # SELECT SMALLEST CONTROL BUFFER
+    #
+    # This is needed for the raster workflow and is harmless
+    # for the sf workflow, where it has already been applied.
+    # ==========================================================
+
+    if ("buffer_order" %in% names(control_medians)) {
+      control_medians <- control_medians |>
+        dplyr::arrange(
+          areaID,
+          buffer_order
+        ) |>
+        dplyr::group_by(areaID) |>
+        dplyr::slice_head(n = 1) |>
+        dplyr::ungroup()
+    }
+
+    # ==========================================================
+    # CALCULATE MPA EFFECT
+    # ==========================================================
     nesteddata <- mpa_medians |>
       dplyr::left_join(
         control_medians |>
@@ -361,9 +479,14 @@ assess_mpa_effect <- function(
       ) |>
       dplyr::mutate(
 
+        # ------------------------------------------------------
         # Difference between median inside and median outside
-        difference = median_inside - median_outside,
+        # ------------------------------------------------------
 
+        difference =
+          median_inside - median_outside,
+
+        # ------------------------------------------------------
         # Score direction
         #
         # Negative difference = lower inside
@@ -372,11 +495,16 @@ assess_mpa_effect <- function(
         # For this scoring scheme:
         # lower inside = better
         # higher inside = worse
-        #
+        # ------------------------------------------------------
+
         score = dplyr::case_when(
-          difference < 0 ~ 100,
-          difference > 0 ~ 0,
+
+          difference > 0 ~ 100,
+
+          difference < 0 ~ 0,
+
           difference == 0 ~ 50,
+
           TRUE ~ NA_real_
         ),
 
@@ -385,15 +513,40 @@ assess_mpa_effect <- function(
         units = metadata$units,
         scoring = metadata$scoring,
         PPTID = metadata$PPTID,
-        project_short_title = metadata$project_short_title,
+        project_short_title =
+          metadata$project_short_title,
         climate = metadata$climate,
         design_target = metadata$design_target,
 
+        # ------------------------------------------------------
+        # Status statement
+        # ------------------------------------------------------
+
+        # status_statement = paste0(
+        #
+        #   areaID,
+        #   " had a median ",
+        #   indicator_var_name,
+        #   " value of ",
+        #   round(median_inside, 2),
+        #   " inside the MPA compared with ",
+        #   round(median_outside, 2),
+        #   " in the associated ",
+        #   buffer_distance,
+        #   " control area. The difference was ",
+        #   round(difference, 2),
+        #   "."
+        # ),
+
         status_statement = paste0(
           areaID,
-          " had a median ",
-          indicator_var_name,
-          " value of ",
+          " had ",
+          if (indicator_var_name == "species") {
+            "a number of species"
+          } else {
+            paste0("a median ", indicator_var_name, " value")
+          },
+          " of ",
           round(median_inside, 2),
           " inside the MPA compared with ",
           round(median_outside, 2),
@@ -401,14 +554,94 @@ assess_mpa_effect <- function(
           buffer_distance,
           " control area. The difference was ",
           round(difference, 2),
+          if (indicator_var_name == "species") {
+            " species"
+          },
           "."
         ),
 
-        trend_statement = "There is no temporal dimension in this data.",
+        trend_statement =
+          "There is no temporal dimension in this data."
+      )
 
-        # Store the raster for each MPA
-        data = mpa_rasters
+    # ==========================================================
+    # STORE RASTER FOR EACH MPA
+    #
+    # Only applicable to stars/raster data.
+    # ==========================================================
 
+    if (inherits(data, "stars")) {
+
+      mpa_polygons <- sf::st_transform(
+        areas_use,
+        terra::crs(raster_data)
+      )
+
+      mpa_rasters <- lapply(
+        seq_len(nrow(mpa_polygons)),
+        function(i) {
+
+          terra::mask(
+            terra::crop(
+              raster_data,
+              terra::vect(mpa_polygons[i, ])
+            ),
+            terra::vect(mpa_polygons[i, ])
+          )
+        }
+      )
+
+      nesteddata$data <- mpa_rasters
+
+    } else {
+
+      # For point data, retain the observations used for
+      # the assessment for each MPA.
+
+      nesteddata$data <- purrr::map(
+        nesteddata$areaID,
+        function(id) {
+
+          mpa_data |>
+            dplyr::filter(areaID == id)
+        }
+      )
+    }
+
+    # ==========================================================
+    # QUALITY STATEMENT
+    # ==========================================================
+    nesteddata <- nesteddata |>
+      dplyr::mutate(
+        quality_statement = if ("sf" %in% class(data)) {
+
+          paste0(
+            "This assessment is based on ",
+            median_inside,
+            " species detected from ",
+            n_inside,
+            " observations within the area compared to ",
+            median_outside,
+            " species detected from ",
+            n_outside,
+            " observations in the associated ",
+            buffer_distance,
+            " control area."
+          )
+
+        } else {
+
+          paste0(
+            "This assessment is based on the median value of ",
+            n_inside,
+            " observations within the area compared to the median ",
+            "value of ",
+            n_outside,
+            " observations in the associated ",
+            buffer_distance,
+            " control area."
+          )
+        }
       ) |>
       dplyr::select(
         areaID,
@@ -423,20 +656,9 @@ assess_mpa_effect <- function(
         design_target,
         status_statement,
         trend_statement,
+        quality_statement,
         data
       )
-
-    ## Adding quality statement:
-    nesteddata$quality_statement <- NA
-    for (i in seq_along(nesteddata$trend_statement)) {
-      nesteddata$quality_statement[i] <- paste0("This assessment is based off of the median value of ",
-                                                length(which(mpa_values$ID == i)), " raster cells within the area compared to the median value of ", length(which(!mpa_values$ID == i)),
-                                                " raster cells outside of the area, for ", stringr::str_extract(names(mpa_values)[2], "\\d{4}"))
-    }
-    # ============================================================
-    # MPA EFFECT – TREND DIFFERENCE
-    # ============================================================
-
   } else if (scoring == "mpa effect: trend difference") {
 
     # ----------------------------------------------------------
