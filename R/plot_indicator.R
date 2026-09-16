@@ -201,6 +201,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
 
       if ('detections' %in% plot_type[i]) {
+
         # ------------------------------------------------------------
         # Current area
         # ------------------------------------------------------------
@@ -210,6 +211,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
         # ------------------------------------------------------------
         # Species column
         # ------------------------------------------------------------
+
         if (!('species' %in% names(data))) {
 
           if ('common_name' %in% names(data)) {
@@ -223,20 +225,88 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           } else if ('scientificName' %in% names(data)) {
 
             names(data)[which(names(data) == 'scientificName')] <- 'species'
-
           }
         }
 
         # ------------------------------------------------------------
-        # Detection counts -- unchanged
+        # Detection counts
         # ------------------------------------------------------------
 
         if ('species' %in% names(data)) {
-        n_detections <- data |>
-          group_by(geometry, species) |>
-          mutate(n_collections = n()) |>
-          ungroup() |>
-          st_as_sf()
+
+          n_detections <- data |>
+            group_by(geometry, species) |>
+            mutate(n_collections = n()) |>
+            ungroup() |>
+            st_as_sf()
+        }
+
+        # ------------------------------------------------------------
+        # Find control buffer if one was supplied
+        # ------------------------------------------------------------
+
+        control_detections <- NULL
+        selected_buffer <- NULL
+
+
+
+          original_data <- get("data", envir = parent.frame())
+
+          control_polygon <- control_polygon |>
+            dplyr::filter(NAME_E == id) |>
+            dplyr::mutate(
+              buffer_order = match(
+                buffer_distance,
+                c(
+                  "twenty_km",
+                  "forty_km",
+                  "sixty_km",
+                  "eighty_km"
+                )
+              )
+            ) |>
+            dplyr::arrange(buffer_order)
+
+
+          for (k in seq_len(nrow(control_polygon))) {
+
+            test_polygon <- control_polygon[k, ]
+
+            test_data <- original_data |>
+              sf::st_join(
+                test_polygon,
+                left = FALSE
+              )
+
+            if (nrow(test_data) > 0) {
+
+              control_polygon <- test_polygon
+              control_detections <- test_data
+              selected_buffer <- test_polygon$buffer_distance
+
+              break
+            }
+          }
+
+          # if (id ==  "Western and Emerald Banks Marine Refuge") {
+          #   browser()
+          # }
+
+          if (!is.null(control_polygon)) {
+
+            habitat_area <- current_area
+
+            if (!is.null(control_detections)) {
+
+              habitat_area <- sf::st_union(
+                current_area,
+                control_polygon
+              ) |>
+                sf::st_as_sf()
+
+            }
+
+
         }
 
         # ------------------------------------------------------------
@@ -246,6 +316,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
         habitat_plots <- list()
 
         if (length(habitat_display) > 0) {
+
           for (j in seq_along(habitat_display)) {
 
             message(names(habitat_display)[j])
@@ -268,9 +339,10 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             # Start a NEW plot for this habitat
             # ----------------------------------------------------------
 
+
             d <- ggplot() +
               geom_sf(
-                data = current_area,
+                data = current_area, # HERE JAIM
                 fill = "white",
                 color = "black"
               ) +
@@ -298,7 +370,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 lengths(
                   st_intersects(
                     habitat,
-                    current_area
+                    habitat_area
                   )
                 ) > 0,
               ]
@@ -350,7 +422,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 lengths(
                   sf::st_intersects(
                     habitat_poly,
-                    current_area
+                    habitat_area
                   )
                 ) > 0,
               ]
@@ -378,7 +450,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             }
 
             # ----------------------------------------------------------
-            # If no overlap, make this obvious
+            # If no habitat overlap, make this obvious
             # ----------------------------------------------------------
 
             if (!has_overlap) {
@@ -392,6 +464,22 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                   hjust = 1.1,
                   vjust = 1.5,
                   size = 5
+                )
+            }
+
+            # ----------------------------------------------------------
+            # Add control buffer if one was found
+            # ----------------------------------------------------------
+
+            if (!is.null(control_detections)) {
+
+              d <- d +
+                geom_sf(
+                  data = control_polygon,
+                  fill = NA,
+                  color = "grey40",
+                  linewidth = 0.8,
+                  linetype = "dashed"
                 )
             }
 
@@ -412,6 +500,112 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             # ----------------------------------------------------------
 
             if ('species' %in% names(data)) {
+
+              d <- d +
+                geom_sf(
+                  data = n_detections,
+                  aes(
+                    geometry = geometry,
+                    size = n_collections,
+                    colour = species
+                  ),
+                  alpha = 0.6,
+                  show.legend = c(
+                    size = FALSE,
+                    colour = (j == 1)
+                  )
+                )
+
+              # --------------------------------------------------------
+              # Add control detections
+              # --------------------------------------------------------
+
+              if (!is.null(control_detections)) {
+
+                d <- d +
+                  geom_sf(
+                    data = control_detections,
+                    aes(
+                      geometry = geometry,
+                      colour = species
+                    ),
+                    alpha = 0.6,
+                    show.legend = FALSE
+                  )
+              }
+
+              d <- d +
+                labs(
+                  colour = "Species",
+                  subtitle = if (!is.null(selected_buffer)) {
+                    paste(
+                      "Control buffer:",
+                      gsub("_", " ", selected_buffer)
+                    )
+                  } else {
+                    NULL
+                  }
+                ) +
+                theme_minimal() +
+                theme(
+                  legend.position = "right"
+                )
+            }
+
+            # ----------------------------------------------------------
+            # Store this habitat plot
+            # ----------------------------------------------------------
+
+            habitat_plots[[j]] <- d
+          }
+
+        } else {
+
+          # ------------------------------------------------------------
+          # No habitat displays -- make one normal detections plot
+          # ------------------------------------------------------------
+
+          d <- ggplot() +
+            geom_sf(
+              data = current_area,
+              fill = "white",
+              color = "black"
+            )
+
+          # ------------------------------------------------------------
+          # Add control buffer
+          # ------------------------------------------------------------
+
+          if (!is.null(control_detections)) {
+
+            d <- d +
+              geom_sf(
+                data = control_polygon,
+                fill = NA,
+                color = "grey40",
+                linewidth = 0.8,
+                linetype = "dashed"
+              )
+          }
+
+          # ------------------------------------------------------------
+          # Area boundary
+          # ------------------------------------------------------------
+
+          d <- d +
+            geom_sf(
+              data = current_area,
+              fill = NA,
+              color = "black",
+              linewidth = 0.8
+            )
+
+          # ------------------------------------------------------------
+          # Add detections
+          # ------------------------------------------------------------
+
+          if ('species' %in% names(data)) {
+
             d <- d +
               geom_sf(
                 data = n_detections,
@@ -423,108 +617,17 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                 alpha = 0.6,
                 show.legend = c(
                   size = FALSE,
-                  colour = (j == 1)
+                  colour = TRUE
                 )
-              ) +
-              labs(
-                colour = "Species"
-              ) +
-              theme_minimal() +
-              theme(
-                legend.position = "right"
               )
-            }
 
             # ----------------------------------------------------------
-            # Store this habitat plot
+            # Add control detections
             # ----------------------------------------------------------
 
-            habitat_plots[[j]] <- d
-          }
-
-
-        } else {
-
-          # ----------------------------------------------------------
-          # No habitat displays -- make one normal detections plot
-          # ----------------------------------------------------------
-
-          if (!is.null(control_polygon)) {
-
-            original_data <- get("data", envir = parent.frame())
-
-            control_polygon <- control_polygon |>
-              dplyr::filter(NAME_E == id) |>
-              dplyr::mutate(
-                buffer_order = match(
-                  buffer_distance,
-                  c(
-                    "twenty_km",
-                    "forty_km",
-                    "sixty_km",
-                    "eighty_km"
-                  )
-                )
-              ) |>
-              dplyr::arrange(buffer_order)
-
-            # Initialize in case no buffer contains observations
-            control_detections <- NULL
-            selected_buffer <- NULL
-
-            for (i in seq_len(nrow(control_polygon))) {
-
-              test_polygon <- control_polygon[i, ]
-
-              test_data <- original_data |>
-                sf::st_join(
-                  test_polygon,
-                  left = FALSE
-                )
-
-              if (nrow(test_data) > 0) {
-                control_polygon <- test_polygon
-                control_detections <- test_data
-                selected_buffer <- test_polygon$buffer_distance
-                break
-              }
-            }
-
-            # Plot with control buffer if one was found
             if (!is.null(control_detections)) {
 
-              d <- ggplot() +
-                geom_sf(
-                  data = current_area,
-                  fill = "white",
-                  color = "black"
-                ) +
-                geom_sf(
-                  data = control_polygon,
-                  fill = NA,
-                  color = "grey40",
-                  linewidth = 0.8,
-                  linetype = "dashed"
-                ) +
-                geom_sf(
-                  data = current_area,
-                  fill = NA,
-                  color = "black",
-                  linewidth = 0.8
-                ) +
-                geom_sf(
-                  data = n_detections,
-                  aes(
-                    geometry = geometry,
-                    size = n_collections,
-                    colour = species
-                  ),
-                  alpha = 0.6,
-                  show.legend = c(
-                    size = FALSE,
-                    colour = TRUE
-                  )
-                ) +
+              d <- d +
                 geom_sf(
                   data = control_detections,
                   aes(
@@ -533,93 +636,28 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
                   ),
                   alpha = 0.6,
                   show.legend = FALSE
-                ) +
-                labs(
-                  colour = "Species",
-                  subtitle = paste(
-                    "Control buffer:",
-                    gsub("_", " ", selected_buffer)
-                  )
-                ) +
-                theme_minimal() +
-                theme(
-                  legend.position = "right"
-                )
-
-            } else {
-
-              # No control buffer contains observations
-              d <- ggplot() +
-                geom_sf(
-                  data = current_area,
-                  fill = "white",
-                  color = "black"
-                ) +
-                geom_sf(
-                  data = current_area,
-                  fill = NA,
-                  color = "black",
-                  linewidth = 0.8
-                ) +
-                geom_sf(
-                  data = n_detections,
-                  aes(
-                    geometry = geometry,
-                    size = n_collections,
-                    colour = species
-                  ),
-                  alpha = 0.6,
-                  show.legend = c(
-                    size = FALSE,
-                    colour = TRUE
-                  )
-                ) +
-                labs(
-                  colour = "Species"
-                ) +
-                theme_minimal() +
-                theme(
-                  legend.position = "right"
                 )
             }
 
-            habitat_plots[[1]] <- d
-          } else {
-          d <- ggplot() +
-            geom_sf(
-              data = current_area,
-              fill = "white",
-              color = "black"
-            ) +
-            geom_sf(
-              data = current_area,
-              fill = NA,
-              color = "black",
-              linewidth = 0.8
-            ) +
-            geom_sf(
-              data = n_detections,
-              aes(
-                geometry = geometry,
-                size = n_collections,
-                colour = species
-              ),
-              alpha = 0.6,
-              show.legend = c(
-                size = FALSE,
-                colour = TRUE
+            d <- d +
+              labs(
+                colour = "Species",
+                subtitle = if (!is.null(selected_buffer)) {
+                  paste(
+                    "Control buffer:",
+                    gsub("_", " ", selected_buffer)
+                  )
+                } else {
+                  NULL
+                }
+              ) +
+              theme_minimal() +
+              theme(
+                legend.position = "right"
               )
-            ) +
-            labs(
-              colour = "Species"
-            ) +
-            theme_minimal() +
-            theme(
-              legend.position = "right"
-            )
+          }
 
           habitat_plots[[1]] <- d
-          }
         }
 
         # ------------------------------------------------------------
@@ -631,7 +669,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
         n_cols <- ceiling(sqrt(n_plots))
         n_rows <- ceiling(n_plots / n_cols)
 
-        plot_list[[length(plot_list) + 1]]  <- patchwork::wrap_plots(
+        plot_list[[length(plot_list) + 1]] <- patchwork::wrap_plots(
           habitat_plots,
           ncol = n_cols,
           nrow = n_rows

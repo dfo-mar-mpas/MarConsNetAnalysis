@@ -196,7 +196,8 @@ assess_mpa_effect <- function(
   valid_scoring <- c(
     "mpa effect: median difference",
     "mpa effect: trend difference",
-    "mpa effect: regional proportion"
+    "mpa effect: regional proportion",
+    'mpa effect: calculation comparison'
   )
   if (!scoring %in% valid_scoring) {
     stop(
@@ -1385,6 +1386,231 @@ assess_mpa_effect <- function(
         trend_statement,
         quality_statement,
         data
+      )
+  } else if (scoring == "mpa effect: calculation comparison") {
+    # ----------------------------------------------------------
+    # Check required columns
+    # ----------------------------------------------------------
+
+    if (!inherits(data, "sf")) {
+      stop(
+        "For 'mpa effect: calculation comparison', data must be an sf object."
+      )
+    }
+
+    required_columns <- c(
+      areaID,
+      indicator_var_name,
+      "year_of_publication",
+      "area_type",
+      "buffer_distance"
+    )
+
+    missing_columns <- setdiff(
+      required_columns,
+      names(data)
+    )
+
+    if (length(missing_columns) > 0) {
+      stop(
+        "The following required columns are missing: ",
+        paste(missing_columns, collapse = ", ")
+      )
+    }
+
+    # ----------------------------------------------------------
+    # Prepare data
+    # ----------------------------------------------------------
+
+    data <- sf::st_transform(
+      data,
+      sf::st_crs(areas_use)
+    )
+
+    # ----------------------------------------------------------
+    # Define buffer order
+    # ----------------------------------------------------------
+
+    buffers_sorted <- c(
+      "twenty_km",
+      "forty_km",
+      "sixty_km",
+      "eighty_km"
+    )
+
+    # ----------------------------------------------------------
+    # Separate MPA and control calculations
+    # ----------------------------------------------------------
+
+    mpa_data <- data |>
+      dplyr::filter(
+        area_type == "MPA"
+      ) |>
+      dplyr::select(
+        areaID = all_of(areaID),
+        indicator_inside = all_of(indicator_var_name),
+        year_of_publication_inside = year_of_publication,
+        data_inside = data
+      ) |>
+      sf::st_drop_geometry()
+
+    control_data <- data |>
+      dplyr::filter(
+        area_type == "Control"
+      ) |>
+      dplyr::select(
+        areaID=all_of(areaID),
+        buffer_distance,
+        indicator_outside = all_of(indicator_var_name),
+        year_of_publication_outside = year_of_publication,
+        data_outside = data
+      ) |>
+      sf::st_drop_geometry()
+
+    # ----------------------------------------------------------
+    # Add buffer order
+    # ----------------------------------------------------------
+
+    control_data <- control_data |>
+      dplyr::mutate(
+        buffer_order = match(
+          buffer_distance,
+          buffers_sorted
+        )
+      )
+
+    # ----------------------------------------------------------
+    # Match MPA to control areas
+    #
+    # Keep only controls with a calculated indicator value.
+    # Then select the smallest available buffer.
+    # ----------------------------------------------------------
+    nesteddata <- mpa_data |>
+      dplyr::left_join(
+        control_data |>
+          dplyr::filter(
+            !is.na(indicator_outside)
+          ) |>
+          dplyr::arrange(
+            areaID,
+            buffer_order
+          ) |>
+          dplyr::group_by(
+            areaID
+          ) |>
+          dplyr::slice_head(
+            n = 1
+          ) |>
+          dplyr::ungroup(),
+        by = "areaID"
+      )  |>
+      dplyr::mutate(
+
+        # ------------------------------------------------------
+        # Difference between calculated values
+        # ------------------------------------------------------
+
+        difference =
+          indicator_inside -
+          indicator_outside,
+
+        # ------------------------------------------------------
+        # Score
+        # ------------------------------------------------------
+
+        score = dplyr::case_when(
+
+          difference > 0 ~ 100,
+
+          difference < 0 ~ 0,
+
+          difference == 0 ~ 50,
+
+          TRUE ~ NA_real_
+        ),
+
+        indicator = metadata$indicator,
+        type = metadata$type,
+        units = metadata$units,
+        scoring = metadata$scoring,
+        PPTID = metadata$PPTID,
+        project_short_title =
+          metadata$project_short_title,
+        climate = metadata$climate,
+        design_target = metadata$design_target,
+
+        # ------------------------------------------------------
+        # Status statement
+        # ------------------------------------------------------
+
+        status_statement = dplyr::case_when(
+          is.na(indicator_outside) ~ paste0(
+            areaID,
+            " had a ",
+            indicator_var_name,
+            " value of ",
+            round(indicator_inside, 2),
+            " inside the area. There was no ",
+            indicator_var_name,
+            " value available for any associated control area."
+          ),
+          TRUE ~ paste0(
+            areaID,
+            " had a ",
+            indicator_var_name,
+            " value of ",
+            round(indicator_inside, 2),
+            " inside the area compared with ",
+            round(indicator_outside, 2),
+            " in the associated ",
+            buffer_distance,
+            " control area. ",
+            "The difference between the area and control area was ",
+            round(difference, 2),
+            "."
+          )
+        ),
+
+        # ------------------------------------------------------
+        # Trend statement
+        # ------------------------------------------------------
+
+        trend_statement =
+          "There is no temporal dimension in this scoring scheme.",
+
+        # ------------------------------------------------------
+        # Quality statement
+        # ------------------------------------------------------
+
+        quality_statement = paste0(
+          "This assessment is based on a calculated ",
+          indicator_var_name,
+          " value from ",
+          year_of_publication_inside,
+          " for the area and a calculated ",
+          indicator_var_name,
+          " value from ",
+          year_of_publication_outside,
+          " for the associated ",
+          buffer_distance,
+          " control area."
+        )
+      ) |>
+      dplyr::select(
+        areaID,
+        score,
+        indicator,
+        type,
+        units,
+        scoring,
+        PPTID,
+        project_short_title,
+        climate,
+        design_target,
+        status_statement,
+        trend_statement,
+        quality_statement,
+        data = data_inside
       )
   }
 
