@@ -493,7 +493,7 @@ if (all(as.numeric(externalData) == 0)) {
         units = coalesce(units, !!units),
         scoring = coalesce(scoring, !!scoring),
         PPTID = paste0(PPTID, collapse = " ;;; "),
-        source = coalesce(source, !!source),
+        source =paste0(source, collapse = " ;;; "),
         climate_expectation = coalesce(climate_expectation, !!climate_expectation),
         indicator_rationale = coalesce(indicator_rationale, !!indicator_rationale),
         objectives = paste0(objectives, collapse = " ;;; "),

@@ -972,9 +972,6 @@ if (any(grepl("sf", class(data)))) {
       }
 
       if ("indicator_by_taxa" %in% plot_type[i]) {
-        # JAIM HERE!!!
-
-
         data <- data |>
           mutate(year_of_data_collection = as.integer(year_of_data_collection))
 
@@ -1001,6 +998,23 @@ if (any(grepl("sf", class(data)))) {
             legend.text = element_text(size = 8),
             legend.title = element_text(size = 9),
             legend.key.size = unit(0.5, "cm")
+          )
+
+      }
+
+      if ('water column profile' %in% plot_type[i]) {
+        plot_list[[i]] <- ggplot(data, aes(
+          x = .data[[indicator_var_name]],
+          y = depth,
+          colour = year_of_data_collection
+        )) +
+          geom_point() +
+          scale_y_reverse() +
+          theme_minimal() +
+          labs(
+            x = indicator_var_name,
+            y = "Depth (m)",
+            colour = "Year"
           )
 
       }
