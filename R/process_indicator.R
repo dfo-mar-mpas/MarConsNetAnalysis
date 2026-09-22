@@ -83,6 +83,11 @@
 #' @param habitat_display a list of habitat conditions to display on a map feasturesincluding "bottom_current_mean",
 #' "bottom_salinity_mean","bottom_temperature_mean", "depth","fishing_effort_mobile","sediment_grain_size",
 #' "slope", or 'benthoscape'. See data_epibenthic_communities_environmental and
+#' @param proxy Optional character string describing a proxy relationship,
+#'   in the format `"proxy name: direction"`, where `direction` is
+#'   `"positive"` or `"inverse"`. For example, `"light availability: inverse"`
+#'   indicates that higher indicator values generally correspond to lower
+#'   values of the proxy.
 #'
 #' @details
 #' The function performs extensive validation of metadata and arguments.
@@ -204,7 +209,8 @@ process_indicator <- function(
   data_year_of_publication = NA_real_,
   externalData=NULL,
   SME_validated=FALSE,
-  habitat_display=NULL
+  habitat_display=NULL,
+  proxy=NULL
 ) {
   if (!('year_of_data_collection' %in% names(data))) {
     # First check if year_of_data_collection is in the data source, if not check for year_of_publication
@@ -702,7 +708,27 @@ if (all(as.numeric(externalData) == 0)) {
     'score_note'
   )
 
+  if (!is.null(proxy)) {
+
+    proxy_parts <- strsplit(proxy, ": ")[[1]]
+    proxy_name <- proxy_parts[1]
+    proxy_direction <- proxy_parts[2]
+
+    final$status_statement[which(!is.na(final$status_statement))] <-
+      paste0(
+        final$status_statement[which(!is.na(final$status_statement))],
+        indicator_var_name,
+        " is used as a proxy for ",
+        proxy_name,
+        ", with higher values generally indicating ",
+        ifelse(proxy_direction == "inverse", "lower ", "higher "),
+        proxy_name,
+        "."
+      )
+  }
+
   final <- final[, desired_order]
+
 
   return(as_tibble(final))
 }
