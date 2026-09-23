@@ -255,7 +255,6 @@ assess_indicator <- function(
   if (!('quality_statement' %in% names(nesteddata))) {
     nesteddata$quality_statement <- NA
 
-
     if (!(areaID %in% names(nesteddata))) {
       if ("areaID" %in% names(nesteddata)) {
         names(nesteddata)[which(names(nesteddata) == 'areaID')] <- areaID
@@ -264,6 +263,7 @@ assess_indicator <- function(
 
     if (any(is.na(nesteddata[[areaID]]))) {nesteddata[[areaID]][which(is.na(nesteddata[[areaID]]))] <- "Non_Conservation_Area"}
     #good until here
+
     for (i in seq_along(nesteddata$data)) {
       # Note a sample means unique date and geometry. If there are multiple depths in a single sample it counts as one sample
       message(i)
@@ -289,12 +289,16 @@ assess_indicator <- function(
               "There are no quality statements available for POLYGON type"
             )
           } else if (year %in% names(quality_data)) {
+            if (!('n_samples' %in% names(quality_data))) {
             number_of_samples <- quality_data %>%
               distinct({{ year }}, .data[[GEOM]]) %>%
               dplyr::summarise(n_samples = n())
 
             if (any(grepl("data.frame", class(number_of_samples)))) {
               number_of_samples <- number_of_samples$n_samples
+            }
+            } else {
+              number_of_samples <- sum(quality_data$n_samples)
             }
             min_year <- min(sort(as.numeric(unique(quality_data[[year]]))))
             max_year <- max(sort(as.numeric(unique(quality_data[[year]]))))
