@@ -38,6 +38,7 @@
 #' @param climate Optional character string describing the climate context of
 #'   the indicator.
 #' @param design_target Optional design target associated with the indicator.
+#' @param indicator_var_name name of variable in dataset
 #'
 #' @return A data frame containing one row per conservation area, with the
 #'   following additional columns:
@@ -127,7 +128,8 @@ assess_community_retention <- function(
     PPTID = NULL,
     project_short_title = NULL,
     climate = NULL,
-    design_target = NULL
+    design_target = NULL,
+    indicator_var_name=NULL
 ) {
 
   # ---------------------------------------------------------
@@ -148,7 +150,7 @@ assess_community_retention <- function(
     "ID",
     "year_of_data_collection",
     "species",
-    "detections"
+    indicator_var_name
   )
 
   missing_columns <- setdiff(
@@ -317,11 +319,11 @@ assess_community_retention <- function(
         ID,
         year_of_data_collection,
         species,
-        detections
+        dplyr::all_of(indicator_var_name)
       ) |>
       tidyr::pivot_wider(
         names_from = species,
-        values_from = detections,
+        values_from =     dplyr::all_of(indicator_var_name),
         values_fill = 0,
         values_fn = sum
       )

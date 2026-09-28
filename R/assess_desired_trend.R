@@ -310,7 +310,6 @@ assess_desired_trend <- function(
     nest_cols <- c(indicator_var_name, "geometry", other_nest_variables)
   }
 
-
   # Only retain columns that actually exist
 
   nest_cols <- nest_cols[
@@ -357,9 +356,8 @@ assess_desired_trend <- function(
 
 
   # Text appended to values when units are supplied
-
-  unit_text <- if (!is.na(units) && units != "") {
-    paste0(" (",units,")")
+  unit_text <- if (!is.na(units) && trimws(units) != "") {
+    paste0(" (", units, ")")
   } else {
     ""
   }
@@ -722,55 +720,73 @@ assess_desired_trend <- function(
           ),
       ]
 
+#browser()
 
-      status_statement[i] <- paste0(
-        "The most recent year, ",
-        last_year,
-        ", shows a mean of ",
-        round(
-          mean(
-            DATA_latest[[indicator_col]],
-            na.rm = TRUE
-          ),
-          2
-        ),
-        unit_text,
-        " (sd = ",
-        round(
-          sd(
-            DATA_latest[[indicator_col]],
-            na.rm = TRUE
-          ),
-          2
-        ),
-        "). ",
-        "The most recent 5 years (",
-        paste(
-          tail(
-            yrs,
-            5
-          ),
-          collapse = ","
-        ),
-        ") showed a mean of ",
-        round(
-          mean(
-            DATA_5_YEARS[[indicator_col]],
-            na.rm = TRUE
-          ),
-          2
-        ),
-        unit_text,
-        " (sd = ",
-        round(
-          sd(
-            DATA_5_YEARS[[indicator_col]],
-            na.rm = TRUE
-          ),
-          2
-        ),
-        ")."
-      )
+
+sd_latest <- sd(
+  DATA_latest[[indicator_col]],
+  na.rm = TRUE
+)
+
+sd_5_years <- sd(
+  DATA_5_YEARS[[indicator_col]],
+  na.rm = TRUE
+)
+
+sd_latest_text <- if (is.na(sd_latest)) {
+  ""
+} else {
+  paste0(
+    " (sd = ",
+    round(sd_latest, 2),
+    ")"
+  )
+}
+
+sd_5_years_text <- if (is.na(sd_5_years)) {
+  ""
+} else {
+  paste0(
+    " (sd = ",
+    round(sd_5_years, 2),
+    ")"
+  )
+}
+
+status_statement[i] <- paste0(
+  "The most recent year, ",
+  last_year,
+  ", shows a mean of ",
+  round(
+    mean(
+      DATA_latest[[indicator_col]],
+      na.rm = TRUE
+    ),
+    2
+  ),
+  unit_text,
+  sd_latest_text,
+  ". ",
+  "The most recent 5 years (",
+  paste(
+    tail(
+      yrs,
+      5
+    ),
+    collapse = ","
+  ),
+  ") showed a mean of ",
+  round(
+    mean(
+      DATA_5_YEARS[[indicator_col]],
+      na.rm = TRUE
+    ),
+    2
+  ),
+  unit_text,
+  sd_5_years_text,
+  "."
+)
     }
 
 

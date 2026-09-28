@@ -9,15 +9,26 @@
 #'
 #' @inheritParams process_indicator
 #' @param data data processed in `assess_indicator()`
-#' @inherit process_indicator params indicator units plot_type year indicator_var_name scoring areaID areas bin_width control_polygon habitat_display
+#' @inherit process_indicator params indicator units plot_type year
+#'  indicator_var_name scoring areaID areas bin_width control_polygon
+#'  habitat_display externalData
 #' @param id Equivalent to `areaID` in [process_indicator()]
 #'
 #' @returns a plot
 #' @export
 #'
 #' @examples
-plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_var_name, scoring, areaID, areas, bin_width, control_polygon, control_nesteddata,control_polygon_out,habitat_display){
+plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_var_name, scoring, areaID, areas, bin_width, control_polygon, control_nesteddata,control_polygon_out,habitat_display, externalData){
+
+
   p <- NULL
+
+  unit_text <- if (!is.na(units) && trimws(units) != "") {
+    paste0(" (", units, ")")
+  } else {
+    ""
+  }
+
 
   if (!(is.null(habitat_display))) {
   if (!(class(habitat_display) == 'list')) {
@@ -26,6 +37,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
   }
 
   if(!is.null(data) & !(all(is.na(data)))){
+
     plot_list <- list()
 
     for (i in seq_along(plot_type)) {
@@ -100,7 +112,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             facet_grid(period ~ location, drop=TRUE) +
             coord_cartesian(xlim = x_range,
                             ylim = y_range) +
-            ylab(paste0(indicator, " (", units, ")"))
+            ylab(paste0(indicator, unit_text))
 
           # ---- Add regressions + R² per panel ----
           panel_info <- split(combined_data,
@@ -201,7 +213,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
 
       if ('detections' %in% plot_type[i]) {
-
         # ------------------------------------------------------------
         # Current area
         # ------------------------------------------------------------
@@ -248,9 +259,14 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
         control_detections <- NULL
         selected_buffer <- NULL
 
+        habitat_area <- current_area
 
 
-          original_data <- get("data", envir = parent.frame())
+
+
+        original_data <- get("data", envir = parent.frame())
+
+        if (!is.null(control_polygon)) {
 
           control_polygon <- control_polygon |>
             dplyr::filter(NAME_E == id) |>
@@ -287,14 +303,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
               break
             }
           }
-
-          # if (id ==  "Western and Emerald Banks Marine Refuge") {
-          #   browser()
-          # }
-
-          if (!is.null(control_polygon)) {
-
-            habitat_area <- current_area
 
             if (!is.null(control_detections)) {
 
@@ -799,8 +807,54 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
               coord_sf(crs = st_crs(areas))
 
           } else {
+
+            # External data buffer
+            if (!is.null(externalData)) {
+
+              area_idx <- which(areas[[areaID]] == id)
+
+              buffer_distance <- externalData[area_idx]
+
+              if (!is.na(buffer_distance) && buffer_distance > 0) {
+
+                area_polygon <- areas[area_idx, ]
+
+                # Transform to a projected CRS in metres
+                area_polygon <- sf::st_transform(area_polygon, 6933)
+
+                # Create buffer in metres
+                external_buffer <- sf::st_buffer(
+                  area_polygon,
+                  dist = buffer_distance * 1000
+                )
+
+                # Transform back to the original CRS
+                external_buffer <- sf::st_transform(
+                  external_buffer,
+                  sf::st_crs(areas)
+                )
+
+                # Draw buffer
+                d <- ggplot() +
+                  geom_sf(
+                    data = external_buffer,
+                    fill = NA,
+                    color = "blue",
+                    linetype = "dashed",
+                    linewidth = 0.8
+                  ) +
+                  labs(
+                    title = paste0(externalData[area_idx], " km buffer")
+                  )+
+                  theme_classic() +
+                  geom_sf(data = areas[areas[[areaID]] == id,], fill = "white", color = "black")
+              }
+            } else {
               d <- ggplot() +
               geom_sf(data = areas[areas[[areaID]] == id,], fill = "white", color = "black")
+            }
+
+
              if (!(all(is.na(control_polygon)))) {
                 ctrl_40 <- control_polygon_out[
                   control_polygon_out$buffer_distance == "forty_km" &

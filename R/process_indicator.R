@@ -370,7 +370,6 @@ process_indicator <- function(
     }
 
     # END TEST
-    #browser()
     nesteddata <- assess_indicator(
       data = data,
       scoring = scoring,
@@ -513,7 +512,6 @@ if (all(as.numeric(externalData) == 0)) {
     plots_storage <- vector("list", length = nrow(final))
 
     # loop over rows
-
     for (nr in seq_len(nrow(final))) {
       message("Running iteration: ", nr) # prints the iteration number
       result <- plot_indicator(
@@ -531,7 +529,8 @@ if (all(as.numeric(externalData) == 0)) {
         control_polygon = control_polygon,
         control_nesteddata = control_nesteddata,
         control_polygon_out = control_polygon_out,
-        habitat_display=habitat_display
+        habitat_display=habitat_display,
+        externalData=externalData
       )
 
       if (is.null(result)) {

@@ -235,7 +235,8 @@ assess_indicator <- function(
       PPTID = PPTID,
       project_short_title = project_short_title,
       climate = climate,
-      design_target = design_target
+      design_target = design_target,
+      indicator_var_name=indicator_var_name
     )
 
 
@@ -291,7 +292,7 @@ assess_indicator <- function(
           } else if (year %in% names(quality_data)) {
             if (!('n_samples' %in% names(quality_data))) {
             number_of_samples <- quality_data %>%
-              distinct({{ year }}, .data[[GEOM]]) %>%
+              distinct(.data[[year]], .data[[GEOM]]) %>%
               dplyr::summarise(n_samples = n())
 
             if (any(grepl("data.frame", class(number_of_samples)))) {
@@ -303,6 +304,15 @@ assess_indicator <- function(
             min_year <- min(sort(as.numeric(unique(quality_data[[year]]))))
             max_year <- max(sort(as.numeric(unique(quality_data[[year]]))))
             if (min_year == max_year) {
+              if (grepl("mean",indicator_var_name)) {
+                nesteddata$quality_statement[i] <- paste0(
+                  nesteddata[[areaID]][i],
+                  ": Average values (",
+                  min_year,
+                  ")"
+                )
+
+              } else {
               nesteddata$quality_statement[i] <- paste0(
                 nesteddata[[areaID]][i],
                 ": ",
@@ -311,7 +321,19 @@ assess_indicator <- function(
                 min_year,
                 ")"
               )
+              }
             } else {
+              if (grepl("mean",indicator_var_name)) {
+                nesteddata$quality_statement[i] <- paste0(
+                  nesteddata[[areaID]][i],
+                  ": Average values (",
+                  min_year,
+                  "-",
+                  max_year,
+                  ")"
+                )
+
+              } else {
               nesteddata$quality_statement[i] <- paste0(
                 nesteddata[[areaID]][i],
                 ": ",
@@ -322,6 +344,8 @@ assess_indicator <- function(
                 max_year,
                 ")"
               )
+
+              }
             }
           } else {
             nesteddata$quality_statement[i] <- paste0(
