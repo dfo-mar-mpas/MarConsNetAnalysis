@@ -36,11 +36,12 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
   }
   }
 
-  if(!is.null(data) & !(all(is.na(data)))){
 
+  if(!is.null(data) & !(all(is.na(data)))){
     plot_list <- list()
 
     for (i in seq_along(plot_type)) {
+
 
       par(mar = c(4, 4.5, 0.5, 1))
 
@@ -88,9 +89,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           if (!("sf" %in% class(combined_data))) {
             combined_data <- combined_data %>% droplevels()   # 🔴 THIS IS THE KEY LINE
           }
-
-
-
 
           # ---- Compute global axis limits ----
           x_range <- range(combined_data[[year]], na.rm = TRUE)
@@ -202,6 +200,8 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             }
           }
 
+
+
           p <- p +
             scale_x_continuous(
               breaks = scales::breaks_width(1),
@@ -209,6 +209,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             )
 
           plot_list[[i]] <- p
+
       }
 
 
@@ -750,6 +751,12 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           }
 
         }
+
+        # if (id == MPAs$NAME_E[9]) {
+        #   browser()
+        # }
+
+
         if (all(st_is_empty(aes_geom))) {
           plot_list[[i]] <- NULL
         } else {
@@ -809,7 +816,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           } else {
 
             # External data buffer
-            if (!is.null(externalData)) {
+            if (!is.null(externalData) && !all(externalData == 0)) {
 
               area_idx <- which(areas[[areaID]] == id)
 

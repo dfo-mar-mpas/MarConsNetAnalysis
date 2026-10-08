@@ -372,6 +372,10 @@ assess_desired_trend <- function(
 
     DATA <- nesteddata$data[[i]]
 
+    if (any(is.na(DATA[[indicator_var_name]]))) {
+      DATA <- DATA[(-(which(is.na(DATA[[indicator_var_name]])))),]
+    }
+
 
     if (is.null(DATA) || nrow(DATA) == 0) {
       status_statement[i] <- "No data available."
@@ -425,11 +429,12 @@ assess_desired_trend <- function(
     # Full-data years
     # -------------------------------------------------------
 
-    yrs <- sort(unique(as.numeric(DATA[[year_col]][!is.na(DATA[[year_col]])])))
-    if (length(yrs) == 0) {
+    yrs <- sort(unique(as.numeric(DATA_use[[year_col]][!is.na(DATA_use[[year_col]])])))
+    if (length(yrs) <= 1) {
       status_statement[i] <- "No data available."
       trend_statement[i] <-
         "Insufficient data for trend analysis."
+      score[i] <- 'NA'
       next
     }
 
@@ -568,6 +573,7 @@ assess_desired_trend <- function(
         # -------------------------------------------------------
         # Existing no-decrease species richness calculation
         # -------------------------------------------------------
+        if (indicator_var_name == 'detections') {
 
         yearly_species <- DATA_use |>
           dplyr::filter(
@@ -592,14 +598,72 @@ assess_desired_trend <- function(
           score[i] <- NA_real_
 
         } else {
+          year_col <- rlang::as_name(rlang::ensym(year))
+
+          trend_model <- lm(
+            stats::reformulate(year_col, response = "richness"),
+            data = yearly_species
+          )
+
+          estimate <- coef(trend_model)[[year_col]]
+
+          p_value <- summary(trend_model)$coefficients[
+            year_col,
+            "Pr(>|t|)"
+          ]
 
           score[i] <- ifelse(
-            dplyr::last(yearly_species$richness) >=
-              dplyr::first(yearly_species$richness),
-            100,
-            0
+            p_value < 0.05 & estimate < 0,
+            0,
+            100
           )
+
+          # score[i] <- ifelse(
+          #   dplyr::last(yearly_species$richness) >=
+          #     dplyr::first(yearly_species$richness),
+          #   100,
+          #   0
+          # )
         }
+
+        } else {
+
+          if (i == 6) {
+            browser()
+          }
+
+          trend_data <- DATA_use |>
+            dplyr::filter(
+              !is.na(.data[[indicator_var_name]]),
+              !is.na(.data[[year_col]])
+            )
+
+          if (nrow(trend_data) < 2) {
+            score[i] <- NA_real_
+          } else {
+            trend_model <- lm(
+              stats::reformulate(
+                year_col,
+                response = indicator_var_name
+              ),
+              data = trend_data
+            )
+
+            estimate <- coef(trend_model)[[year_col]]
+
+            p_value <- summary(trend_model)$coefficients[
+              year_col,
+              "Pr(>|t|)"
+            ]
+
+            score[i] <- ifelse(
+              p_value < 0.05 & estimate < 0,
+              0,
+              100
+            )
+          }
+      }
+
       }
 
     }
@@ -611,6 +675,7 @@ assess_desired_trend <- function(
     if (grepl('no decrease', sc)) {
       latest_year <- max(DATA[[year_col]], na.rm = TRUE)
 
+      if (indicator_var_name == 'detections') {
       latest_species <- DATA |>
         dplyr::filter(
           .data[[year_col]] == latest_year,
@@ -702,6 +767,37 @@ assess_desired_trend <- function(
       status_statement[i] <- paste0(
         "The most recent sampling year was ",latest_year, ", during which ",length(latest_species)," unique ",group_name," species were detected: ",
         paste(unname(latest_species_labels),collapse = ", "),".")
+
+
+    } else {
+
+      first_year <- min(trend_data[[year_col]], na.rm = TRUE)
+      latest_year <- max(trend_data[[year_col]], na.rm = TRUE)
+
+      first_value <- mean(
+        trend_data[[indicator_var_name]][
+          trend_data[[year_col]] == first_year
+        ],
+        na.rm = TRUE
+      )
+
+      last_value <- mean(
+        trend_data[[indicator_var_name]][
+          trend_data[[year_col]] == latest_year
+        ],
+        na.rm = TRUE
+      )
+
+      status_statement[i] <- paste0(
+        "The most recent sampling year was ", latest_year,
+        ", during which the mean ", indicator_var_name,
+        " was ", round(last_value, 2), unit_text,
+        ", compared to ", round(first_value, 2), unit_text,
+        " in ", first_year, "."
+      )
+
+    }
+
     } else {
       # -----------------------------------------------------
       # Standard desired-trend status statement
@@ -719,9 +815,6 @@ assess_desired_trend <- function(
             5
           ),
       ]
-
-#browser()
-
 
 sd_latest <- sd(
   DATA_latest[[indicator_col]],
@@ -795,6 +888,8 @@ status_statement[i] <- paste0(
     # =======================================================
 
     if (grepl('no decrease', sc)) {
+
+      if ('detections' == indicator_var_name) {
       yearly_species <- DATA_use |>
         dplyr::filter(
           !is.na(
@@ -853,8 +948,27 @@ status_statement[i] <- paste0(
           direction <- "remained stable"
         }
 
+        # JAIM
+
         trend_statement[i] <- paste0("The number of unique ",group_name," species detected ",direction, " from ",first_richness," to ",last_richness,
                                      " between ",first_year," and ",last_year_use,".")
+
+
+      }
+      } else {
+        trend_statement[i] <- paste0(
+          "Linear regression shows a ",
+          ifelse(estimate > 0, "increase", "decrease"),
+          " of ",
+          round(estimate, 2),
+          " per year (p = ",
+          round(p_value, 3),
+          ") between ",
+          first_year,
+          " and ",
+          latest_year,
+          "."
+        )
       }
 
     } else {
