@@ -41,11 +41,13 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
     plot_list <- list()
 
     for (i in seq_along(plot_type)) {
+      message('plot type = ', plot_type[i])
 
 
       par(mar = c(4, 4.5, 0.5, 1))
 
       if("time-series" %in% plot_type[i]) {
+        #browser()
           est_year <- areas$date_of_establishment[areas$NAME_E == id]
           if(length(est_year)<1) est_year <- Inf
 
@@ -206,7 +208,8 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
             scale_x_continuous(
               breaks = scales::breaks_width(1),
               labels = function(x) as.character(x)
-            )
+            ) +
+            theme(axis.text.x = element_text(angle = 90))
 
           plot_list[[i]] <- p
 
@@ -214,11 +217,17 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
 
       if ('detections' %in% plot_type[i]) {
+
+
         # ------------------------------------------------------------
         # Current area
         # ------------------------------------------------------------
 
         current_area <- areas[areas[[areaID]] == id, ]
+
+        # if (id == "Eastern Canyons Marine Refuge") {
+        #   browser()
+        # }
 
         # ------------------------------------------------------------
         # Species column
@@ -267,7 +276,9 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
         original_data <- get("data", envir = parent.frame())
 
-        if (!is.null(control_polygon)) {
+        #browser()
+
+        if (!is.null(control_polygon) & !all(is.na(control_polygon))) {
 
           control_polygon <- control_polygon |>
             dplyr::filter(NAME_E == id) |>
@@ -751,11 +762,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
           }
 
         }
-
-        # if (id == MPAs$NAME_E[9]) {
-        #   browser()
-        # }
-
 
         if (all(st_is_empty(aes_geom))) {
           plot_list[[i]] <- NULL

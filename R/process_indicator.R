@@ -402,6 +402,7 @@ if (all(as.numeric(externalData) == 0)) {
 }
     LAST_SAMPLE_YEAR <- NULL
     if (year %in% names(nesteddata$data[[1]])) {
+      #browser()
       for (i in seq_along(areas[[areaID]])) {
         message(i)
         if (areas[[areaID]][i] %in% nesteddata$areaID) {
@@ -512,6 +513,7 @@ if (all(as.numeric(externalData) == 0)) {
     plots_storage <- vector("list", length = nrow(final))
 
     # loop over rows
+    #browser()
     for (nr in seq_len(nrow(final))) {
       message("Running iteration: ", nr) # prints the iteration number
       result <- plot_indicator(

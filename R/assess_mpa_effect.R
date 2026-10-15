@@ -52,7 +52,8 @@
 #' @param indicator Optional character string identifying the indicator.
 #' @param type Optional character string describing the indicator type.
 #' @param units Optional character string specifying the units of the
-#'   indicator.
+#'   indicator. Units are included in the generated status and trend
+#'   statements when supplied.
 #' @param PPTID Optional identifier for the associated PPT. Multiple values
 #'   are collapsed using `" ;;; "`.
 #' @param project_short_title Optional short title of the project. Multiple
@@ -223,6 +224,13 @@ assess_mpa_effect <- function(
     climate = climate,
     design_target = design_target
   )
+
+  unit_text <- if (!is.na(units) && trimws(units) != "") {
+    paste0(" (", units, ")")
+  } else {
+    ""
+  }
+
 
   # ============================================================
   # MPA EFFECT – MEDIAN DIFFERENCE
@@ -548,13 +556,13 @@ assess_mpa_effect <- function(
             paste0("a median ", indicator_var_name, " value")
           },
           " of ",
-          round(median_inside, 2),
+          round(median_inside, 2),unit_text,
           " inside the MPA compared with ",
-          round(median_outside, 2),
+          round(median_outside, 2), unit_text,
           " in the associated ",
           buffer_distance,
-          " control area. The difference was ",
-          round(difference, 2),
+          " control area. The difference was a median of ",
+          round(difference, 2), unit_text,
           if (indicator_var_name == "species") {
             " species"
           },
@@ -562,7 +570,7 @@ assess_mpa_effect <- function(
         ),
 
         trend_statement =
-          "There is no temporal dimension in this data."
+          "Temporal information not needed for this type of analysis."
       )
 
     # ==========================================================
