@@ -21,6 +21,13 @@
 #' detected across the region. The score represents the percentage of species
 #' detected in the region that were also detected within the MPA.
 #'
+#' For `"mpa effect: control proportion`", the number of unique species
+#' detected within each MPA is compared with the number of unique species
+#' detected in the control area. The score represents the percentage of species
+#' detected in the control area that were also detected within the MPA.
+#' If there were species detected in the MPA but not in the control area
+#' the score is 100.
+#'
 #' @param data Data used for the assessment. For `"mpa effect: median
 #'   difference"`, this must be a `stars` raster object. For the other scoring
 #'   methods, this can be a data frame or `sf` object containing observations.
@@ -198,7 +205,8 @@ assess_mpa_effect <- function(
     "mpa effect: median difference",
     "mpa effect: trend difference",
     "mpa effect: regional proportion",
-    'mpa effect: calculation comparison'
+    'mpa effect: calculation comparison',
+    "mpa effect: control proportion"
   )
   if (!scoring %in% valid_scoring) {
     stop(
@@ -1104,7 +1112,8 @@ assess_mpa_effect <- function(
         -control_effect,
         -p
       )
-  } else if (scoring == "mpa effect: regional proportion") {
+  } else if (scoring %in% c("mpa effect: regional proportion","mpa effect: control proportion")) {
+
 
     if (!inherits(data, "sf")) {
 
@@ -1138,7 +1147,6 @@ assess_mpa_effect <- function(
     # ----------------------------------------------------------
     # Prepare species column
     # ----------------------------------------------------------
-
     if ("species" %in% names(data)) {
       names(data)[
         names(data) == "species"
@@ -1191,11 +1199,45 @@ assess_mpa_effect <- function(
     # Identify all species detected in the region
     # ----------------------------------------------------------
 
+    if (grepl('control', scoring)) {
+      #JAIM
+
+      # Find data within control polygons
+      control_data <- sf::st_join(
+        data,
+        control_polygons,
+        join = sf::st_within,
+        left = FALSE
+      ) |>
+        dplyr::mutate(
+          buffer_order = match(
+            buffer_distance,
+            c("twenty_km", "forty_km", "sixty_km", "eighty_km")
+          )
+        ) |>
+        dplyr::group_by(NAME_E) |>
+        dplyr::filter(
+          buffer_order == min(buffer_order, na.rm = TRUE)
+        ) |>
+        dplyr::ungroup()
+
+      regional_species <- control_data |>
+        dplyr::filter(!is.na(scientificName)) |>
+        dplyr::group_by(NAME_E) |>
+        dplyr::summarise(
+          regional_species = list(unique(scientificName)),
+          .groups = "drop"
+        )
+
+    } else {
+
     regional_species <- unique(
       data$scientificName[
         !is.na(data$scientificName)
       ]
     )
+
+    }
 
     # ----------------------------------------------------------
     # Calculate regional proportion
@@ -1223,22 +1265,26 @@ assess_mpa_effect <- function(
     # Identify all species detected in the region
     # ----------------------------------------------------------
 
-    regional_species <- unique(
-      data$scientificName[
-        !is.na(data$scientificName)
-      ]
-    )
 
     # ----------------------------------------------------------
     # Calculate score and statements
     # ----------------------------------------------------------
-
     nesteddata <- nesteddata |>
       dplyr::mutate(
 
-        score = purrr::map_dbl(
+        score = purrr::map2_dbl(
           data,
-          function(mpa_data) {
+          areaID,
+          function(mpa_data, area_id) {
+
+            # 🔴 CHANGED: Handle both scoring types
+            if (grepl("control", scoring[1])) {
+              regional_species_for_area <- regional_species$regional_species[
+                match(area_id, regional_species$NAME_E)
+              ][[1]]
+            } else {
+              regional_species_for_area <- regional_species
+            }
 
             identified_species_for_area <- unique(
               mpa_data$scientificName[
@@ -1246,17 +1292,22 @@ assess_mpa_effect <- function(
               ]
             )
 
+            if (length(regional_species_for_area) == 0) {
+
+              return(if (length(identified_species_for_area) > 0) 100 else NA_real_)
+
+
+            }
+
+
             identified_species_for_area <-
               identified_species_for_area[
                 identified_species_for_area %in%
-                  regional_species
+                  regional_species_for_area
               ]
 
-            length(
-              identified_species_for_area
-            ) /
-              length(regional_species) *
-              100
+            length(identified_species_for_area) /
+              length(regional_species_for_area) * 100
           }
         ),
 
@@ -1265,8 +1316,7 @@ assess_mpa_effect <- function(
         units = metadata$units,
         scoring = metadata$scoring,
         PPTID = metadata$PPTID,
-        project_short_title =
-          metadata$project_short_title,
+        project_short_title = metadata$project_short_title,
         climate = metadata$climate,
         design_target = metadata$design_target,
 
@@ -1274,9 +1324,19 @@ assess_mpa_effect <- function(
         # Status statement
         # ------------------------------------------------------
 
-        status_statement = purrr::map_chr(
+        status_statement = purrr::map2_chr(
           data,
-          function(mpa_data) {
+          areaID,
+          function(mpa_data, area_id) {
+
+            # 🔴 CHANGED: Handle both scoring types
+            if (grepl("control", scoring[1])) {
+              regional_species_for_area <- regional_species$regional_species[
+                match(area_id, regional_species$NAME_E)
+              ][[1]]
+            } else {
+              regional_species_for_area <- regional_species
+            }
 
             identified_species_for_area <- unique(
               mpa_data$scientificName[
@@ -1287,33 +1347,30 @@ assess_mpa_effect <- function(
             identified_species_for_area <-
               identified_species_for_area[
                 identified_species_for_area %in%
-                  regional_species
+                  regional_species_for_area
               ]
+
+            if (length(regional_species_for_area) == 0) {
+              return(
+                "No target species were detected in the available control buffer for this area."
+              )
+            }
 
             paste0(
               "Target species detected within this area: ",
-              paste(
-                identified_species_for_area,
-                collapse = ", "
-              ),
-              ". The following target species were detected in the region: ",
-              paste(
-                regional_species,
-                collapse = ", "
-              ),
+              paste(identified_species_for_area, collapse = ", "),
+              # 🔴 CHANGED: General wording for either scoring type
+              ". The following target species were detected in the reference area: ",
+              paste(regional_species_for_area, collapse = ", "),
               ". ",
-              length(
-                identified_species_for_area
-              ),
+              length(identified_species_for_area),
               " of ",
-              length(
-                regional_species
-              ),
-              " target species detected in the region ",
+              length(regional_species_for_area),
+              " target species detected in the reference area ",
               "were detected within this area (",
               round(
                 length(identified_species_for_area) /
-                  length(regional_species) * 100,
+                  length(regional_species_for_area) * 100,
                 1
               ),
               "%)."
@@ -1339,14 +1396,10 @@ assess_mpa_effect <- function(
             n_samples <- nrow(mpa_data)
 
             years <- sort(
-              unique(
-                mpa_data[[year]]
-              )
+              unique(mpa_data[[year]])
             )
 
-            years <- years[
-              !is.na(years)
-            ]
+            years <- years[!is.na(years)]
 
             if (length(years) == 1) {
 

@@ -47,7 +47,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
       par(mar = c(4, 4.5, 0.5, 1))
 
       if("time-series" %in% plot_type[i]) {
-        #browser()
           est_year <- areas$date_of_establishment[areas$NAME_E == id]
           if(length(est_year)<1) est_year <- Inf
 
@@ -225,10 +224,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
         current_area <- areas[areas[[areaID]] == id, ]
 
-        # if (id == "Eastern Canyons Marine Refuge") {
-        #   browser()
-        # }
-
         # ------------------------------------------------------------
         # Species column
         # ------------------------------------------------------------
@@ -275,8 +270,6 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
 
         original_data <- get("data", envir = parent.frame())
-
-        #browser()
 
         if (!is.null(control_polygon) & !all(is.na(control_polygon))) {
 
@@ -362,7 +355,7 @@ plot_indicator <- function(data,indicator,units,id, plot_type, year, indicator_v
 
             d <- ggplot() +
               geom_sf(
-                data = current_area, # HERE JAIM
+                data = current_area,
                 fill = "white",
                 color = "black"
               ) +
@@ -993,11 +986,22 @@ if (any(grepl("sf", class(data)))) {
 
       }
 
-      if ("region-mpa-comparison" %in% plot_type[i]) {
+      if (plot_type[i] %in% c("region-mpa-comparison", "control-mpa-comparison")) {
         full_data <- get("data", envir = parent.frame())
 
         library(dplyr)
         library(ggplot2)
+
+        #browser()
+
+        if ('species' %in% names(data)) {
+          names(data)[which(names(data) == 'species')] <- 'scientificName'
+        }
+
+        if ('species' %in% names(full_data)) {
+          names(full_data)[which(names(full_data) == 'species')] <- 'scientificName'
+        }
+
 
         # MPA NIS
         mpa_nis <- data %>%
@@ -1008,12 +1012,40 @@ if (any(grepl("sf", class(data)))) {
           )
 
         # Regional NIS
+
+        if (grepl('region', scoring)) {
         region_nis <- full_data %>%
           distinct(scientificName) %>%
           mutate(
             count = 1,
             source = "Region"
           )
+
+        } else {
+          ## Looking at control data (not region data) JAIM
+          region_nis <- sf::st_join(
+            full_data,
+            control_polygon,
+            join = sf::st_within,
+            left = FALSE
+          ) |>
+            dplyr::mutate(
+              buffer_order = match(
+                buffer_distance,
+                c("twenty_km", "forty_km", "sixty_km", "eighty_km")
+              )
+            ) |>
+            dplyr::group_by(NAME_E) |>
+            dplyr::filter(
+              buffer_order == min(buffer_order, na.rm = TRUE)
+            ) |>
+            dplyr::ungroup() |>
+            dplyr::distinct(scientificName) |>
+            dplyr::mutate(
+              count = 1,
+              source = "Control"
+            )
+        }
 
         # Combine
         nis_summary <- bind_rows(
