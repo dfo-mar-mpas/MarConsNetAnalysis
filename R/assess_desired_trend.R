@@ -960,7 +960,7 @@ status_statement[i] <- paste0(
           "Linear regression shows a ",
           ifelse(estimate > 0, "increase", "decrease"),
           " of ",
-          round(estimate, 2),
+          round(estimate, 2), unit_text,
           " per year (p = ",
           round(p_value, 3),
           ") between ",
