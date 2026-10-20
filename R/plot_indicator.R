@@ -1096,7 +1096,8 @@ if (any(grepl("sf", class(data)))) {
           theme(
             legend.text = element_text(size = 8),
             legend.title = element_text(size = 9),
-            legend.key.size = unit(0.5, "cm")
+            legend.key.size = unit(0.5, "cm"),
+            axis.text.x = element_text(angle = 90)
           )
 
       }

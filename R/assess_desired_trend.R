@@ -612,18 +612,22 @@ assess_desired_trend <- function(
             "Pr(>|t|)"
           ]
 
+
+          if (indicator_var_name == 'detections') {
+
+            score[i] <- ifelse(
+              dplyr::last(yearly_species$richness) >=
+                dplyr::first(yearly_species$richness),
+              100,
+              0
+            )
+          } else {
           score[i] <- ifelse(
             p_value < 0.05 & estimate < 0,
             0,
             100
           )
-
-          # score[i] <- ifelse(
-          #   dplyr::last(yearly_species$richness) >=
-          #     dplyr::first(yearly_species$richness),
-          #   100,
-          #   0
-          # )
+          }
         }
 
         } else {
