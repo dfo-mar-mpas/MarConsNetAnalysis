@@ -632,9 +632,9 @@ assess_desired_trend <- function(
 
         } else {
 
-          if (i == 6) {
-            browser()
-          }
+          # if (i == 6) {
+          #   browser()
+          # }
 
           trend_data <- DATA_use |>
             dplyr::filter(
